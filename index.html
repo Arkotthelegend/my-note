@@ -3,144 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Subscriptions</title>
+    <title>G-12 Pro Tracker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --primary: #0088cc;
-            --bg: var(--tg-theme-bg-color, #f5f5f5);
-            --text: var(--tg-theme-text-color, #222);
-            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
-        }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         .container { max-width: 500px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         
-        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2, h3 { margin-top: 0; color: var(--primary); }
-
         .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-size: 1rem; }
-
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); }
-
-        .search-box { margin-top: 20px; position: sticky; top: 10px; z-index: 10; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         
-        .record-item { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .record-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
-        .record-details { font-size: 0.9rem; color: #666; }
-        .badge { background: #e3f2fd; color: #0088cc; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-add:active { transform: scale(0.98); }
+        
+        .search-box { background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--primary); width: 100%; box-sizing: border-box; }
+        
+        /* User Record Style */
+        .user-record { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .user-id { font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; color: #0056b3; display: flex; justify-content: space-between; align-items: center; }
+        .sub-item { display: grid; grid-template-columns: 1.2fr 1fr; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; border: 1px solid #eee; }
+        .exp-date { color: #d32f2f; font-weight: bold; text-align: right; }
+        .delete-btn { background: #ffeded; color: #ff4d4d; border: none; padding: 6px 12px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h2>📝 New Subscription</h2>
+        <h2>👤 Add/Update Student</h2>
         <div class="form-group">
-            <label>Customer TG ID / Name</label>
-            <input type="text" id="tgId" placeholder="@username သို့မဟုတ် အမည်">
+            <label>Telegram ID / Name</label>
+            <input type="text" id="tgId" placeholder="e.g. @kaung_kaung">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 2;">
+                <label>Subject</label>
+                <select id="subject">
+                    <option value="Myanmar">Myanmar</option>
+                    <option value="English">English</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Economics">Economics</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Months</label>
+                <input type="number" id="months" value="1" min="1">
+            </div>
         </div>
         <div class="form-group">
-            <label>Subject</label>
-            <select id="subject">
-                <option value="Myanmar">Myanmar</option>
-                <option value="English">English</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-                <option value="Economics">Economics</option>
-            </select>
+            <label>Expiry Date (သက်တမ်းကုန်မည့်ရက်)</label>
+            <input type="date" id="expiryDate">
         </div>
-        <div class="form-group">
-            <label>Duration (Months)</label>
-            <input type="number" id="months" value="1" min="1">
-        </div>
-        <button onclick="saveData()">Save Note</button>
+        <button class="btn-add" onclick="saveRecord()">Save Subscription</button>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="search" placeholder="🔍 Search ID or Subject..." onkeyup="displayData()">
-    </div>
+    <input type="text" id="search" class="search-box" placeholder="🔍 Search Students or Subjects..." onkeyup="renderData()">
 
-    <h3 style="margin-top: 20px;">📜 All Records</h3>
-    <div id="recordList"></div>
+    <div id="displayArea"></div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Save Data
-    function saveData() {
-        const id = document.getElementById('tgId').value.trim();
-        const sub = document.getElementById('subject').value;
-        const month = document.getElementById('months').value;
-        const date = new Date().toLocaleDateString();
+    // Months ပြောင်းရင် Expiry Date ကို Auto တွက်ပေးတာ
+    document.getElementById('months').addEventListener('input', function() {
+        updateExpiryDate(parseInt(this.value) || 0);
+    });
 
-        if(!id || !month) {
-            tg.showScanQrPopup({ text: "အချက်အလက် အကုန်ဖြည့်ပါ" }); 
-            alert("Please fill all fields");
-            return;
-        }
-
-        const record = { id, sub, month, date, timestamp: Date.now() };
-        let data = JSON.parse(localStorage.getItem('notes')) || [];
-        data.push(record);
-        localStorage.setItem('notes', JSON.stringify(data));
-
-        // Reset inputs
-        document.getElementById('tgId').value = '';
-        tg.HapticFeedback.notificationOccurred('success');
-        displayData();
+    function updateExpiryDate(months) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + months);
+        document.getElementById('expiryDate').value = d.toISOString().split('T')[0];
     }
 
-    // Display & Search Data
-    function displayData() {
-        const searchTxt = document.getElementById('search').value.toLowerCase();
-        const list = document.getElementById('recordList');
-        let data = JSON.parse(localStorage.getItem('notes')) || [];
+    function saveRecord() {
+        const id = document.getElementById('tgId').value.trim();
+        const sub = document.getElementById('subject').value;
+        const months = document.getElementById('months').value;
+        const exp = document.getElementById('expiryDate').value;
 
-        // Sort: Newest first
-        data.sort((a, b) => b.timestamp - a.timestamp);
+        if(!id || !exp) { 
+            tg.showAlert("ID နှင့် Expiry Date ကို သေချာဖြည့်ပါဗျ။");
+            return; 
+        }
 
-        list.innerHTML = '';
+        let db = JSON.parse(localStorage.getItem('g12_db')) || {};
 
-        const filtered = data.filter(item => 
-            item.id.toLowerCase().includes(searchTxt) || 
-            item.sub.toLowerCase().includes(searchTxt)
-        );
+        if(!db[id]) {
+            db[id] = [];
+        }
 
-        filtered.forEach((item, index) => {
-            list.innerHTML += `
-                <div class="record-item">
-                    <div class="record-header">
-                        <span>${item.id}</span>
-                        <span class="badge">${item.sub}</span>
+        // ဘာသာရပ်တူရင် အရင်ဟာကို ဖျက်ပြီး update လုပ်မယ်
+        db[id] = db[id].filter(s => s.subject !== sub); 
+        
+        db[id].push({
+            subject: sub,
+            duration: months,
+            expiry: exp,
+            addedDate: new Date().toLocaleDateString()
+        });
+
+        localStorage.setItem('g12_db', JSON.stringify(db));
+        tg.HapticFeedback.notificationOccurred('success');
+        renderData();
+        
+        // Form ကို reset လုပ်မယ်
+        document.getElementById('tgId').value = "";
+        updateExpiryDate(1); 
+    }
+
+    function renderData() {
+        const search = document.getElementById('search').value.toLowerCase();
+        const area = document.getElementById('displayArea');
+        const db = JSON.parse(localStorage.getItem('g12_db')) || {};
+        
+        area.innerHTML = "";
+
+        // ID ကို အစဉ်လိုက်စီပြီး ပြမယ်
+        const sortedIds = Object.keys(db).reverse();
+
+        sortedIds.forEach(studentId => {
+            const subs = db[studentId];
+            
+            // Search filter: ID ထဲမှာပဲဖြစ်ဖြစ်၊ Subject ထဲမှာပဲဖြစ်ဖြစ် ရှာလို့ရအောင်
+            const matchesSearch = studentId.toLowerCase().includes(search) || 
+                                subs.some(s => s.subject.toLowerCase().includes(search));
+
+            if (matchesSearch) {
+                let subHtml = "";
+                subs.forEach(s => {
+                    subHtml += `
+                        <div class="sub-item">
+                            <span>📘 <b>${s.subject}</b> (${s.duration} လ)</span>
+                            <span class="exp-date">⏳ ${s.expiry}</span>
+                        </div>
+                    `;
+                });
+
+                area.innerHTML += `
+                    <div class="user-record">
+                        <div class="user-id">
+                            <span>👤 ${studentId}</span>
+                        </div>
+                        ${subHtml}
+                        <div style="text-align: right;">
+                            <button class="delete-btn" onclick="deleteUser('${studentId}')">Remove All</button>
+                        </div>
                     </div>
-                    <div class="record-details">
-                        📅 Date: ${item.date} | ⏳ Duration: ${item.month} Months
-                    </div>
-                    <button onclick="deleteRecord(${item.timestamp})" style="width: auto; padding: 5px 10px; background: #ff4d4d; margin-top: 10px; font-size: 0.7rem;">Delete</button>
-                </div>
-            `;
+                `;
+            }
         });
     }
 
-    function deleteRecord(ts) {
-        if(confirm("ဖျက်မှာ သေချာပါသလား?")) {
-            let data = JSON.parse(localStorage.getItem('notes')) || [];
-            data = data.filter(item => item.timestamp !== ts);
-            localStorage.setItem('notes', JSON.stringify(data));
-            displayData();
+    function deleteUser(id) {
+        if(confirm(id + " ရဲ့ အချက်အလက်အားလုံး ဖျက်မှာ သေချာပါသလား?")) {
+            let db = JSON.parse(localStorage.getItem('g12_db')) || {};
+            delete db[id];
+            localStorage.setItem('g12_db', JSON.stringify(db));
+            renderData();
         }
     }
 
-    // Initial Load
-    displayData();
+    // Initial setup
+    renderData();
+    updateExpiryDate(1);
 </script>
 
 </body>
