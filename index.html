@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-12 Subscriptions</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary: #0088cc;
+            --bg: var(--tg-theme-bg-color, #f5f5f5);
+            --text: var(--tg-theme-text-color, #222);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        .container { max-width: 500px; margin: auto; }
+        
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2, h3 { margin-top: 0; color: var(--primary); }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-size: 1rem; }
+
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
+
+        .search-box { margin-top: 20px; position: sticky; top: 10px; z-index: 10; }
+        
+        .record-item { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .record-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+        .record-details { font-size: 0.9rem; color: #666; }
+        .badge { background: #e3f2fd; color: #0088cc; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>📝 New Subscription</h2>
+        <div class="form-group">
+            <label>Customer TG ID / Name</label>
+            <input type="text" id="tgId" placeholder="@username သို့မဟုတ် အမည်">
+        </div>
+        <div class="form-group">
+            <label>Subject</label>
+            <select id="subject">
+                <option value="Myanmar">Myanmar</option>
+                <option value="English">English</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Economics">Economics</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Duration (Months)</label>
+            <input type="number" id="months" value="1" min="1">
+        </div>
+        <button onclick="saveData()">Save Note</button>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="search" placeholder="🔍 Search ID or Subject..." onkeyup="displayData()">
+    </div>
+
+    <h3 style="margin-top: 20px;">📜 All Records</h3>
+    <div id="recordList"></div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Save Data
+    function saveData() {
+        const id = document.getElementById('tgId').value.trim();
+        const sub = document.getElementById('subject').value;
+        const month = document.getElementById('months').value;
+        const date = new Date().toLocaleDateString();
+
+        if(!id || !month) {
+            tg.showScanQrPopup({ text: "အချက်အလက် အကုန်ဖြည့်ပါ" }); 
+            alert("Please fill all fields");
+            return;
+        }
+
+        const record = { id, sub, month, date, timestamp: Date.now() };
+        let data = JSON.parse(localStorage.getItem('notes')) || [];
+        data.push(record);
+        localStorage.setItem('notes', JSON.stringify(data));
+
+        // Reset inputs
+        document.getElementById('tgId').value = '';
+        tg.HapticFeedback.notificationOccurred('success');
+        displayData();
+    }
+
+    // Display & Search Data
+    function displayData() {
+        const searchTxt = document.getElementById('search').value.toLowerCase();
+        const list = document.getElementById('recordList');
+        let data = JSON.parse(localStorage.getItem('notes')) || [];
+
+        // Sort: Newest first
+        data.sort((a, b) => b.timestamp - a.timestamp);
+
+        list.innerHTML = '';
+
+        const filtered = data.filter(item => 
+            item.id.toLowerCase().includes(searchTxt) || 
+            item.sub.toLowerCase().includes(searchTxt)
+        );
+
+        filtered.forEach((item, index) => {
+            list.innerHTML += `
+                <div class="record-item">
+                    <div class="record-header">
+                        <span>${item.id}</span>
+                        <span class="badge">${item.sub}</span>
+                    </div>
+                    <div class="record-details">
+                        📅 Date: ${item.date} | ⏳ Duration: ${item.month} Months
+                    </div>
+                    <button onclick="deleteRecord(${item.timestamp})" style="width: auto; padding: 5px 10px; background: #ff4d4d; margin-top: 10px; font-size: 0.7rem;">Delete</button>
+                </div>
+            `;
+        });
+    }
+
+    function deleteRecord(ts) {
+        if(confirm("ဖျက်မှာ သေချာပါသလား?")) {
+            let data = JSON.parse(localStorage.getItem('notes')) || [];
+            data = data.filter(item => item.timestamp !== ts);
+            localStorage.setItem('notes', JSON.stringify(data));
+            displayData();
+        }
+    }
+
+    // Initial Load
+    displayData();
+</script>
+
+</body>
+</html>
