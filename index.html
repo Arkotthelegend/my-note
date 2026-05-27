@@ -6,34 +6,40 @@
     <title>G-12 Pro Tracker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 50px; }
         .container { max-width: 500px; margin: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         
+        /* Form Card */
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        
         .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-add:active { transform: scale(0.98); }
-        
-        .search-box { background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--primary); width: 100%; box-sizing: border-box; }
-        
-        /* User Record Style */
+
+        /* Tabs System */
+        .tabs { display: flex; background: #ddd; border-radius: 10px; margin-bottom: 15px; padding: 5px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; font-size: 0.9rem; }
+        .tab.active { background: var(--primary); color: white; }
+
+        /* Records Style */
         .user-record { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .user-id { font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; color: #0056b3; display: flex; justify-content: space-between; align-items: center; }
-        .sub-item { display: grid; grid-template-columns: 1.2fr 1fr; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; border: 1px solid #eee; }
-        .exp-date { color: #d32f2f; font-weight: bold; text-align: right; }
-        .delete-btn { background: #ffeded; color: #ff4d4d; border: none; padding: 6px 12px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; margin-top: 5px; font-weight: bold; }
+        .user-id { font-weight: bold; color: #0056b3; margin-bottom: 10px; display: block; }
+        .sub-item { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
+        .sub-main { display: flex; justify-content: space-between; align-items: center; }
+        .exp-date { font-weight: bold; }
+        .expired { color: var(--danger); }
+        .warning { color: var(--warning); }
+        
+        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; }
+        .search-box { background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--primary); width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h2>👤 Add/Update Student</h2>
+        <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.1rem;">👤 New / Update Sub</h2>
         <div class="form-group">
             <label>Telegram ID / Name</label>
             <input type="text" id="tgId" placeholder="e.g. @kaung_kaung">
@@ -57,13 +63,20 @@
             </div>
         </div>
         <div class="form-group">
-            <label>Expiry Date (သက်တမ်းကုန်မည့်ရက်)</label>
+            <label>Expiry Date</label>
             <input type="date" id="expiryDate">
         </div>
         <button class="btn-add" onclick="saveRecord()">Save Subscription</button>
     </div>
 
-    <input type="text" id="search" class="search-box" placeholder="🔍 Search Students or Subjects..." onkeyup="renderData()">
+    <div class="tabs">
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All Records</div>
+        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring Soon</div>
+    </div>
+
+    <div id="search-container">
+        <input type="text" id="search" class="search-box" placeholder="🔍 Search ID or Subject..." onkeyup="renderData()">
+    </div>
 
     <div id="displayArea"></div>
 </div>
@@ -72,7 +85,8 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Months ပြောင်းရင် Expiry Date ကို Auto တွက်ပေးတာ
+    let currentTab = 'manage';
+
     document.getElementById('months').addEventListener('input', function() {
         updateExpiryDate(parseInt(this.value) || 0);
     });
@@ -83,95 +97,114 @@
         document.getElementById('expiryDate').value = d.toISOString().split('T')[0];
     }
 
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        
+        // Expiring Soon tab မှာ search ကို ခဏဖျောက်ထားလို့ရတယ် (ဒါမှမဟုတ် ထားခဲ့လို့ရတယ်)
+        document.getElementById('search-container').style.display = (tab === 'expire') ? 'none' : 'block';
+        
+        renderData();
+    }
+
     function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
         const months = document.getElementById('months').value;
         const exp = document.getElementById('expiryDate').value;
 
-        if(!id || !exp) { 
-            tg.showAlert("ID နှင့် Expiry Date ကို သေချာဖြည့်ပါဗျ။");
-            return; 
-        }
+        if(!id || !exp) { alert("Please fill all fields"); return; }
 
         let db = JSON.parse(localStorage.getItem('g12_db')) || {};
+        if(!db[id]) db[id] = [];
 
-        if(!db[id]) {
-            db[id] = [];
-        }
-
-        // ဘာသာရပ်တူရင် အရင်ဟာကို ဖျက်ပြီး update လုပ်မယ်
-        db[id] = db[id].filter(s => s.subject !== sub); 
-        
-        db[id].push({
-            subject: sub,
-            duration: months,
-            expiry: exp,
-            addedDate: new Date().toLocaleDateString()
-        });
+        db[id] = db[id].filter(item => item.subject !== sub);
+        db[id].push({ subject: sub, duration: months, expiry: exp, timestamp: Date.now() });
 
         localStorage.setItem('g12_db', JSON.stringify(db));
         tg.HapticFeedback.notificationOccurred('success');
         renderData();
-        
-        // Form ကို reset လုပ်မယ်
         document.getElementById('tgId').value = "";
-        updateExpiryDate(1); 
+        updateExpiryDate(1);
     }
 
-    function renderData() {
-        const search = document.getElementById('search').value.toLowerCase();
-        const area = document.getElementById('displayArea');
-        const db = JSON.parse(localStorage.getItem('g12_db')) || {};
-        
-        area.innerHTML = "";
-
-        // ID ကို အစဉ်လိုက်စီပြီး ပြမယ်
-        const sortedIds = Object.keys(db).reverse();
-
-        sortedIds.forEach(studentId => {
-            const subs = db[studentId];
-            
-            // Search filter: ID ထဲမှာပဲဖြစ်ဖြစ်၊ Subject ထဲမှာပဲဖြစ်ဖြစ် ရှာလို့ရအောင်
-            const matchesSearch = studentId.toLowerCase().includes(search) || 
-                                subs.some(s => s.subject.toLowerCase().includes(search));
-
-            if (matchesSearch) {
-                let subHtml = "";
-                subs.forEach(s => {
-                    subHtml += `
-                        <div class="sub-item">
-                            <span>📘 <b>${s.subject}</b> (${s.duration} လ)</span>
-                            <span class="exp-date">⏳ ${s.expiry}</span>
-                        </div>
-                    `;
-                });
-
-                area.innerHTML += `
-                    <div class="user-record">
-                        <div class="user-id">
-                            <span>👤 ${studentId}</span>
-                        </div>
-                        ${subHtml}
-                        <div style="text-align: right;">
-                            <button class="delete-btn" onclick="deleteUser('${studentId}')">Remove All</button>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-    }
-
-    function deleteUser(id) {
-        if(confirm(id + " ရဲ့ အချက်အလက်အားလုံး ဖျက်မှာ သေချာပါသလား?")) {
+    function deleteSubject(userId, timestamp) {
+        if(confirm("ဖျက်မှာ သေချာပါသလား?")) {
             let db = JSON.parse(localStorage.getItem('g12_db')) || {};
-            delete db[id];
-            localStorage.setItem('g12_db', JSON.stringify(db));
-            renderData();
+            if(db[userId]) {
+                db[userId] = db[userId].filter(s => s.timestamp !== timestamp);
+                if(db[userId].length === 0) delete db[userId];
+                localStorage.setItem('g12_db', JSON.stringify(db));
+                renderData();
+            }
         }
     }
 
-    // Initial setup
+    function renderData() {
+        const area = document.getElementById('displayArea');
+        const db = JSON.parse(localStorage.getItem('g12_db')) || {};
+        area.innerHTML = "";
+
+        if (currentTab === 'manage') {
+            const search = document.getElementById('search').value.toLowerCase();
+            Object.keys(db).reverse().forEach(studentId => {
+                const subs = db[studentId];
+                if (studentId.toLowerCase().includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                    let subHtml = "";
+                    subs.forEach(s => {
+                        subHtml += `
+                            <div class="sub-item">
+                                <div class="sub-main">
+                                    <span>📘 <b>${s.subject}</b> (${s.duration} လ)</span>
+                                    <button class="item-delete-btn" onclick="deleteSubject('${studentId}', ${s.timestamp})">🗑️</button>
+                                </div>
+                                <div style="font-size:0.85rem; margin-top:5px;">Exp: ${s.expiry}</div>
+                            </div>`;
+                    });
+                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ${studentId}</span>${subHtml}</div>`;
+                }
+            });
+        } else {
+            // Expiring Soon Tab Logic
+            let allSubs = [];
+            Object.keys(db).forEach(id => {
+                db[id].forEach(s => { allSubs.push({ id, ...s }); });
+            });
+
+            // ရက်စွဲအလိုက် စီမယ် (နီးတဲ့ဟာ အပေါ်ဆုံး)
+            allSubs.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+
+            allSubs.forEach(s => {
+                const today = new Date();
+                const expDate = new Date(s.expiry);
+                const diffTime = expDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                let statusClass = "";
+                let statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
+
+                if (diffDays < 0) { 
+                    statusClass = "expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; 
+                } else if (diffDays <= 7) { 
+                    statusClass = "warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; 
+                }
+
+                area.innerHTML += `
+                    <div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
+                        <div class="sub-main">
+                            <span>👤 <b>${s.id}</b></span>
+                            <button class="item-delete-btn" onclick="deleteSubject('${s.id}', ${s.timestamp})">🗑️</button>
+                        </div>
+                        <div style="margin-top:5px; font-weight:bold;">📘 ${s.subject}</div>
+                        <div class="exp-date ${statusClass}" style="margin-top:5px; font-size:0.9rem;">
+                            ⌛ Expiry: ${s.expiry} ${statusText}
+                        </div>
+                    </div>`;
+            });
+        }
+    }
+
     renderData();
     updateExpiryDate(1);
 </script>
