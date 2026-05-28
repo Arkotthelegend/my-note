@@ -6,23 +6,19 @@
     <title>G-12 Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
         .container { max-width: 500px; margin: auto; }
-        
         .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
         h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; transition: 0.3s; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
         input:focus { border-color: var(--primary); }
-        
         .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        .btn-add:active { transform: scale(0.98); }
-
-        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; color: #666; }
+        
+        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
+        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
 
         .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -36,16 +32,14 @@
         .status-expired { color: var(--danger); }
         .status-warning { color: var(--warning); }
         .status-ok { color: var(--success); }
-
         .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
         .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
-        
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay">⏳ Loading... Please wait</div>
+<div id="loading-overlay">⏳ Loading...</div>
 
 <div class="container">
     <div class="card">
@@ -58,13 +52,13 @@
             <div class="form-group" style="flex: 2;">
                 <label>Subject</label>
                 <select id="subject">
-                    <option value="Myanmar">Myanmar (mm)</option>
-                    <option value="English">English (en)</option>
-                    <option value="Mathematics">Mathematics (math)</option>
-                    <option value="Physics">Physics (phy)</option>
-                    <option value="Chemistry">Chemistry (chem)</option>
-                    <option value="Biology">Biology (bio)</option>
-                    <option value="Economics">Economics (eco)</option>
+                    <option value="Myanmar">Myanmar</option>
+                    <option value="English">English</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Economics">Economics</option>
                     <option value="All">All Subjects (all)</option>
                 </select>
             </div>
@@ -81,8 +75,9 @@
     </div>
 
     <div class="tabs">
-        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All Students</div>
-        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring Soon</div>
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
+        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
+        <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Today Logs</div>
     </div>
 
     <div id="search-container">
@@ -96,36 +91,25 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ==========================================
-    // 🔒 လုံခြုံရေး: Admin ID ပြင်ဆင်ရန်
-    // အောက်က "123456789" နေရာမှာ လူကြီးမင်းရဲ့ Telegram ID အစစ်ကို ထည့်ပါ
-    // ဥပမာ - ["8432363664"]
-    // ==========================================
+    // 🔒 Admin ID ဖြည့်ရန်
     const ADMIN_IDS = ["8432363664"]; 
 
     const currentUserId = tg.initDataUnsafe?.user?.id;
     const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
 
     if (!isAdmin) {
-        document.body.innerHTML = `
-            <div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
-                <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1>
-                <h2 style="color:#721c24; margin-top:10px;">Access Denied</h2>
-                <p style="color:#721c24; font-weight:bold;">သင့်တွင် ဤ Admin Panel ကို အသုံးပြုခွင့် မရှိပါ။</p>
-               
-            </div>
-        `;
-        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။ သင်သည် Admin မဟုတ်ပါ။");
-        throw new Error("Unauthorized Access Blocked!");
+        document.body.innerHTML = `<div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
+            <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1><h2 style="color:#721c24; margin-top:10px;">Access Denied</h2></div>`;
+        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။");
+        throw new Error("Unauthorized Access");
     }
 
-    // ==========================================
-    // 🔗 Google Script URL
-    // ==========================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-SIpXkDIe83TKgTdVJN0b_FsLjdD_k44xBy1yzJlslgR9z9g1jUZvBQ8ZhihI2An9Tw/exec";
+    // 🔗 Google Script URL သစ် ထည့်ရန်
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVC5RE4A9A_Se0cTTYMDJ1GmMLMU5Fu45dJIW9-_3_gNhyOovz_jdTi0z893k6wEV4ag/exec";
     
     let currentTab = 'manage';
     let cachedData = [];
+    let cachedLogs = []; // Logs သိမ်းရန်
 
     document.getElementById('months').addEventListener('input', function() {
         const months = parseInt(this.value) || 0;
@@ -134,15 +118,13 @@
         document.getElementById('expiryDate').value = d.toISOString().split('T')[0];
     });
 
-    function showLoading(show) {
-        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
-    }
+    function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
 
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('search-container').style.display = (tab === 'expire') ? 'none' : 'block';
+        document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
         renderData();
     }
 
@@ -150,7 +132,9 @@
         showLoading(true);
         try {
             const response = await fetch(SCRIPT_URL);
-            cachedData = await response.json();
+            const data = await response.json();
+            cachedData = data.active || [];
+            cachedLogs = data.logs || [];
             renderData();
         } catch (e) {
             tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
@@ -161,21 +145,20 @@
     async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
+        const months = document.getElementById('months').value;
         const exp = document.getElementById('expiryDate').value;
 
         if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
         
         showLoading(true);
-        const payload = { action: "save", id, subject: sub, expiry: exp, timestamp: Date.now() };
+        const payload = { action: "save", id, subject: sub, months, expiry: exp, timestamp: Date.now() };
 
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
             tg.HapticFeedback.notificationOccurred('success');
             await fetchFromSheet();
             document.getElementById('tgId').value = "";
-        } catch(e) { 
-            tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။");
-        }
+        } catch(e) { tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); }
         showLoading(false);
     }
 
@@ -193,55 +176,75 @@
         const area = document.getElementById('displayArea');
         area.innerHTML = "";
 
-        let db = {};
-        cachedData.forEach(item => {
-            if(!db[item.id]) db[item.id] = [];
-            db[item.id].push(item);
-        });
-
         if (currentTab === 'manage') {
+            let db = {};
+            cachedData.forEach(item => { if(!db[item.id]) db[item.id] = []; db[item.id].push(item); });
             const search = document.getElementById('search').value.toLowerCase();
             const sortedIds = Object.keys(db).reverse();
 
             sortedIds.forEach(studentId => {
                 const subs = db[studentId];
-                const matches = studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search));
-
-                if (matches) {
+                if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
                     let subHtml = "";
                     subs.forEach(s => {
-                        subHtml += `
-                            <div class="sub-item">
-                                <div class="sub-main">
-                                    <span class="sub-name">📘 ${s.subject}</span>
-                                    <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
-                                </div>
-                                <div class="exp-date">📅 Exp: ${s.expiry}</div>
-                            </div>`;
+                        subHtml += `<div class="sub-item">
+                            <div class="sub-main">
+                                <span class="sub-name">📘 ${s.subject}</span>
+                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
+                            </div>
+                            <div class="exp-date">📅 Exp: ${s.expiry}</div>
+                        </div>`;
                     });
                     area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
                 }
             });
-        } else {
+        } 
+        else if (currentTab === 'expire') {
             let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-            
             allItems.forEach(s => {
                 const diffDays = Math.ceil((new Date(s.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-                let statusClass = "status-ok";
-                let statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
-
+                let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
                 if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
                 else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
 
-                area.innerHTML += `
-                    <div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
-                        <div class="sub-main">
-                            <span>👤 <b>${s.id}</b> - ${s.subject}</span>
-                            <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
-                        </div>
-                        <div class="exp-date ${statusClass}">⌛ ${s.expiry} ${statusText}</div>
-                    </div>`;
+                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
+                    <div class="sub-main">
+                        <span>👤 <b>${s.id}</b> - ${s.subject}</span>
+                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
+                    </div>
+                    <div class="exp-date ${statusClass}">⌛ ${s.expiry} ${statusText}</div>
+                </div>`;
             });
+        }
+        else if (currentTab === 'logs') {
+            // မြန်မာစံတော်ချိန် (UTC+6:30) ဖြင့် ယနေ့ရက်စွဲကို ရှာဖွေခြင်း
+            let d = new Date();
+            let localDate = new Date(d.getTime() + (6.5 * 60 * 60 * 1000));
+            let mmToday = localDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+            // နေ့စဉ်မှတ်တမ်းများကို ယနေ့အတွက်သာ စစ်ထုတ်ခြင်း
+            let todayLogs = cachedLogs.filter(log => log.timestamp && log.timestamp.startsWith(mmToday));
+
+            if(todayLogs.length === 0) {
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">ဒီနေ့အတွက် အသစ်သွင်းထားသော မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+            } else {
+                area.innerHTML = `<div style="margin-bottom:10px; font-weight:bold; color:var(--info);">📅 ယနေ့မှတ်တမ်း (${todayLogs.length} ခု)</div>`;
+                todayLogs.forEach(log => {
+                    let timeOnly = log.timestamp.split(' ')[1] || ''; // အချိန် သီးသန့်ထုတ်ယူခြင်း
+                    area.innerHTML += `
+                        <div class="sub-item" style="border-left: 5px solid var(--info); background: white;">
+                            <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">⏰ အချိန်: ${timeOnly}</div>
+                            <div class="sub-main">
+                                <span>👤 <b>${log.id}</b></span>
+                                <span class="sub-name" style="color:var(--primary)">📘 ${log.subject}</span>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 0.9rem; background:#f0f8ff; padding:8px; border-radius:8px;">
+                                ➕ ထပ်တိုးသက်တမ်း: <b>${log.months || 0} လ</b><br>
+                                📅 သက်တမ်းကုန်မည့်ရက်: <b>${log.expiry}</b>
+                            </div>
+                        </div>`;
+                });
+            }
         }
     }
 
