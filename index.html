@@ -217,13 +217,15 @@
             });
         }
         else if (currentTab === 'logs') {
-            // မြန်မာစံတော်ချိန် (UTC+6:30) ဖြင့် ယနေ့ရက်စွဲကို ရှာဖွေခြင်း
+            // ဖုန်း/ကွန်ပျူတာ၏ Local Time အတိုင်း ယနေ့ရက်စွဲကို "YYYY-MM-DD" ပုံစံဖြင့် ရယူခြင်း
             let d = new Date();
-            let localDate = new Date(d.getTime() + (6.5 * 60 * 60 * 1000));
-            let mmToday = localDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            let todayStr = `${yyyy}-${mm}-${dd}`; 
 
             // နေ့စဉ်မှတ်တမ်းများကို ယနေ့အတွက်သာ စစ်ထုတ်ခြင်း
-            let todayLogs = cachedLogs.filter(log => log.timestamp && log.timestamp.startsWith(mmToday));
+            let todayLogs = cachedLogs.filter(log => log.timestamp && log.timestamp.startsWith(todayStr));
 
             if(todayLogs.length === 0) {
                 area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">ဒီနေ့အတွက် အသစ်သွင်းထားသော မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
