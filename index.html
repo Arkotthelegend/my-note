@@ -3,58 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Pro Tracker</title>
+    <title>G-12 Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 50px; }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
         .container { max-width: 500px; margin: auto; }
         
-        /* Form Card */
-        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        /* Card Style */
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        
+        /* Form Elements */
         .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); }
+        
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .btn-add:active { transform: scale(0.98); }
 
         /* Tabs System */
-        .tabs { display: flex; background: #ddd; border-radius: 10px; margin-bottom: 15px; padding: 5px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; font-size: 0.9rem; }
+        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
 
-        /* Records Style */
-        .user-record { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .user-id { font-weight: bold; color: #0056b3; margin-bottom: 10px; display: block; }
-        .sub-item { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
-        .sub-main { display: flex; justify-content: space-between; align-items: center; }
-        .exp-date { font-weight: bold; }
-        .expired { color: var(--danger); }
-        .warning { color: var(--warning); }
+        /* List Items */
+        .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         
-        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; }
-        .search-box { background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--primary); width: 100%; box-sizing: border-box; }
+        .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
+        .sub-main { display: flex; justify-content: space-between; align-items: center; }
+        .sub-name { font-weight: bold; color: #333; }
+        .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
+        
+        /* Status Colors */
+        .status-expired { color: var(--danger); }
+        .status-warning { color: var(--warning); }
+        .status-ok { color: var(--success); }
+
+        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
+<div id="loading-overlay">⏳ Loading... Please wait</div>
+
 <div class="container">
     <div class="card">
-        <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.1rem;">👤 New / Update Sub</h2>
+        <h2>👤 Add/Update Sub (G-12)</h2>
         <div class="form-group">
-            <label>Telegram ID / Name</label>
-            <input type="text" id="tgId" placeholder="e.g. @kaung_kaung">
+            <label>Telegram ID (Only Numbers)</label>
+            <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
         <div style="display: flex; gap: 10px;">
             <div class="form-group" style="flex: 2;">
                 <label>Subject</label>
                 <select id="subject">
-                    <option value="Myanmar">Myanmar</option>
-                    <option value="English">English</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="Economics">Economics</option>
+                    <option value="Myanmar">Myanmar (mm)</option>
+                    <option value="English">English (en)</option>
+                    <option value="Mathematics">Mathematics (math)</option>
+                    <option value="Physics">Physics (phy)</option>
+                    <option value="Chemistry">Chemistry (chem)</option>
+                    <option value="Biology">Biology (bio)</option>
+                    <option value="Economics">Economics (eco)</option>
                 </select>
             </div>
             <div class="form-group" style="flex: 1;">
@@ -66,11 +81,11 @@
             <label>Expiry Date</label>
             <input type="date" id="expiryDate">
         </div>
-        <button class="btn-add" onclick="saveRecord()">Save Subscription</button>
+        <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
     </div>
 
     <div class="tabs">
-        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All Records</div>
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All Students</div>
         <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring Soon</div>
     </div>
 
@@ -85,128 +100,145 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // 🔗 လူကြီးမင်းပေးထားတဲ့ Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUwCMxYyKSdj-qpSeLUZ7FNXUC826xrC2IyQ5Okz5gD0euW4KT6NdbA7wOqGmxuMXXcg/exec";
+    
     let currentTab = 'manage';
+    let cachedData = [];
 
+    // Auto-calculate Expiry Date based on months
     document.getElementById('months').addEventListener('input', function() {
-        updateExpiryDate(parseInt(this.value) || 0);
-    });
-
-    function updateExpiryDate(months) {
+        const months = parseInt(this.value) || 0;
         const d = new Date();
         d.setMonth(d.getMonth() + months);
         document.getElementById('expiryDate').value = d.toISOString().split('T')[0];
+    });
+
+    function showLoading(show) {
+        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
     }
 
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-        
-        // Expiring Soon tab မှာ search ကို ခဏဖျောက်ထားလို့ရတယ် (ဒါမှမဟုတ် ထားခဲ့လို့ရတယ်)
         document.getElementById('search-container').style.display = (tab === 'expire') ? 'none' : 'block';
-        
         renderData();
     }
 
-    function saveRecord() {
+    // Google Sheet ထဲကနေ Data အကုန်ယူခြင်း
+    async function fetchFromSheet() {
+        showLoading(true);
+        try {
+            const response = await fetch(SCRIPT_URL);
+            cachedData = await response.json();
+            renderData();
+        } catch (e) {
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+        }
+        showLoading(false);
+    }
+
+    // Google Sheet ထဲသို့ Save လုပ်ခြင်း
+    async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
-        const months = document.getElementById('months').value;
         const exp = document.getElementById('expiryDate').value;
 
-        if(!id || !exp) { alert("Please fill all fields"); return; }
+        if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
+        
+        showLoading(true);
+        const payload = { action: "save", id, subject: sub, expiry: exp, timestamp: Date.now() };
 
-        let db = JSON.parse(localStorage.getItem('g12_db')) || {};
-        if(!db[id]) db[id] = [];
-
-        db[id] = db[id].filter(item => item.subject !== sub);
-        db[id].push({ subject: sub, duration: months, expiry: exp, timestamp: Date.now() });
-
-        localStorage.setItem('g12_db', JSON.stringify(db));
-        tg.HapticFeedback.notificationOccurred('success');
-        renderData();
-        document.getElementById('tgId').value = "";
-        updateExpiryDate(1);
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            tg.HapticFeedback.notificationOccurred('success');
+            await fetchFromSheet(); // Refresh List
+            document.getElementById('tgId').value = "";
+        } catch(e) { 
+            tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။");
+        }
+        showLoading(false);
     }
 
-    function deleteSubject(userId, timestamp) {
-        if(confirm("ဖျက်မှာ သေချာပါသလား?")) {
-            let db = JSON.parse(localStorage.getItem('g12_db')) || {};
-            if(db[userId]) {
-                db[userId] = db[userId].filter(s => s.timestamp !== timestamp);
-                if(db[userId].length === 0) delete db[userId];
-                localStorage.setItem('g12_db', JSON.stringify(db));
-                renderData();
-            }
-        }
+    // ဘာသာရပ်တစ်ခုတည်းကို ဖျက်ခြင်း (Sheet ထဲမှာ ကွက်လပ်ဖြစ်သွားစေမယ်)
+    async function deleteSubject(id, subject) {
+        if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
+        showLoading(true);
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
+            await fetchFromSheet();
+        } catch(e) { tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); }
+        showLoading(false);
     }
 
     function renderData() {
         const area = document.getElementById('displayArea');
-        const db = JSON.parse(localStorage.getItem('g12_db')) || {};
         area.innerHTML = "";
+
+        // Group data by ID
+        let db = {};
+        cachedData.forEach(item => {
+            if(!db[item.id]) db[item.id] = [];
+            db[item.id].push(item);
+        });
 
         if (currentTab === 'manage') {
             const search = document.getElementById('search').value.toLowerCase();
-            Object.keys(db).reverse().forEach(studentId => {
+            const sortedIds = Object.keys(db).reverse();
+
+            sortedIds.forEach(studentId => {
                 const subs = db[studentId];
-                if (studentId.toLowerCase().includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                const matches = studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search));
+
+                if (matches) {
                     let subHtml = "";
                     subs.forEach(s => {
                         subHtml += `
                             <div class="sub-item">
                                 <div class="sub-main">
-                                    <span>📘 <b>${s.subject}</b> (${s.duration} လ)</span>
-                                    <button class="item-delete-btn" onclick="deleteSubject('${studentId}', ${s.timestamp})">🗑️</button>
+                                    <span class="sub-name">📘 ${s.subject}</span>
+                                    <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
                                 </div>
-                                <div style="font-size:0.85rem; margin-top:5px;">Exp: ${s.expiry}</div>
+                                <div class="exp-date">📅 Exp: ${s.expiry}</div>
                             </div>`;
                     });
-                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ${studentId}</span>${subHtml}</div>`;
+                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
                 }
             });
         } else {
-            // Expiring Soon Tab Logic
-            let allSubs = [];
-            Object.keys(db).forEach(id => {
-                db[id].forEach(s => { allSubs.push({ id, ...s }); });
-            });
-
-            // ရက်စွဲအလိုက် စီမယ် (နီးတဲ့ဟာ အပေါ်ဆုံး)
-            allSubs.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-
-            allSubs.forEach(s => {
-                const today = new Date();
-                const expDate = new Date(s.expiry);
-                const diffTime = expDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                let statusClass = "";
+            // Expiring Soon Tab
+            let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            
+            allItems.forEach(s => {
+                const diffDays = Math.ceil((new Date(s.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                let statusClass = "status-ok";
                 let statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
 
-                if (diffDays < 0) { 
-                    statusClass = "expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; 
-                } else if (diffDays <= 7) { 
-                    statusClass = "warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; 
-                }
+                if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
+                else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
 
                 area.innerHTML += `
                     <div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
                         <div class="sub-main">
-                            <span>👤 <b>${s.id}</b></span>
-                            <button class="item-delete-btn" onclick="deleteSubject('${s.id}', ${s.timestamp})">🗑️</button>
+                            <span>👤 <b>${s.id}</b> - ${s.subject}</span>
+                            <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
                         </div>
-                        <div style="margin-top:5px; font-weight:bold;">📘 ${s.subject}</div>
-                        <div class="exp-date ${statusClass}" style="margin-top:5px; font-size:0.9rem;">
-                            ⌛ Expiry: ${s.expiry} ${statusText}
-                        </div>
+                        <div class="exp-date ${statusClass}">⌛ ${s.expiry} ${statusText}</div>
                     </div>`;
             });
         }
     }
 
-    renderData();
-    updateExpiryDate(1);
+    // Default Date for Expiry (Today + 1 Month)
+    function setDefaultDate() {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        document.getElementById('expiryDate').value = d.toISOString().split('T')[0];
+    }
+
+    fetchFromSheet();
+    setDefaultDate();
 </script>
 
 </body>
