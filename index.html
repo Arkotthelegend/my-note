@@ -98,6 +98,42 @@
 </div>
 
 <script>
+
+    <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // 🔒 လုံခြုံရေး: ခွင့်ပြုထားသော Admin Telegram ID များ (ဂဏန်းများသာဖြစ်ရမည်)
+    // မိမိရဲ့ Telegram ID အစစ်ကို အောက်မှာ အစားထိုးထည့်ပါ။ Admin ၂ ယောက်ရှိရင် ကော်မာ (,) ခြားပြီး ထည့်နိုင်ပါတယ်။
+    const ADMIN_IDS = [8432363664]; 
+    
+    // App ကို ဖွင့်လိုက်သူရဲ့ Telegram ID ကို ရယူခြင်း
+    const currentUserId = tg.initDataUnsafe?.user?.id;
+
+    // စစ်ဆေးခြင်း (Admin ဟုတ်၊ မဟုတ်)
+    if (!ADMIN_IDS.includes(currentUserId)) {
+        // Admin မဟုတ်ပါက App အသုံးပြုခွင့်ကို ပိတ်ပင်ခြင်း
+        document.body.innerHTML = `
+            <div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
+                <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1>
+                <h2 style="color:#721c24; margin-top:10px;">Access Denied</h2>
+                <p style="color:#721c24; font-weight:bold;">သင့်တွင် ဤ Admin Panel ကို အသုံးပြုခွင့် မရှိပါ။</p>
+            </div>
+        `;
+        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။ သင်သည် Admin မဟုတ်ပါ။");
+        setTimeout(() => { tg.close(); }, 3000); // ၃ စက္ကန့်အကြာတွင် App ကို အလိုအလျောက် ပိတ်မည်
+        
+        throw new Error("Unauthorized Access Blocked!"); // ကျန်သော Script များ ဆက်မအလုပ်လုပ်စေရန် ရပ်တန့်ခြင်း
+    }
+
+    // ==========================================
+    // အောက်ဘက်တွင် လူကြီးမင်း၏ မူလ Script များကို ဆက်ထားပါ
+    // 🔗 လူကြီးမင်းပေးထားတဲ့ Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUwCMxYyKSdj-qpSeLUZ7FNXUC826xrC2IyQ5Okz5gD0euW4KT6NdbA7wOqGmxuMXXcg/exec";
+    // ...
+
+
+    
     const tg = window.Telegram.WebApp;
     tg.expand();
 
