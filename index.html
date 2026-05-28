@@ -77,7 +77,7 @@
     <div class="tabs">
         <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
         <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
-        <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Today Logs</div>
+       <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
     </div>
 
     <div id="search-container">
@@ -216,23 +216,40 @@
                 </div>`;
             });
         }
-        else if (currentTab === 'logs') {
-            // ဖုန်း/ကွန်ပျူတာ၏ Local Time အတိုင်း ယနေ့ရက်စွဲကို "YYYY-MM-DD" ပုံစံဖြင့် ရယူခြင်း
-            let d = new Date();
-            let yyyy = d.getFullYear();
-            let mm = String(d.getMonth() + 1).padStart(2, '0');
-            let dd = String(d.getDate()).padStart(2, '0');
-            let todayStr = `${yyyy}-${mm}-${dd}`; 
+      else if (currentTab === 'logs') {
+            // မြန်မာစံတော်ချိန် (GMT+6:30) အတိုင်း ယနေ့ရက်စွဲကို အတိအကျ တွက်ယူခြင်း
+            let now = new Date();
+            let utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            let myanmarTime = new Date(utcTime + (390 * 60000)); // 390 minutes = 6 hours 30 mins
+            
+            let yyyy = myanmarTime.getFullYear();
+            let mm = String(myanmarTime.getMonth() + 1).padStart(2, '0');
+            let dd = String(myanmarTime.getDate()).padStart(2, '0');
+            let todayStr = `${yyyy}-${mm}-${dd}`; // ဥပမာ - "2026-05-29"
 
-            // နေ့စဉ်မှတ်တမ်းများကို ယနေ့အတွက်သာ စစ်ထုတ်ခြင်း
-            let todayLogs = cachedLogs.filter(log => log.timestamp && log.timestamp.startsWith(todayStr));
+            // "ယနေ့" အတွက်သာ Data များကို တိတိကျကျ စစ်ထုတ်ခြင်း
+            let todayLogs = cachedLogs.filter(log => log.timestamp && String(log.timestamp).includes(todayStr));
 
             if(todayLogs.length === 0) {
-                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">ဒီနေ့အတွက် အသစ်သွင်းထားသော မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">ဒီနေ့အတွက် အရောင်းစာရင်း မရှိသေးပါဘူး။</div>`;
             } else {
-                area.innerHTML = `<div style="margin-bottom:10px; font-weight:bold; color:var(--info);">📅 ယနေ့မှတ်တမ်း (${todayLogs.length} ခု)</div>`;
+                // 📊 နေ့စဉ် အရောင်းအနှစ်ချုပ် (Summary) တွက်ချက်ခြင်း
+                let totalMonthsSold = 0;
+                todayLogs.forEach(log => { totalMonthsSold += (parseInt(log.months) || 0); });
+
+                area.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px;">📊 ယနေ့ အရောင်းအနှစ်ချုပ်</div>
+                        <div style="color:#444; font-size: 0.95rem; line-height: 1.6;">
+                            👉 စုစုပေါင်း အရောင်းအဝယ် (Transactions): <b>${todayLogs.length} ကြိမ်</b><br>
+                            👉 စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${totalMonthsSold} လ</b>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:12px; font-weight:bold; color:#666;">📝 အသေးစိတ် စာရင်းများ</div>`;
+                
+                // အသေးစိတ်စာရင်းများကို ဖော်ပြခြင်း
                 todayLogs.forEach(log => {
-                    let timeOnly = log.timestamp.split(' ')[1] || ''; // အချိန် သီးသန့်ထုတ်ယူခြင်း
+                    let timeOnly = String(log.timestamp).split(' ')[1] || ''; 
                     area.innerHTML += `
                         <div class="sub-item" style="border-left: 5px solid var(--info); background: white;">
                             <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">⏰ အချိန်: ${timeOnly}</div>
