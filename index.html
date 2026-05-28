@@ -10,11 +10,9 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
         .container { max-width: 500px; margin: auto; }
         
-        /* Card Style */
         .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
         h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
         
-        /* Form Elements */
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; transition: 0.3s; }
@@ -23,12 +21,10 @@
         .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
         .btn-add:active { transform: scale(0.98); }
 
-        /* Tabs System */
         .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; }
         .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
 
-        /* List Items */
         .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         
@@ -37,7 +33,6 @@
         .sub-name { font-weight: bold; color: #333; }
         .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
         
-        /* Status Colors */
         .status-expired { color: var(--danger); }
         .status-warning { color: var(--warning); }
         .status-ok { color: var(--success); }
@@ -62,16 +57,16 @@
         <div style="display: flex; gap: 10px;">
             <div class="form-group" style="flex: 2;">
                 <label>Subject</label>
-               <select id="subject">
-    <option value="Myanmar">Myanmar (mm)</option>
-    <option value="English">English (en)</option>
-    <option value="Mathematics">Mathematics (math)</option>
-    <option value="Physics">Physics (phy)</option>
-    <option value="Chemistry">Chemistry (chem)</option>
-    <option value="Biology">Biology (bio)</option>
-    <option value="Economics">Economics (eco)</option>
-    <option value="All">All Subjects (all)</option>
-</select>
+                <select id="subject">
+                    <option value="Myanmar">Myanmar (mm)</option>
+                    <option value="English">English (en)</option>
+                    <option value="Mathematics">Mathematics (math)</option>
+                    <option value="Physics">Physics (phy)</option>
+                    <option value="Chemistry">Chemistry (chem)</option>
+                    <option value="Biology">Biology (bio)</option>
+                    <option value="Economics">Economics (eco)</option>
+                    <option value="All">All Subjects (all)</option>
+                </select>
             </div>
             <div class="form-group" style="flex: 1;">
                 <label>Months</label>
@@ -98,43 +93,40 @@
 </div>
 
 <script>
-
-    <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // 🔒 လုံခြုံရေး: ခွင့်ပြုထားသော Admin Telegram ID များ (ဂဏန်းများသာဖြစ်ရမည်)
-    // မိမိရဲ့ Telegram ID အစစ်ကို အောက်မှာ အစားထိုးထည့်ပါ။ Admin ၂ ယောက်ရှိရင် ကော်မာ (,) ခြားပြီး ထည့်နိုင်ပါတယ်။
-    const ADMIN_IDS = [8432363664]; 
-    
-    // App ကို ဖွင့်လိုက်သူရဲ့ Telegram ID ကို ရယူခြင်း
-    const currentUserId = tg.initDataUnsafe?.user?.id;
+    // ==========================================
+    // 🔒 လုံခြုံရေး: Admin ID ပြင်ဆင်ရန်
+    // အောက်က "123456789" နေရာမှာ လူကြီးမင်းရဲ့ Telegram ID အစစ်ကို ထည့်ပါ
+    // ဥပမာ - ["8432363664"]
+    // ==========================================
+    const ADMIN_IDS = ["123456789"]; 
 
-    // စစ်ဆေးခြင်း (Admin ဟုတ်၊ မဟုတ်)
-    if (!ADMIN_IDS.includes(currentUserId)) {
-        // Admin မဟုတ်ပါက App အသုံးပြုခွင့်ကို ပိတ်ပင်ခြင်း
+    const currentUserId = tg.initDataUnsafe?.user?.id;
+    const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
+
+    if (!isAdmin) {
         document.body.innerHTML = `
             <div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
                 <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1>
                 <h2 style="color:#721c24; margin-top:10px;">Access Denied</h2>
                 <p style="color:#721c24; font-weight:bold;">သင့်တွင် ဤ Admin Panel ကို အသုံးပြုခွင့် မရှိပါ။</p>
+                <p style="color:#555; font-size:12px; margin-top:20px;">(Your Detected ID: ${currentUserId || 'Unknown - Open in Telegram'})</p>
             </div>
         `;
         tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။ သင်သည် Admin မဟုတ်ပါ။");
-        setTimeout(() => { tg.close(); }, 3000); // ၃ စက္ကန့်အကြာတွင် App ကို အလိုအလျောက် ပိတ်မည်
-        
-        throw new Error("Unauthorized Access Blocked!"); // ကျန်သော Script များ ဆက်မအလုပ်လုပ်စေရန် ရပ်တန့်ခြင်း
+        throw new Error("Unauthorized Access Blocked!");
     }
 
-
-
-    // 🔗 လူကြီးမင်းပေးထားတဲ့ Web App URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-SIpXkDIe83TKgTdVJN0b_FsLjdD_k44xBy1yzJlslgR9z9g1jUZvBQ8ZhihI2An9Tw/exec";
+    // ==========================================
+    // 🔗 Google Script URL
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUwCMxYyKSdj-qpSeLUZ7FNXUC826xrC2IyQ5Okz5gD0euW4KT6NdbA7wOqGmxuMXXcg/exec";
     
     let currentTab = 'manage';
     let cachedData = [];
 
-    // Auto-calculate Expiry Date based on months
     document.getElementById('months').addEventListener('input', function() {
         const months = parseInt(this.value) || 0;
         const d = new Date();
@@ -154,7 +146,6 @@
         renderData();
     }
 
-    // Google Sheet ထဲကနေ Data အကုန်ယူခြင်း
     async function fetchFromSheet() {
         showLoading(true);
         try {
@@ -167,7 +158,6 @@
         showLoading(false);
     }
 
-    // Google Sheet ထဲသို့ Save လုပ်ခြင်း
     async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
@@ -181,7 +171,7 @@
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
             tg.HapticFeedback.notificationOccurred('success');
-            await fetchFromSheet(); // Refresh List
+            await fetchFromSheet();
             document.getElementById('tgId').value = "";
         } catch(e) { 
             tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။");
@@ -189,7 +179,6 @@
         showLoading(false);
     }
 
-    // ဘာသာရပ်တစ်ခုတည်းကို ဖျက်ခြင်း (Sheet ထဲမှာ ကွက်လပ်ဖြစ်သွားစေမယ်)
     async function deleteSubject(id, subject) {
         if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
         showLoading(true);
@@ -204,7 +193,6 @@
         const area = document.getElementById('displayArea');
         area.innerHTML = "";
 
-        // Group data by ID
         let db = {};
         cachedData.forEach(item => {
             if(!db[item.id]) db[item.id] = [];
@@ -235,7 +223,6 @@
                 }
             });
         } else {
-            // Expiring Soon Tab
             let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
             
             allItems.forEach(s => {
@@ -258,7 +245,6 @@
         }
     }
 
-    // Default Date for Expiry (Today + 1 Month)
     function setDefaultDate() {
         const d = new Date();
         d.setMonth(d.getMonth() + 1);
