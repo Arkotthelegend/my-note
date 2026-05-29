@@ -241,69 +241,51 @@
                 </div>`;
             });
         }
-        else if (currentTab === 'logs') {
-            let now = new Date();
-            let utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            let myanmarTime = new Date(utcTime + (390 * 60000)); 
-            
-            let yyyy = myanmarTime.getFullYear();
-            let mm = String(myanmarTime.getMonth() + 1).padStart(2, '0');
-            let dd = String(myanmarTime.getDate()).padStart(2, '0');
-            let todayStr = `${yyyy}-${mm}-${dd}`; 
-
-            // ⭐ Error ကင်းအောင် String ထဲက ပထမစာလုံး ၁၀ လုံး (YYYY-MM-DD) ကိုသာ ဖြတ်ပြီး စစ်ဆေးခြင်း
-            let todayLogs = cachedLogs.filter(log => {
-                if (!log.timestamp) return false;
-                let logDate = String(log.timestamp).substring(0, 10);
-                return logDate === todayStr;
+       else if (currentTab === 'logs') {
+            // ရက်စွဲအလိုက် အုပ်စုဖွဲ့ရန် (Group by Date)
+            let logsByDate = {};
+            cachedLogs.forEach(log => {
+                if (!log.timestamp) return;
+                // Timestamp ထဲမှ ရက်စွဲ (YYYY-MM-DD) ကိုသာ ဖြတ်ယူခြင်း
+                let dateStr = String(log.timestamp).substring(0, 10); 
+                if (!logsByDate[dateStr]) logsByDate[dateStr] = [];
+                logsByDate[dateStr].push(log);
             });
 
-            if(todayLogs.length === 0) {
-                area.innerHTML = `<div class="user-record" style="text-align:center; color:var(--danger); font-weight:bold;">ဒီနေ့အတွက် အရောင်းစာရင်း မရှိသေးပါဘူး။</div>`;
-                
-                // Data ရောက်မရောက် စစ်ဆေးနိုင်ရန် ယခင်မှတ်တမ်း (၅) ခုကို အောက်တွင် ပြပေးထားမည်
-                if (cachedLogs.length > 0) {
-                    area.innerHTML += `<div style="margin-top:20px; font-weight:bold; color:#666;">⏳ ယခင်မှတ်တမ်းဟောင်း အချို့ (Data Check)</div>`;
-                    cachedLogs.slice(0, 5).forEach(log => {
-                        area.innerHTML += `
-                        <div class="sub-item" style="border-left: 5px solid #ccc; background: #fafafa; margin-top:8px;">
-                            <div style="font-size: 0.8rem; color: #888;">⏰ ${log.timestamp}</div>
-                            <div class="sub-main"><span>👤 <b>${log.id}</b></span><span class="sub-name">📘 ${log.subject}</span></div>
-                        </div>`;
-                    });
-                }
-            } else {
-                let totalMonthsSold = 0;
-                todayLogs.forEach(log => { totalMonthsSold += (parseInt(log.months) || 0); });
+            // ရက်စွဲအသစ်ကနေ အဟောင်းဆီသို့ စီစဉ်ရန် (Newest Date First)
+            let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
 
-                area.innerHTML = `
-                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px;">📊 ယနေ့ အရောင်းအနှစ်ချုပ်</div>
-                        <div style="color:#444; font-size: 0.95rem; line-height: 1.6;">
-                            👉 စုစုပေါင်း အရောင်းအဝယ်: <b>${todayLogs.length} ကြိမ်</b><br>
-                            👉 စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${totalMonthsSold} လ</b>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:12px; font-weight:bold; color:#666;">📝 အသေးစိတ် စာရင်းများ</div>`;
+            if (sortedDates.length === 0) {
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+            } else {
+                area.innerHTML = `<div style="font-weight:bold; margin-bottom:10px; color:#555;">📅 ရက်စွဲအလိုက် မှတ်တမ်းများ</div>`;
                 
-                todayLogs.forEach(log => {
-                    let timeOnly = String(log.timestamp).split(' ')[1] || ''; 
-                    area.innerHTML += `
-                        <div class="sub-item" style="border-left: 5px solid var(--info); background: white;">
-                            <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">⏰ အချိန်: ${timeOnly}</div>
-                            <div class="sub-main">
-                                <span>👤 <b>${log.id}</b></span>
-                                <span class="sub-name" style="color:var(--primary)">📘 ${log.subject}</span>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 0.9rem; background:#f0f8ff; padding:8px; border-radius:8px;">
-                                ➕ ထပ်တိုးသက်တမ်း: <b>${log.months || 0} လ</b><br>
-                                📅 သက်တမ်းကုန်မည့်ရက်: <b>${log.expiry}</b>
-                            </div>
-                        </div>`;
+                // ရက်စွဲတစ်ခုချင်းစီအတွက် Loop ပတ်ပြီး ဖော်ပြခြင်း
+                sortedDates.forEach(date => {
+                    // ရက်စွဲ ခေါင်းစဉ် (Date Header)
+                    area.innerHTML += `<div style="margin-top:20px; margin-bottom:10px; font-weight:bold; color:var(--primary); border-bottom: 2px solid #ddd; padding-bottom:5px;">🗓 ${date}</div>`;
+                    
+                    // ထိုရက်စွဲတွင် ရှိသော မှတ်တမ်းများကို ဖော်ပြခြင်း
+                    logsByDate[date].forEach(log => {
+                        let timeOnly = String(log.timestamp).split(' ')[1] || '';
+                        area.innerHTML += `
+                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
+                                    <span>⏰ ${timeOnly}</span>
+                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                                </div>
+                                <div class="sub-main">
+                                    <span>👤 <b>${log.id}</b></span>
+                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
+                                </div>
+                                <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
+                                    📅 သက်တမ်းကုန်မည့်ရက်: ${log.expiry}
+                                </div>
+                            </div>`;
+                    });
                 });
             }
         }
-    }
 
     fetchFromSheet();
 </script>
