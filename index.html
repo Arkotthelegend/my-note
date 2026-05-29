@@ -88,7 +88,6 @@
 </div>
 
 <script>
-
     const tg = window.Telegram.WebApp;
     tg.expand();
 
@@ -105,39 +104,34 @@
         throw new Error("Unauthorized Access");
     }
 
-    // 🔗 Google Script URL သစ် ထည့်ရန်
+    // 🔗 Google Script URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVC5RE4A9A_Se0cTTYMDJ1GmMLMU5Fu45dJIW9-_3_gNhyOovz_jdTi0z893k6wEV4ag/exec";
     
     let currentTab = 'manage';
     let cachedData = [];
     let cachedLogs = []; 
 
-    // ⭐ သက်တမ်းရှိပြီးသားဖြစ်ပါက ရှိပြီးသားရက်ပေါ်တွင် ပေါင်းထည့်မည့် Function
     function updateExpiryDate() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
         const months = parseInt(document.getElementById('months').value) || 0;
 
-        let baseDate = new Date(); // မူလက ဒီနေ့ရက်စွဲ
+        let baseDate = new Date(); 
 
-        // ယူထားပြီးသား ဘာသာရပ်ရှိ/မရှိ စစ်ဆေးခြင်း
         if (id && sub && cachedData.length > 0) {
             const existingRecord = cachedData.find(item => String(item.id) === id && item.subject === sub);
             if (existingRecord && existingRecord.expiry) {
                 let existingExp = new Date(existingRecord.expiry);
-                // လက်ရှိသက်တမ်းက ဒီနေ့ထက် ကျော်လွန်နေရင် အဲ့ဒီရက်ကို အခြေခံပါမယ်
                 if (existingExp > baseDate) {
                     baseDate = existingExp; 
                 }
             }
         }
 
-        // လအသစ် ပေါင်းထည့်ခြင်း
         baseDate.setMonth(baseDate.getMonth() + months);
         document.getElementById('expiryDate').value = baseDate.toISOString().split('T')[0];
     }
 
-    // ID, Subject, Month တစ်ခုခုပြောင်းတာနဲ့ Expiry Date ကို အလိုအလျောက် တွက်ပေးမည်
     document.getElementById('months').addEventListener('input', updateExpiryDate);
     document.getElementById('tgId').addEventListener('input', updateExpiryDate);
     document.getElementById('subject').addEventListener('change', updateExpiryDate);
@@ -159,7 +153,7 @@
             const data = await response.json();
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
-            updateExpiryDate(); // Data ရတာနဲ့ Expiry Date ကို Update လုပ်မည်
+            updateExpiryDate(); 
             renderData();
         } catch (e) {
             tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
@@ -241,65 +235,71 @@
                 </div>`;
             });
         }
-       else if (currentTab === 'logs') {
-            let now = new Date();
-            let utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            let myanmarTime = new Date(utcTime + (390 * 60000)); 
-            
-            let yyyy = myanmarTime.getFullYear();
-            let mm = String(myanmarTime.getMonth() + 1).padStart(2, '0');
-            let dd = String(myanmarTime.getDate()).padStart(2, '0');
-            let todayStr = `${yyyy}-${mm}-${dd}`; 
+        else if (currentTab === 'logs') {
+            // ⭐ ရက်စွဲအလိုက် အုပ်စုဖွဲ့မည့် Variable များ
+            let logsByDate = {};
+            let totalMonthsByDate = {};
+            let countByDate = {};
 
-            // ⭐ Error ကင်းအောင် String ထဲက ပထမစာလုံး ၁၀ လုံး (YYYY-MM-DD) ကိုသာ ဖြတ်ပြီး စစ်ဆေးခြင်း
-            let todayLogs = cachedLogs.filter(log => {
-                if (!log.timestamp) return false;
-                let logDate = String(log.timestamp).substring(0, 10);
-                return logDate === todayStr;
+            cachedLogs.forEach(log => {
+                if (!log.timestamp) return;
+                
+                // Timestamp မှ ရက်စွဲနှင့် အချိန်ကို ခွဲထုတ်ခြင်း (ဥပမာ "2026-05-29 10:30")
+                let dateStr = String(log.timestamp).substring(0, 10);
+                let timeStr = String(log.timestamp).substring(11, 16) || '';
+
+                if (!logsByDate[dateStr]) {
+                    logsByDate[dateStr] = [];
+                    totalMonthsByDate[dateStr] = 0;
+                    countByDate[dateStr] = 0;
+                }
+                
+                // အချက်အလက်များ သိမ်းဆည်းပေါင်းထည့်ခြင်း
+                logsByDate[dateStr].push({...log, displayTime: timeStr});
+                totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
+                countByDate[dateStr] += 1;
             });
 
-            if(todayLogs.length === 0) {
-                area.innerHTML = `<div class="user-record" style="text-align:center; color:var(--danger); font-weight:bold;">ဒီနေ့အတွက် အရောင်းစာရင်း မရှိသေးပါဘူး။</div>`;
-                
-                // Data ရောက်မရောက် စစ်ဆေးနိုင်ရန် ယခင်မှတ်တမ်း (၅) ခုကို အောက်တွင် ပြပေးထားမည်
-                if (cachedLogs.length > 0) {
-                    area.innerHTML += `<div style="margin-top:20px; font-weight:bold; color:#666;">⏳ ယခင်မှတ်တမ်းဟောင်း အချို့ (Data Check)</div>`;
-                    cachedLogs.slice(0, 5).forEach(log => {
-                        area.innerHTML += `
-                        <div class="sub-item" style="border-left: 5px solid #ccc; background: #fafafa; margin-top:8px;">
-                            <div style="font-size: 0.8rem; color: #888;">⏰ ${log.timestamp}</div>
-                            <div class="sub-main"><span>👤 <b>${log.id}</b></span><span class="sub-name">📘 ${log.subject}</span></div>
-                        </div>`;
-                    });
-                }
-            } else {
-                let totalMonthsSold = 0;
-                todayLogs.forEach(log => { totalMonthsSold += (parseInt(log.months) || 0); });
+            // ရက်စွဲအသစ်မှ အဟောင်းသို့ စီစဉ်ခြင်း
+            let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
 
-                area.innerHTML = `
-                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px;">📊 ယနေ့ အရောင်းအနှစ်ချုပ်</div>
-                        <div style="color:#444; font-size: 0.95rem; line-height: 1.6;">
-                            👉 စုစုပေါင်း အရောင်းအဝယ်: <b>${todayLogs.length} ကြိမ်</b><br>
-                            👉 စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${totalMonthsSold} လ</b>
+            if (sortedDates.length === 0) {
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+            } else {
+                sortedDates.forEach(date => {
+                    let dailyTotal = totalMonthsByDate[date];
+                    let dailyCount = countByDate[date];
+
+                    // ခေါင်းစဉ် (ရက်စွဲနှင့် နေ့စဉ်အနှစ်ချုပ်)
+                    let html = `
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🗓 ${date}</span>
+                            <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
                         </div>
-                    </div>
-                    <div style="margin-bottom:12px; font-weight:bold; color:#666;">📝 အသေးစိတ် စာရင်းများ</div>`;
-                
-                todayLogs.forEach(log => {
-                    let timeOnly = String(log.timestamp).split(' ')[1] || ''; 
-                    area.innerHTML += `
-                        <div class="sub-item" style="border-left: 5px solid var(--info); background: white;">
-                            <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">⏰ အချိန်: ${timeOnly}</div>
-                            <div class="sub-main">
-                                <span>👤 <b>${log.id}</b></span>
-                                <span class="sub-name" style="color:var(--primary)">📘 ${log.subject}</span>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 0.9rem; background:#f0f8ff; padding:8px; border-radius:8px;">
-                                ➕ ထပ်တိုးသက်တမ်း: <b>${log.months || 0} လ</b><br>
-                                📅 သက်တမ်းကုန်မည့်ရက်: <b>${log.expiry}</b>
-                            </div>
-                        </div>`;
+                        <div style="color:#444; font-size: 0.95rem;">
+                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
+                        </div>
+                    </div>`;
+                    
+                    // အသေးစိတ် စာရင်းများ
+                    logsByDate[date].forEach(log => {
+                        html += `
+                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
+                                    <span>⏰ ${log.displayTime}</span>
+                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                                </div>
+                                <div class="sub-main">
+                                    <span>👤 <b>${log.id}</b></span>
+                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
+                                </div>
+                                <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
+                                    📅 ကုန်ဆုံးရက်: ${log.expiry}
+                                </div>
+                            </div>`;
+                    });
+                    area.innerHTML += html;
                 });
             }
         }
@@ -307,7 +307,6 @@
 
     fetchFromSheet();
 </script>
-    
 
 </body>
 </html>
