@@ -111,6 +111,29 @@
     let cachedData = [];
     let cachedLogs = []; 
 
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
+    function getLocalDateStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(0, 10);
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Time (AM/PM) ပြောင်းပေးသည့် Function
+    function getLocalTimeStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(11, 16);
+        let hh = d.getHours();
+        let min = String(d.getMinutes()).padStart(2, '0');
+        let ampm = hh >= 12 ? 'PM' : 'AM';
+        hh = hh % 12 || 12; // 12-hour format
+        return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
+    }
+
     function updateExpiryDate() {
         const id = document.getElementById('tgId').value.trim();
         const sub = document.getElementById('subject').value;
@@ -211,7 +234,7 @@
                                 <span class="sub-name">📘 ${s.subject}</span>
                                 <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
                             </div>
-                            <div class="exp-date">📅 Exp: ${s.expiry}</div>
+                            <div class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</div>
                         </div>`;
                     });
                     area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
@@ -221,7 +244,8 @@
         else if (currentTab === 'expire') {
             let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
             allItems.forEach(s => {
-                const diffDays = Math.ceil((new Date(s.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                let expDate = new Date(s.expiry);
+                const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
                 let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
                 if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
                 else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
@@ -231,12 +255,11 @@
                         <span>👤 <b>${s.id}</b> - ${s.subject}</span>
                         <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
                     </div>
-                    <div class="exp-date ${statusClass}">⌛ ${s.expiry} ${statusText}</div>
+                    <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
                 </div>`;
             });
         }
         else if (currentTab === 'logs') {
-            // ⭐ ရက်စွဲအလိုက် အုပ်စုဖွဲ့မည့် Variable များ
             let logsByDate = {};
             let totalMonthsByDate = {};
             let countByDate = {};
@@ -244,9 +267,10 @@
             cachedLogs.forEach(log => {
                 if (!log.timestamp) return;
                 
-                // Timestamp မှ ရက်စွဲနှင့် အချိန်ကို ခွဲထုတ်ခြင်း (ဥပမာ "2026-05-29 10:30")
-                let dateStr = String(log.timestamp).substring(0, 10);
-                let timeStr = String(log.timestamp).substring(11, 16) || '';
+                // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
+                let dateStr = getLocalDateStr(log.timestamp);
+                let timeStr = getLocalTimeStr(log.timestamp);
+                let expiryStr = getLocalDateStr(log.expiry); // Expiry Date ကို ပြုပြင်ခြင်း
 
                 if (!logsByDate[dateStr]) {
                     logsByDate[dateStr] = [];
@@ -254,13 +278,11 @@
                     countByDate[dateStr] = 0;
                 }
                 
-                // အချက်အလက်များ သိမ်းဆည်းပေါင်းထည့်ခြင်း
-                logsByDate[dateStr].push({...log, displayTime: timeStr});
+                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
                 totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
                 countByDate[dateStr] += 1;
             });
 
-            // ရက်စွဲအသစ်မှ အဟောင်းသို့ စီစဉ်ခြင်း
             let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
 
             if (sortedDates.length === 0) {
@@ -270,7 +292,6 @@
                     let dailyTotal = totalMonthsByDate[date];
                     let dailyCount = countByDate[date];
 
-                    // ခေါင်းစဉ် (ရက်စွဲနှင့် နေ့စဉ်အနှစ်ချုပ်)
                     let html = `
                     <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                         <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -282,7 +303,6 @@
                         </div>
                     </div>`;
                     
-                    // အသေးစိတ် စာရင်းများ
                     logsByDate[date].forEach(log => {
                         html += `
                             <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
@@ -295,7 +315,7 @@
                                     <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
                                 </div>
                                 <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
-                                    📅 ကုန်ဆုံးရက်: ${log.expiry}
+                                    📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
                                 </div>
                             </div>`;
                     });
