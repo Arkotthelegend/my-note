@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="my">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>Subscription Manager</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: var(--tg-theme-bg-color, #fff);
-      color: var(--tg-theme-text-color, #000);
-      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #000000);
+      padding: 12px;
+      line-height: 1.5;
     }
     
     .container {
@@ -25,87 +27,110 @@
     }
     
     .header {
-      background: var(--tg-theme-button-color, #3390ec);
-      color: var(--tg-theme-button-text-color, #fff);
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--tg-theme-button-color, #3390ec), #1a73c7);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      padding: 24px 20px;
+      border-radius: 16px;
+      margin-bottom: 16px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(51, 144, 236, 0.3);
     }
     
     .header h1 {
-      font-size: 24px;
+      font-size: 26px;
       margin-bottom: 8px;
+      font-weight: 700;
+    }
+    
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
     }
     
     .card {
       background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 20px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
     .card-title {
       font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
       color: var(--tg-theme-button-color, #3390ec);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     
     .form-group label {
       display: block;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-      color: var(--tg-theme-hint-color, #999);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--tg-theme-hint-color, #666);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
     
     .form-group input,
     .form-group select {
       width: 100%;
-      padding: 10px;
-      border: 1px solid var(--tg-theme-hint-color, #ddd);
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 12px;
+      border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+      border-radius: 10px;
+      font-size: 15px;
       background: var(--tg-theme-bg-color, #fff);
       color: var(--tg-theme-text-color, #000);
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--tg-theme-button-color, #3390ec);
     }
     
     .form-group input:disabled {
       background: var(--tg-theme-secondary-bg-color, #f5f5f5);
       opacity: 0.6;
+      cursor: not-allowed;
     }
     
     .btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       margin-top: 8px;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .btn:active {
-      opacity: 0.8;
+      transform: scale(0.98);
     }
     
     .btn-primary {
       background: var(--tg-theme-button-color, #3390ec);
       color: var(--tg-theme-button-text-color, #fff);
+      box-shadow: 0 4px 12px rgba(51, 144, 236, 0.3);
     }
     
     .btn-secondary {
       background: var(--tg-theme-secondary-bg-color, #f5f5f5);
       color: var(--tg-theme-text-color, #000);
-      border: 1px solid var(--tg-theme-button-color, #3390ec);
+      border: 2px solid var(--tg-theme-button-color, #3390ec);
     }
     
     .btn-danger {
@@ -116,29 +141,33 @@
     .data-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
     }
     
     .data-item {
       background: var(--tg-theme-bg-color, #fff);
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 13px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
     }
     
     .data-item strong {
       display: block;
       color: var(--tg-theme-hint-color, #999);
       font-size: 11px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .badge {
       display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
     }
     
     .badge-admin {
@@ -162,79 +191,134 @@
       color: var(--tg-theme-hint-color, #999);
     }
     
+    .spinner {
+      border: 3px solid var(--tg-theme-hint-color, #f3f3f3);
+      border-top: 3px solid var(--tg-theme-button-color, #3390ec);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .error {
       background: #ffebee;
       color: #c62828;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 10px;
       margin-bottom: 16px;
       font-size: 14px;
+      border-left: 4px solid #c62828;
     }
     
     .success {
       background: #e8f5e9;
       color: #2e7d32;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 10px;
       margin-bottom: 16px;
       font-size: 14px;
+      border-left: 4px solid #2e7d32;
     }
     
     .hidden {
-      display: none;
+      display: none !important;
     }
     
     .admin-panel {
       border: 2px solid var(--tg-theme-button-color, #3390ec);
+      background: linear-gradient(135deg, rgba(51, 144, 236, 0.05), rgba(51, 144, 236, 0.1));
     }
     
     .commission-info {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #fff;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
       font-size: 14px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .commission-info strong {
+      font-size: 18px;
+      display: block;
+      margin-top: 4px;
     }
     
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
+      overflow-x: auto;
+      display: block;
     }
     
     th, td {
-      padding: 8px;
+      padding: 10px;
       text-align: left;
-      border-bottom: 1px solid var(--tg-theme-hint-color, #ddd);
+      border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
     }
     
     th {
       background: var(--tg-theme-button-color, #3390ec);
       color: var(--tg-theme-button-text-color, #fff);
-      font-weight: 600;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:hover {
+      background: var(--tg-theme-bg-color, #f9f9f9);
     }
     
     .tabs {
       display: flex;
       gap: 8px;
       margin-bottom: 16px;
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      padding: 4px;
+      border-radius: 12px;
     }
     
     .tab {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       border: none;
-      border-radius: 8px;
-      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      border-radius: 10px;
+      background: transparent;
       color: var(--tg-theme-text-color, #000);
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
     }
     
     .tab.active {
       background: var(--tg-theme-button-color, #3390ec);
       color: var(--tg-theme-button-text-color, #fff);
+      box-shadow: 0 2px 8px rgba(51, 144, 236, 0.3);
+    }
+    
+    .section-divider {
+      height: 1px;
+      background: var(--tg-theme-hint-color, #e0e0e0);
+      margin: 20px 0;
+    }
+    
+    @media (max-width: 480px) {
+      .data-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
@@ -249,13 +333,16 @@
     
     <div class="tabs">
       <button class="tab active" onclick="showTab('profile')">My Profile</button>
-      <button class="tab hidden" id="adminTab" onclick="showTab('admin')">Admin Panel</button>
+      <button class="tab hidden" id="adminTabBtn" onclick="showTab('admin')">Admin Panel</button>
     </div>
     
     <!-- Profile View -->
     <div id="profileTab" class="card">
       <div class="card-title">👤 Your Subscription</div>
-      <div id="profileContent" class="loading">Loading...</div>
+      <div id="profileContent" class="loading">
+        <div class="spinner"></div>
+        <p>Loading your data...</p>
+      </div>
     </div>
     
     <!-- Admin Panel -->
@@ -264,14 +351,17 @@
       
       <div class="form-group">
         <label>Search by Telegram ID</label>
-        <input type="text" id="searchId" placeholder="Enter Telegram ID">
-        <button class="btn btn-secondary" onclick="searchUser()">Search</button>
+        <input type="number" id="searchId" placeholder="Enter Telegram ID">
+        <button class="btn btn-secondary" onclick="searchUser()">🔍 Search</button>
       </div>
       
       <div id="editForm" class="hidden">
+        <div class="section-divider"></div>
+        <div class="card-title" style="font-size: 16px;">✏️ Edit User Data</div>
+        
         <div class="form-group">
           <label>Telegram ID</label>
-          <input type="text" id="edit_telegram_id" disabled>
+          <input type="number" id="edit_telegram_id" disabled>
         </div>
         
         <div class="data-grid">
@@ -319,7 +409,7 @@
         </div>
         
         <div class="form-group">
-          <label>Price (Admin Only)</label>
+          <label>Price (MMK)</label>
           <input type="number" id="edit_price" placeholder="Enter price">
         </div>
         
@@ -338,18 +428,21 @@
         </div>
         
         <div class="commission-info" id="commissionCalc" style="display:none;">
-          Commission Amount: <strong id="commissionAmount">0</strong>
+          Commission Amount: <strong id="commissionAmount">0 MMK</strong>
         </div>
         
-        <button class="btn btn-primary" onclick="updateUser()">Update User</button>
-        <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+        <button class="btn btn-primary" onclick="updateUser()">💾 Update User</button>
+        <button class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
       </div>
       
-      <div id="addUserForm" style="margin-top: 20px;">
-        <div class="card-title">➕ Add New User</div>
+      <div class="section-divider"></div>
+      
+      <div id="addUserForm">
+        <div class="card-title" style="font-size: 16px;">➕ Add New User</div>
+        
         <div class="form-group">
-          <label>Telegram ID</label>
-          <input type="text" id="add_telegram_id" placeholder="Enter Telegram ID">
+          <label>Telegram ID *</label>
+          <input type="number" id="add_telegram_id" placeholder="Enter Telegram ID">
         </div>
         
         <div class="data-grid">
@@ -397,7 +490,7 @@
         </div>
         
         <div class="form-group">
-          <label>Price</label>
+          <label>Price (MMK)</label>
           <input type="number" id="add_price" placeholder="Enter price">
         </div>
         
@@ -415,60 +508,97 @@
           </select>
         </div>
         
-        <button class="btn btn-primary" onclick="addUser()">Add User</button>
+        <button class="btn btn-primary" onclick="addUser()">➕ Add User</button>
       </div>
       
-      <div style="margin-top: 20px;">
-        <button class="btn btn-secondary" onclick="viewLogs()">View Logs</button>
-      </div>
+      <div class="section-divider"></div>
+      
+      <button class="btn btn-secondary" onclick="viewLogs()"> View Logs</button>
     </div>
     
     <!-- Logs View -->
     <div id="logsTab" class="card hidden">
       <div class="card-title">📋 Activity Logs</div>
-      <div id="logsContent" class="loading">Loading...</div>
-      <button class="btn btn-secondary" onclick="showTab('admin')">Back to Admin</button>
+      <div id="logsContent" class="loading">
+        <div class="spinner"></div>
+        <p>Loading logs...</p>
+      </div>
+      <button class="btn btn-secondary" onclick="showTab('admin')">← Back to Admin</button>
     </div>
   </div>
 
   <script>
+    // ⚠️ REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCTWfcfw8kADUcFeBoRcZC1HQNK1DcCKsB2Q6QWt3qz373NKkZSOroo6jsEfspn6BH/exec';
+    
     var tg = window.Telegram.WebApp;
     tg.expand();
+    tg.ready();
     
     var currentUserId = tg.initDataUnsafe.user?.id?.toString() || '';
     var isAdmin = false;
     
+    // API Helper Functions
+    async function apiCall(action, params = null, isPost = false) {
+      try {
+        let url = APPS_SCRIPT_URL + '?action=' + action;
+        
+        if (params) {
+          if (!isPost) {
+            // GET request
+            Object.keys(params).forEach(key => {
+              url += '&' + key + '=' + encodeURIComponent(params[key]);
+            });
+            
+            const response = await fetch(url);
+            return await response.json();
+          } else {
+            // POST request
+            const response = await fetch(url, {
+              method: 'POST',
+              body: JSON.stringify(params)
+            });
+            return await response.json();
+          }
+        }
+        
+        const response = await fetch(url);
+        return await response.json();
+      } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, message: 'Connection error: ' + error.message };
+      }
+    }
+    
     // Initialize
     window.onload = function() {
+      if (!currentUserId) {
+        showMessage('Please open this app from Telegram', 'error');
+        return;
+      }
       checkAdminStatus();
       loadUserData();
     };
     
-    function checkAdminStatus() {
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            isAdmin = result.isAdmin;
-            document.getElementById('userStatus').textContent = isAdmin ? '👑 Admin Access' : '👤 User';
-            if (isAdmin) {
-              document.getElementById('adminTab').classList.remove('hidden');
-            }
-          }
-        })
-        .checkAdmin(currentUserId);
+    async function checkAdminStatus() {
+      const result = await apiCall('checkAdmin', { telegramId: currentUserId });
+      if (result.success) {
+        isAdmin = result.isAdmin;
+        document.getElementById('userStatus').textContent = isAdmin ? '👑 Admin Access' : '👤 User';
+        if (isAdmin) {
+          document.getElementById('adminTabBtn').classList.remove('hidden');
+        }
+      }
     }
     
-    function loadUserData() {
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            displayUserData(result.data);
-          } else {
-            document.getElementById('profileContent').innerHTML = 
-              '<div class="error">' + result.message + '</div>';
-          }
-        })
-        .getUserData(currentUserId);
+    async function loadUserData() {
+      const result = await apiCall('getUserData', { telegramId: currentUserId });
+      if (result.success) {
+        displayUserData(result.data);
+      } else {
+        document.getElementById('profileContent').innerHTML = 
+          '<div class="error">❌ ' + result.message + '</div>';
+      }
     }
     
     function displayUserData(data) {
@@ -483,9 +613,23 @@
       
       var commissionInfo = '';
       if (data.affiliate && data.comission > 0) {
-        var commissionAmount = (data.price || 0) * (data.comission / 100);
-        commissionInfo = '<div class="commission-info">Affiliate: ' + data.affiliate + 
-                        '<br>Commission: ' + data.comission + '% (' + commissionAmount + ' MMK)</div>';
+        var commissionAmount = (parseFloat(data.price) || 0) * (parseFloat(data.comission) / 100);
+        commissionInfo = `
+          <div class="commission-info">
+            🤝 Affiliate Code: ${data.affiliate}
+            <strong>💰 Commission: ${data.comission}% (${commissionAmount.toFixed(0)} MMK)</strong>
+          </div>
+        `;
+      }
+      
+      function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        try {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-GB');
+        } catch {
+          return dateStr;
+        }
       }
       
       var html = `
@@ -500,35 +644,35 @@
           </div>
           <div class="data-item">
             <strong>MM</strong>
-            ${data.mm || 'N/A'}
+            ${formatDate(data.mm)}
           </div>
           <div class="data-item">
             <strong>EN</strong>
-            ${data.en || 'N/A'}
+            ${formatDate(data.en)}
           </div>
           <div class="data-item">
             <strong>Math</strong>
-            ${data.math || 'N/A'}
+            ${formatDate(data.math)}
           </div>
           <div class="data-item">
             <strong>Physics</strong>
-            ${data.phy || 'N/A'}
+            ${formatDate(data.phy)}
           </div>
           <div class="data-item">
             <strong>Chemistry</strong>
-            ${data.chem || 'N/A'}
+            ${formatDate(data.chem)}
           </div>
           <div class="data-item">
             <strong>Biology</strong>
-            ${data.bio || 'N/A'}
+            ${formatDate(data.bio)}
           </div>
           <div class="data-item">
             <strong>Economics</strong>
-            ${data.eco || 'N/A'}
+            ${formatDate(data.eco)}
           </div>
           <div class="data-item">
             <strong>All Subjects</strong>
-            ${data.all || 'N/A'}
+            ${formatDate(data.all)}
           </div>
           <div class="data-item">
             <strong>Price</strong>
@@ -556,34 +700,31 @@
       }
     }
     
-    function searchUser() {
+    async function searchUser() {
       var searchId = document.getElementById('searchId').value;
       if (!searchId) {
         showMessage('Please enter Telegram ID', 'error');
         return;
       }
       
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            fillEditForm(result.data);
-          } else {
-            showMessage(result.message, 'error');
-          }
-        })
-        .getUserData(searchId);
+      const result = await apiCall('getUserData', { telegramId: searchId });
+      if (result.success) {
+        fillEditForm(result.data);
+      } else {
+        showMessage(result.message, 'error');
+      }
     }
     
     function fillEditForm(data) {
       document.getElementById('edit_telegram_id').value = data.telegram_id || '';
-      document.getElementById('edit_mm').value = formatDate(data.mm);
-      document.getElementById('edit_en').value = formatDate(data.en);
-      document.getElementById('edit_math').value = formatDate(data.math);
-      document.getElementById('edit_phy').value = formatDate(data.phy);
-      document.getElementById('edit_chem').value = formatDate(data.chem);
-      document.getElementById('edit_bio').value = formatDate(data.bio);
-      document.getElementById('edit_eco').value = formatDate(data.eco);
-      document.getElementById('edit_all').value = formatDate(data.all);
+      document.getElementById('edit_mm').value = formatDateForInput(data.mm);
+      document.getElementById('edit_en').value = formatDateForInput(data.en);
+      document.getElementById('edit_math').value = formatDateForInput(data.math);
+      document.getElementById('edit_phy').value = formatDateForInput(data.phy);
+      document.getElementById('edit_chem').value = formatDateForInput(data.chem);
+      document.getElementById('edit_bio').value = formatDateForInput(data.bio);
+      document.getElementById('edit_eco').value = formatDateForInput(data.eco);
+      document.getElementById('edit_all').value = formatDateForInput(data.all);
       document.getElementById('edit_accounttype').value = data.accounttype || 'normal acc';
       document.getElementById('edit_price').value = data.price || '';
       document.getElementById('edit_affiliate').value = data.affiliate || '';
@@ -591,13 +732,20 @@
       
       document.getElementById('editForm').classList.remove('hidden');
       calculateCommission();
+      
+      // Scroll to form
+      document.getElementById('editForm').scrollIntoView({ behavior: 'smooth' });
     }
     
-    function formatDate(dateStr) {
+    function formatDateForInput(dateStr) {
       if (!dateStr) return '';
-      var date = new Date(dateStr);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+      } catch {
+        return '';
+      }
     }
     
     document.getElementById('edit_price').addEventListener('input', calculateCommission);
@@ -610,13 +758,13 @@
       
       if (percentage > 0) {
         document.getElementById('commissionCalc').style.display = 'block';
-        document.getElementById('commissionAmount').textContent = commission.toFixed(2) + ' MMK';
+        document.getElementById('commissionAmount').textContent = commission.toFixed(0) + ' MMK';
       } else {
         document.getElementById('commissionCalc').style.display = 'none';
       }
     }
     
-    function updateUser() {
+    async function updateUser() {
       var formData = {
         telegram_id: document.getElementById('edit_telegram_id').value,
         mm: document.getElementById('edit_mm').value,
@@ -633,20 +781,17 @@
         comission: parseFloat(document.getElementById('edit_comission').value) || 0
       };
       
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            showMessage(result.message, 'success');
-            clearForm();
-            loadUserData();
-          } else {
-            showMessage(result.message, 'error');
-          }
-        })
-        .updateUserData(formData);
+      const result = await apiCall('updateUserData', formData, true);
+      if (result.success) {
+        showMessage(result.message, 'success');
+        clearForm();
+        loadUserData();
+      } else {
+        showMessage(result.message, 'error');
+      }
     }
     
-    function addUser() {
+    async function addUser() {
       var formData = {
         telegram_id: document.getElementById('add_telegram_id').value,
         mm: document.getElementById('add_mm').value,
@@ -668,16 +813,13 @@
         return;
       }
       
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            showMessage(result.message, 'success');
-            clearAddForm();
-          } else {
-            showMessage(result.message, 'error');
-          }
-        })
-        .addNewUser(formData);
+      const result = await apiCall('addNewUser', formData, true);
+      if (result.success) {
+        showMessage(result.message, 'success');
+        clearAddForm();
+      } else {
+        showMessage(result.message, 'error');
+      }
     }
     
     function clearForm() {
@@ -700,20 +842,17 @@
       document.getElementById('add_comission').value = '0';
     }
     
-    function viewLogs() {
+    async function viewLogs() {
       document.getElementById('adminTab').classList.add('hidden');
       document.getElementById('logsTab').classList.remove('hidden');
       
-      google.script.run
-        .withSuccessHandler(function(result) {
-          if (result.success) {
-            displayLogs(result.data);
-          } else {
-            document.getElementById('logsContent').innerHTML = 
-              '<div class="error">' + result.message + '</div>';
-          }
-        })
-        .getLogs(currentUserId);
+      const result = await apiCall('getLogs', { telegramId: currentUserId });
+      if (result.success) {
+        displayLogs(result.data);
+      } else {
+        document.getElementById('logsContent').innerHTML = 
+          '<div class="error">❌ ' + result.message + '</div>';
+      }
     }
     
     function displayLogs(data) {
@@ -728,10 +867,20 @@
       }
       html += '</tr></thead><tbody>';
       
-      for (var i = 1; i < data.length; i++) {
+      // Show last 50 logs (newest first)
+      var logsToShow = data.slice(1).reverse().slice(0, 50);
+      
+      for (var i = 0; i < logsToShow.length; i++) {
         html += '<tr>';
-        for (var j = 0; j < data[i].length; j++) {
-          html += '<td>' + (data[i][j] || '') + '</td>';
+        for (var j = 0; j < logsToShow[i].length; j++) {
+          var cell = logsToShow[i][j];
+          if (j === 0 && cell) {
+            // Format timestamp
+            try {
+              cell = new Date(cell).toLocaleString('en-GB');
+            } catch {}
+          }
+          html += '<td>' + (cell || '') + '</td>';
         }
         html += '</tr>';
       }
@@ -745,7 +894,10 @@
       msgDiv.innerHTML = '<div class="' + type + '">' + message + '</div>';
       setTimeout(function() {
         msgDiv.innerHTML = '';
-      }, 3000);
+      }, 4000);
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>
 </body>
