@@ -1,1456 +1,748 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Telegram Admin Panel</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #000000;
-            --tg-theme-button-color: #3390ec;
-            --tg-theme-button-text-color: #ffffff;
-            --tg-theme-secondary-bg-color: #f1f1f1;
-            --tg-theme-hint-color: #8e8e93;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-        .header {
-            background: var(--tg-theme-bg-color);
-            padding: 16px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .header p {
-            font-size: 13px;
-            color: var(--tg-theme-hint-color);
-        }
-        
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 12px 16px;
-            background: var(--tg-theme-bg-color);
-            margin-bottom: 8px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            text-align: center;
-        }
-        
-        .stat-card.green {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        
-        .stat-card.orange {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .stat-card.blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .stat-card.purple {
-            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-        }
-        
-        .stat-card.gold {
-            background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
-        }
-        
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 2px;
-        }
-        
-        .stat-label {
-            font-size: 11px;
-            opacity: 0.9;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 8px;
-            padding: 12px 16px;
-            background: var(--tg-theme-bg-color);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        
-        .tabs::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .tab {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--tg-theme-button-color);
-            background: transparent;
-            color: var(--tg-theme-button-color);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        
-        .tab.active {
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-        }
-        
-        .content {
-            padding: 0 16px 80px;
-        }
-        
-        .section {
-            background: var(--tg-theme-bg-color);
-            border-radius: 16px;
-            margin-top: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .section-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-        }
-        
-        .section-action {
-            color: var(--tg-theme-button-color);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .filters {
-            padding: 12px 16px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        
-        .filters::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .filter-chip {
-            padding: 6px 14px;
-            border-radius: 16px;
-            background: var(--tg-theme-secondary-bg-color);
-            font-size: 12px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            white-space: nowrap;
-        }
-        
-        .filter-chip.active {
-            border-color: var(--tg-theme-button-color);
-            background: rgba(51, 144, 236, 0.1);
-            color: var(--tg-theme-button-color);
-            font-weight: 600;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        table {
-            width: 100%;
-            min-width: 900px;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        
-        th {
-            background: var(--tg-theme-secondary-bg-color);
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            position: sticky;
-            top: 0;
-            white-space: nowrap;
-        }
-        
-        td {
-            padding: 10px 8px;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-            vertical-align: middle;
-        }
-        
-        tr:hover {
-            background: rgba(51, 144, 236, 0.02);
-        }
-        
-        .cell-input {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 6px;
-            font-size: 12px;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: inherit;
-        }
-        
-        .cell-input:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color);
-        }
-        
-        .cell-input.date {
-            width: 120px;
-        }
-        
-        .cell-input.price {
-            width: 90px;
-            text-align: right;
-        }
-        
-        .cell-input.affiliate {
-            width: 100px;
-        }
-        
-        .tg-id {
-            font-family: 'SF Mono', monospace;
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            max-width: 100px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .badge-normal {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .btn-save {
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        tr:hover .btn-save {
-            opacity: 1;
-        }
-        
-        .btn-save:active {
-            transform: scale(0.95);
-        }
-        
-        .btn-save.dirty {
-            opacity: 1;
-            background: #ff9800;
-        }
-        
-        .btn-save.saved {
-            opacity: 1;
-            background: #4caf50;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--tg-theme-hint-color);
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(51, 144, 236, 0.2);
-            border-top-color: var(--tg-theme-button-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 12px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--tg-theme-hint-color);
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
-        
-        .report-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            padding: 16px;
-        }
-        
-        .report-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 16px;
-            color: white;
-        }
-        
-        .report-card h3 {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-        }
-        
-        .report-card .amount {
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        .report-card .detail {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-top: 4px;
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #333;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s;
-            pointer-events: none;
-        }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        
-        .toast.success {
-            background: #4caf50;
-        }
-        
-        .toast.error {
-            background: #f44336;
-        }
-        
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--tg-theme-bg-color);
-            border-top: 1px solid rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            z-index: 100;
-        }
-        
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 4px 16px;
-            cursor: pointer;
-            color: var(--tg-theme-hint-color);
-            font-size: 11px;
-            border: none;
-            background: none;
-            font-family: inherit;
-        }
-        
-        .nav-item.active {
-            color: var(--tg-theme-button-color);
-        }
-        
-        .nav-item svg {
-            width: 24px;
-            height: 24px;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .commission-calc {
-            background: #fff8e1;
-            border: 1px solid #ffcc02;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin: 8px 16px;
-            font-size: 13px;
-        }
-        
-        .commission-calc strong {
-            color: #f57f17;
-        }
-        
-        .date-range {
-            display: flex;
-            gap: 8px;
-            padding: 12px 16px;
-            align-items: center;
-        }
-        
-        .date-range input {
-            padding: 8px 12px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: inherit;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-        }
-        
-        .affiliate-summary {
-            padding: 16px;
-        }
-        
-        .affiliate-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-        }
-        
-        .affiliate-row:last-child {
-            border-bottom: none;
-        }
-        
-        .affiliate-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .affiliate-code {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            font-family: monospace;
-        }
-        
-        .affiliate-amount {
-            text-align: right;
-        }
-        
-        .affiliate-amount .total {
-            font-weight: 700;
-            font-size: 16px;
-        }
-        
-        .affiliate-amount .commission {
-            font-size: 12px;
-            color: #4caf50;
-        }
-        
-        .search-box {
-            padding: 12px 16px;
-        }
-        
-        .search-box input {
-            width: 100%;
-            padding: 10px 16px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 12px;
-            font-size: 14px;
-            background: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: inherit;
-        }
-        
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color);
-            background: var(--tg-theme-bg-color);
-        }
-        
-        .bulk-actions {
-            padding: 12px 16px;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-bulk {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .btn-bulk:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .sync-status {
-            padding: 8px 16px;
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .sync-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4caf50;
-        }
-        
-        .sync-dot.syncing {
-            background: #ff9800;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Admin Panel - Student Records</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --text: #1a1a2e;
+      --text-light: #666;
+      --border: #e0e0e0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      min-height: 100vh;
+      color: var(--text);
+    }
+    
+    /* Loading Screen */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s;
+    }
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .loading-text {
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    /* Access Denied */
+    .access-denied {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+      color: white;
+    }
+    .access-denied .icon { font-size: 80px; margin-bottom: 20px; }
+    .access-denied h1 { font-size: 28px; margin-bottom: 10px; }
+    .access-denied p { opacity: 0.85; font-size: 15px; line-height: 1.6; }
+    .access-denied .user-id {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    
+    /* Main App */
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 15px;
+      padding-bottom: 100px;
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      color: white;
+      padding: 20px 0 25px;
+    }
+    .header .avatar {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 12px;
+      backdrop-filter: blur(10px);
+    }
+    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .header p { opacity: 0.85; font-size: 13px; }
+    
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 14px 8px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat-card .number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .stat-card .label {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-top: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Search */
+    .search-box {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-box .search-icon { font-size: 18px; opacity: 0.5; }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      background: transparent;
+      color: var(--text);
+    }
+    .search-box input::placeholder { color: #aaa; }
+    
+    /* Student Card */
+    .student-card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .student-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .telegram-id {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .telegram-id .icon { font-size: 20px; }
+    
+    .account-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-admin { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .badge-normal { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .badge-giveaway { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .badge-default { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+    
+    /* Subjects */
+    .subjects-section {
+      padding: 16px 18px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .subjects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .field-group {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .field-group:focus-within {
+      border-color: var(--primary);
+      background: #f0f4ff;
+    }
+    .field-group label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+    .field-group input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+      text-align: center;
+      font-family: monospace;
+    }
+    .field-group input::placeholder { color: #bbb; font-weight: 400; }
+    
+    /* Financial Section */
+    .financial-section {
+      margin: 0 18px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 14px;
+      padding: 16px;
+      color: white;
+    }
+    .financial-section .section-title { color: rgba(255,255,255,0.8); margin-bottom: 12px; }
+    
+    .financial-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .financial-grid .field-group {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+    }
+    .financial-grid .field-group:focus-within {
+      background: rgba(255,255,255,0.25);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .financial-grid label { color: rgba(255,255,255,0.8) !important; }
+    .financial-grid input {
+      color: white !important;
+      text-align: left;
+      font-weight: 700;
+    }
+    .financial-grid input::placeholder { color: rgba(255,255,255,0.5); }
+    
+    /* Account Type Select */
+    .account-section {
+      padding: 0 18px 16px;
+    }
+    .account-section select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      background: #f8f9fa;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    .account-section select:focus { border-color: var(--primary); }
+    
+    /* Save Button */
+    .save-btn {
+      width: calc(100% - 36px);
+      margin: 0 18px 18px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    }
+    .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102,126,234,0.5);
+    }
+    .save-btn:active { transform: scale(0.98); }
+    .save-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .save-btn.saved {
+      background: linear-gradient(135deg, var(--success), #27ae60);
+      box-shadow: 0 4px 15px rgba(46,204,113,0.4);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--success);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 8px 25px rgba(46,204,113,0.4);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.error { background: var(--danger); box-shadow: 0 8px 25px rgba(231,76,60,0.4); }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+    
+    /* Responsive */
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .subjects-grid { grid-template-columns: 1fr; }
+      .financial-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📊 Admin Dashboard</h1>
-        <p>Normal Accounts Only • @test_appreed_bot</p>
-    </div>
-    
-    <div class="stats-bar" id="statsBar">
-        <div class="stat-card">
-            <div class="stat-value" id="totalUsers">-</div>
-            <div class="stat-label">Total Users</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-value" id="totalRevenue">-</div>
-            <div class="stat-label">Total Revenue</div>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-value" id="todayNew">-</div>
-            <div class="stat-label">Today New</div>
-        </div>
-    </div>
-    
-    <div class="tabs" id="mainTabs">
-        <button class="tab active" data-tab="accounts">👥 Accounts</button>
-        <button class="tab" data-tab="reports">📈 Reports</button>
-        <button class="tab" data-tab="affiliate">🤝 Affiliate</button>
-    </div>
-    
-    <!-- Accounts Tab -->
-    <div class="content" id="tab-accounts">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 Search by Telegram ID..." oninput="filterAccounts()">
-        </div>
-        
-        <div class="filters">
-            <div class="filter-chip active" data-filter="all">All Normal</div>
-            <div class="filter-chip" data-filter="today">Today</div>
-            <div class="filter-chip" data-filter="week">This Week</div>
-            <div class="filter-chip" data-filter="month">This Month</div>
-            <div class="filter-chip" data-filter="pending">No Price</div>
-        </div>
-        
-        <div class="sync-status" id="syncStatus">
-            <div class="sync-dot" id="syncDot"></div>
-            <span id="syncText">Ready</span>
-        </div>
-        
-        <div class="bulk-actions">
-            <button class="btn-bulk" id="btnSaveAll" onclick="saveAll()" disabled>💾 Save All Changes</button>
-            <button class="btn-bulk" onclick="refreshData()">🔄 Refresh</button>
-        </div>
-        
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">Account List</span>
-                <span class="section-action" onclick="exportAccounts()">📥 Export CSV</span>
-            </div>
-            <div class="table-container">
-                <table id="accountsTable">
-                    <thead>
-                        <tr>
-                            <th>Telegram ID</th>
-                            <th>MM</th>
-                            <th>EN</th>
-                            <th>Math</th>
-                            <th>Phy</th>
-                            <th>Chem</th>
-                            <th>Bio</th>
-                            <th>Eco</th>
-                            <th>All</th>
-                            <th>Account Type</th>
-                            <th>Price 💰</th>
-                            <th>Affiliate</th>
-                            <th>Commission</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="accountsBody">
-                        <tr>
-                            <td colspan="14" class="loading">
-                                <div class="spinner"></div>
-                                Loading data from Google Sheets...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Reports Tab -->
-    <div class="content hidden" id="tab-reports">
-        <div class="date-range">
-            <input type="date" id="reportStart" onchange="generateReport()">
-            <span>to</span>
-            <input type="date" id="reportEnd" onchange="generateReport()">
-        </div>
-        
-        <div class="stats-bar" style="grid-template-columns: repeat(2, 1fr);">
-            <div class="stat-card blue">
-                <div class="stat-value" id="reportTotal">-</div>
-                <div class="stat-label">Period Revenue</div>
-            </div>
-            <div class="stat-card purple">
-                <div class="stat-value" id="reportCount">-</div>
-                <div class="stat-label">New Accounts</div>
-            </div>
-        </div>
-        
-        <div class="report-grid">
-            <div class="report-card">
-                <h3>📅 Daily Average</h3>
-                <div class="amount" id="dailyAvg">-</div>
-                <div class="detail" id="dailyDetail">accounts/day</div>
-            </div>
-            <div class="report-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                <h3>📊 Monthly Trend</h3>
-                <div class="amount" id="monthlyTrend">-</div>
-                <div class="detail" id="monthlyDetail">vs last month</div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">Subject Distribution</span>
-            </div>
-            <div id="subjectStats" style="padding: 16px;">
-            </div>
-        </div>
-    </div>
-    
-    <!-- Affiliate Tab -->
-    <div class="content hidden" id="tab-affiliate">
-        <div class="commission-calc">
-            <strong>💡 Commission Rules:</strong><br>
-            • 20% commission for sales < 100,000 MMK<br>
-            • 30% commission for sales ≥ 100,000 MMK<br>
-            • Auto-calculated from total price per affiliate code
-        </div>
-        
-        <div class="stats-bar" style="grid-template-columns: repeat(2, 1fr);">
-            <div class="stat-card gold">
-                <div class="stat-value" id="affiliateTotal">-</div>
-                <div class="stat-label">Affiliate Revenue</div>
-            </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                <div class="stat-value" id="commissionTotal">-</div>
-                <div class="stat-label">Total Commission</div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">Affiliate Performance</span>
-                <span class="section-action" onclick="exportAffiliate()">📥 Export CSV</span>
-            </div>
-            <div class="affiliate-summary" id="affiliateList">
-            </div>
-        </div>
-    </div>
-    
-    <div class="toast" id="toast"></div>
-    
-    <div class="bottom-nav">
-        <button class="nav-item active" data-tab="accounts">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            Accounts
-        </button>
-        <button class="nav-item" data-tab="reports">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            Reports
-        </button>
-        <button class="nav-item" data-tab="affiliate">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                <path d="M2 17l10 5 10-5"></path>
-                <path d="M2 12l10 5 10-5"></path>
-            </svg>
-            Affiliate
-        </button>
-    </div>
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Admin Panel...</div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app"></div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast">Saved! 💾</div>
 
-    <script>
-        // ==================== CONFIG ====================
-        const CONFIG = {
-            // ⚠️ IMPORTANT: Replace with your Google Apps Script Web App URL
-            // Get this from: Deploy → Manage Deployments → Web App → URL
-            SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby2PjiFZTj9M0SibVB5ttlCuC4csMCMysqLUx2DZjzUrx9yWQUmAKXIclK8Yhq8dtT3/exec',
-            
-            // Commission rates
-            COMMISSION_LOW: 0.20,    // 20% for < 100k
-            COMMISSION_HIGH: 0.30,   // 30% for >= 100k
-            COMMISSION_THRESHOLD: 100000
-        };
-
-        // ==================== STATE ====================
-        let allData = [];
-        let filteredData = [];
-        let currentTab = 'accounts';
-        let dirtyRows = new Map(); // rowIndex -> changed data
-
-        // ==================== TELEGRAM WEB APP ====================
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        
-        // Set theme colors
-        if (tg.colorScheme === 'dark') {
-            document.documentElement.style.setProperty('--tg-theme-bg-color', '#1c1c1e');
-            document.documentElement.style.setProperty('--tg-theme-text-color', '#ffffff');
-            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#2c2c2e');
-            document.documentElement.style.setProperty('--tg-theme-hint-color', '#8e8e93');
+  <script>
+    // ============================================
+    // CONFIG - EDIT THIS WITH YOUR WEB APP URL
+    // ============================================
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyajWCH3_uyXzW5ObpVF1xEWLZo5HI2OKS_DobOIaevl57nKHpvT2UfK08fi_kQDkpr/exec";
+    const ADMIN_ID = "8432363664";
+    
+    // ============================================
+    // TELEGRAM WEB APP INIT
+    // ============================================
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    
+    // Set theme colors
+    tg.setHeaderColor('#667eea');
+    tg.setBackgroundColor('#667eea');
+    
+    const userId = tg.initDataUnsafe?.user?.id?.toString() || "";
+    const userName = tg.initDataUnsafe?.user?.first_name || "Admin";
+    
+    let sheetData = [];
+    let headers = [];
+    
+    // ============================================
+    // UTILS
+    // ============================================
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast' + (isError ? ' error' : '');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      if (typeof dateStr === 'string') {
+        // Already formatted
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+        // Google Sheets date format
+        const match = dateStr.match(/(\w{3}) (\d{1,2}),? (\d{4})/);
+        if (match) {
+          const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+                          'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+          const m = months[match[1]];
+          const d = match[2].padStart(2, '0');
+          const y = match[3];
+          return `${y}-${m}-${d}`;
         }
-
-        // ==================== INITIALIZATION ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            // Set default date range for reports
-            const today = new Date();
-            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            document.getElementById('reportEnd').value = today.toISOString().split('T')[0];
-            document.getElementById('reportStart').value = lastMonth.toISOString().split('T')[0];
-            
-            // Tab switching
-            document.querySelectorAll('.tab, .nav-item').forEach(el => {
-                el.addEventListener('click', () => switchTab(el.dataset.tab));
-            });
-            
-            // Filter chips
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    filterAccounts();
-                });
-            });
-            
-            // Load data
-            loadData();
+        return dateStr;
+      }
+      if (dateStr instanceof Date) {
+        return dateStr.toISOString().split('T')[0];
+      }
+      return String(dateStr);
+    }
+    
+    // ============================================
+    // API CALLS
+    // ============================================
+    async function fetchData() {
+      try {
+        const response = await fetch(`${WEB_APP_URL}?action=getData`);
+        const result = await response.json();
+        if (result.success) {
+          sheetData = result.data;
+          headers = result.data[0];
+          return true;
+        }
+        throw new Error(result.error || 'Failed to fetch data');
+      } catch (err) {
+        console.error('Fetch error:', err);
+        showToast('❌ Failed to load data: ' + err.message, true);
+        return false;
+      }
+    }
+    
+    async function saveToSheet(rowIndex, rowData) {
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateRow',
+            rowIndex: rowIndex,
+            rowData: rowData
+          })
         });
-
-        // ==================== SYNC STATUS ====================
-        function setSyncStatus(status, text) {
-            const dot = document.getElementById('syncDot');
-            const txt = document.getElementById('syncText');
+        const result = await response.json();
+        return result;
+      } catch (err) {
+        console.error('Save error:', err);
+        return { success: false, error: err.message };
+      }
+    }
+    
+    // ============================================
+    // RENDERS
+    // ============================================
+    function renderAccessDenied() {
+      document.getElementById('app').innerHTML = `
+        <div class="access-denied">
+          <div class="icon">⛔</div>
+          <h1>Access Denied</h1>
+          <p>ဒီ Web App ကို Admin ဘဲသုံးလို့ရပါတယ်။<br>Only Admin can use this Web App.</p>
+          <div class="user-id">Your ID: ${userId || 'Not detected'}</div>
+        </div>
+      `;
+      document.getElementById('loadingScreen').classList.add('hidden');
+    }
+    
+    function renderApp() {
+      const totalStudents = sheetData.length - 1;
+      const rows = sheetData.slice(1);
+      const adminCount = rows.filter(r => r[9] === 'admin acc').length;
+      const normalCount = rows.filter(r => r[9] === 'normal acc').length;
+      const giveawayCount = rows.filter(r => r[9] === 'giveaway winner acc').length;
+      
+      let html = `
+        <div class="app-container">
+          <div class="header">
+            <div class="avatar">👑</div>
+            <h1>မင်္ဂလာပါ ${userName}</h1>
+            <p>Admin Panel • Student Records Management</p>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="number">${totalStudents}</div>
+              <div class="label">Total</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${adminCount}</div>
+              <div class="label">Admin</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${normalCount}</div>
+              <div class="label">Normal</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${giveawayCount}</div>
+              <div class="label">Giveaway</div>
+            </div>
+          </div>
+          
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search by Telegram ID or Account Type..." onkeyup="filterCards()">
+          </div>
+          
+          <div id="cardsContainer">
+      `;
+      
+      for (let i = 1; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const telegramId = row[0] || '';
+        const mm = formatDate(row[1]);
+        const en = formatDate(row[2]);
+        const math = formatDate(row[3]);
+        const phy = formatDate(row[4]);
+        const chem = formatDate(row[5]);
+        const bio = formatDate(row[6]);
+        const eco = formatDate(row[7]);
+        const all = formatDate(row[8]);
+        const accountType = row[9] || 'normal acc';
+        const price = row[10] || '';
+        const affiliate = row[11] || '';
+        const comission = row[12] || '';
+        
+        const badgeClass = accountType === 'admin acc' ? 'badge-admin' : 
+                          accountType === 'giveaway winner acc' ? 'badge-giveaway' : 'badge-normal';
+        
+        html += `
+          <div class="student-card" data-telegram="${telegramId}" data-type="${accountType}">
+            <div class="card-header">
+              <div class="telegram-id">
+                <span class="icon">👤</span>
+                ${telegramId}
+              </div>
+              <div class="account-badge ${badgeClass}">${accountType}</div>
+            </div>
             
-            dot.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : '');
-            txt.textContent = text;
-        }
-
-        // ==================== DATA LOADING ====================
-        async function loadData() {
-            setSyncStatus('syncing', 'Loading...');
-            showToast('Loading data from Google Sheets...', 'info');
-            
-            try {
-                // Use Google Apps Script Web App URL (GET request)
-                const response = await fetch(CONFIG.SCRIPT_URL + '?filter=all', {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.result === 'success') {
-                    allData = result.data || [];
-                    // Cache data
-                    localStorage.setItem('sheetData', JSON.stringify(allData));
-                    showToast(`✅ Loaded ${allData.length} normal accounts`, 'success');
-                } else {
-                    throw new Error(result.error || 'Unknown error');
-                }
-                
-            } catch (error) {
-                console.error('Fetch error:', error);
-                showToast('⚠️ Using cached data', 'error');
-                
-                // Fallback to cached data
-                const cached = localStorage.getItem('sheetData');
-                if (cached) {
-                    allData = JSON.parse(cached);
-                } else {
-                    allData = generateDemoData();
-                }
-            }
-            
-            setSyncStatus('ready', `Last updated: ${new Date().toLocaleTimeString()}`);
-            processData();
-        }
-
-        function generateDemoData() {
-            const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-            const data = [];
-            
-            for (let i = 0; i < 50; i++) {
-                const telegramId = (8432363664 + Math.floor(Math.random() * 1000000000)).toString();
-                const row = {
-                    _rowIndex: i + 2,
-                    telegram_id: telegramId,
-                    accounttype: 'normal acc',
-                    price: '',
-                    affiliate: '',
-                    comission: ''
-                };
-                
-                subjects.forEach(sub => {
-                    if (Math.random() > 0.3) {
-                        const date = new Date(2026, 6, Math.floor(Math.random() * 30) + 1);
-                        row[sub] = date.toISOString().split('T')[0];
-                    } else {
-                        row[sub] = '';
-                    }
-                });
-                
-                data.push(row);
-            }
-            
-            // Add some with prices and affiliates
-            data[2].price = '50000';
-            data[7].price = '75000';
-            data[12].price = '120000';
-            data[12].affiliate = 'CELEB01';
-            data[12].comission = '36000';
-            data[20].price = '45000';
-            data[20].affiliate = 'CELEB02';
-            data[20].comission = '9000';
-            
-            return data;
-        }
-
-        function processData() {
-            filteredData = [...allData];
-            renderAccounts();
-            updateStats();
-        }
-
-        // ==================== RENDERING ====================
-        function renderAccounts() {
-            const tbody = document.getElementById('accountsBody');
-            
-            if (filteredData.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="14" class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <div>No normal accounts found</div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = filteredData.map(row => {
-                const isDirty = dirtyRows.has(row._rowIndex);
-                const savedClass = isDirty ? 'dirty' : '';
-                
-                return `
-                    <tr data-row="${row._rowIndex}">
-                        <td><span class="tg-id" title="${row.telegram_id || ''}">${row.telegram_id || ''}</span></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.mm)}" onchange="onCellChange(${row._rowIndex}, 'mm', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.en)}" onchange="onCellChange(${row._rowIndex}, 'en', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.math)}" onchange="onCellChange(${row._rowIndex}, 'math', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.phy)}" onchange="onCellChange(${row._rowIndex}, 'phy', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.chem)}" onchange="onCellChange(${row._rowIndex}, 'chem', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.bio)}" onchange="onCellChange(${row._rowIndex}, 'bio', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.eco)}" onchange="onCellChange(${row._rowIndex}, 'eco', this.value)"></td>
-                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.all)}" onchange="onCellChange(${row._rowIndex}, 'all', this.value)"></td>
-                        <td><span class="badge badge-normal">${row.accounttype || 'normal acc'}</span></td>
-                        <td><input class="cell-input price" type="number" value="${row.price || ''}" placeholder="0" onchange="onCellChange(${row._rowIndex}, 'price', this.value); updateCommission(${row._rowIndex})"></td>
-                        <td><input class="cell-input affiliate" type="text" value="${row.affiliate || ''}" placeholder="Code" onchange="onCellChange(${row._rowIndex}, 'affiliate', this.value); updateCommission(${row._rowIndex})"></td>
-                        <td><input class="cell-input price" type="number" value="${row.comission || ''}" placeholder="Auto" readonly style="background: #f5f5f5;"></td>
-                        <td><button class="btn-save ${savedClass}" id="save-${row._rowIndex}" onclick="saveRow(${row._rowIndex})">💾 Save</button></td>
-                    </tr>
-                `;
-            }).join('');
-            
-            updateSaveAllButton();
-        }
-
-        function formatDateForInput(dateStr) {
-            if (!dateStr) return '';
-            const str = dateStr.toString().trim();
-            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
-            if (str.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
-                const parts = str.split('-');
-                return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-            }
-            return '';
-        }
-
-        // ==================== CELL EDITING ====================
-        function onCellChange(rowIndex, field, value) {
-            if (!dirtyRows.has(rowIndex)) {
-                dirtyRows.set(rowIndex, { telegram_id: getRowByIndex(rowIndex).telegram_id });
-            }
-            dirtyRows.get(rowIndex)[field] = value;
-            
-            // Update button state
-            const btn = document.getElementById(`save-${rowIndex}`);
-            if (btn) {
-                btn.classList.add('dirty');
-                btn.textContent = '💾 Save';
-            }
-            
-            updateSaveAllButton();
-        }
-
-        function getRowByIndex(rowIndex) {
-            return allData.find(r => r._rowIndex === rowIndex) || {};
-        }
-
-        function updateCommission(rowIndex) {
-            const row = getRowByIndex(rowIndex);
-            const dirtyData = dirtyRows.get(rowIndex) || {};
-            
-            const price = parseFloat(dirtyData.price || row.price) || 0;
-            const affiliate = (dirtyData.affiliate || row.affiliate || '').trim();
-            
-            if (affiliate && price > 0) {
-                const rate = price >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
-                const commission = Math.round(price * rate);
-                
-                // Update commission in dirty data
-                if (!dirtyRows.has(rowIndex)) {
-                    dirtyRows.set(rowIndex, { telegram_id: row.telegram_id });
-                }
-                dirtyRows.get(rowIndex).comission = commission.toString();
-                
-                // Update UI
-                const tr = document.querySelector(`tr[data-row="${rowIndex}"]`);
-                if (tr) {
-                    const commissionInput = tr.querySelectorAll('input[type="number"]')[1];
-                    if (commissionInput) commissionInput.value = commission;
-                }
-            }
-        }
-
-        function updateSaveAllButton() {
-            const btn = document.getElementById('btnSaveAll');
-            btn.disabled = dirtyRows.size === 0;
-            btn.textContent = `💾 Save All Changes (${dirtyRows.size})`;
-        }
-
-        // ==================== SAVING ====================
-        async function saveRow(rowIndex) {
-            const dirtyData = dirtyRows.get(rowIndex);
-            if (!dirtyData) return;
-            
-            const btn = document.getElementById(`save-${rowIndex}`);
-            if (btn) {
-                btn.textContent = '⏳ Saving...';
-                btn.disabled = true;
-            }
-            
-            try {
-                const response = await fetch(CONFIG.SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'update',
-                        data: dirtyData
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.result === 'success') {
-                    // Update local data
-                    const idx = allData.findIndex(r => r._rowIndex === rowIndex);
-                    if (idx !== -1) {
-                        Object.assign(allData[idx], dirtyData);
-                    }
-                    
-                    dirtyRows.delete(rowIndex);
-                    
-                    if (btn) {
-                        btn.classList.remove('dirty');
-                        btn.classList.add('saved');
-                        btn.textContent = '✅ Saved';
-                        setTimeout(() => {
-                            btn.classList.remove('saved');
-                            btn.textContent = '💾 Save';
-                            btn.disabled = false;
-                        }, 2000);
-                    }
-                    
-                    showToast('✅ Saved successfully!', 'success');
-                    updateStats();
-                    updateSaveAllButton();
-                    
-                    // Refresh if on reports/affiliate tab
-                    if (currentTab === 'reports') generateReport();
-                    if (currentTab === 'affiliate') generateAffiliateReport();
-                    
-                } else {
-                    throw new Error(result.message || 'Update failed');
-                }
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                showToast('❌ ' + error.message, 'error');
-                
-                if (btn) {
-                    btn.textContent = '💾 Retry';
-                    btn.disabled = false;
-                }
-            }
-        }
-
-        async function saveAll() {
-            if (dirtyRows.size === 0) return;
-            
-            setSyncStatus('syncing', `Saving ${dirtyRows.size} changes...`);
-            showToast(`Saving ${dirtyRows.size} changes...`, 'info');
-            
-            const updates = Array.from(dirtyRows.values());
-            
-            try {
-                const response = await fetch(CONFIG.SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'bulk_update',
-                        updates: updates
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.result === 'success') {
-                    // Update local data
-                    updates.forEach(update => {
-                        const row = allData.find(r => r.telegram_id == update.telegram_id);
-                        if (row) Object.assign(row, update);
-                    });
-                    
-                    dirtyRows.clear();
-                    renderAccounts();
-                    updateStats();
-                    showToast(`✅ Saved ${result.updated} changes!`, 'success');
-                    
-                } else {
-                    throw new Error(result.errors?.join(', ') || 'Bulk update failed');
-                }
-                
-            } catch (error) {
-                console.error('Bulk save error:', error);
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                setSyncStatus('ready', `Last updated: ${new Date().toLocaleTimeString()}`);
-            }
-        }
-
-        // ==================== FILTERING ====================
-        function filterAccounts() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filterType = document.querySelector('.filter-chip.active')?.dataset.filter || 'all';
-            
-            let filtered = [...allData];
-            
-            // Search filter
-            if (search) {
-                filtered = filtered.filter(row => {
-                    const id = (row.telegram_id || '').toString().toLowerCase();
-                    return id.includes(search);
-                });
-            }
-            
-            // Date filters
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (filterType === 'today') {
-                filtered = filtered.filter(row => {
-                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                    return subjects.some(sub => {
-                        const date = row[sub];
-                        if (!date) return false;
-                        const d = new Date(date);
-                        return d.toDateString() === today.toDateString();
-                    });
-                });
-            } else if (filterType === 'week') {
-                const weekAgo = new Date(today);
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                filtered = filtered.filter(row => {
-                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                    return subjects.some(sub => {
-                        const date = row[sub];
-                        if (!date) return false;
-                        const d = new Date(date);
-                        return d >= weekAgo && d <= today;
-                    });
-                });
-            } else if (filterType === 'month') {
-                const monthAgo = new Date(today);
-                monthAgo.setDate(monthAgo.getDate() - 30);
-                filtered = filtered.filter(row => {
-                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                    return subjects.some(sub => {
-                        const date = row[sub];
-                        if (!date) return false;
-                        const d = new Date(date);
-                        return d >= monthAgo && d <= today;
-                    });
-                });
-            } else if (filterType === 'pending') {
-                filtered = filtered.filter(row => !row.price || row.price === '');
-            }
-            
-            filteredData = filtered;
-            renderAccounts();
-        }
-
-        // ==================== STATS ====================
-        function updateStats() {
-            const totalUsers = allData.length;
-            const totalRevenue = allData.reduce((sum, row) => sum + (parseFloat(row.price) || 0), 0);
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const todayNew = allData.filter(row => {
-                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                return subjects.some(sub => {
-                    const date = row[sub];
-                    if (!date) return false;
-                    const d = new Date(date);
-                    return d.toDateString() === today.toDateString();
-                });
-            }).length;
-            
-            document.getElementById('totalUsers').textContent = totalUsers;
-            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
-            document.getElementById('todayNew').textContent = todayNew;
-        }
-
-        // ==================== REPORTS ====================
-        function generateReport() {
-            const startDate = new Date(document.getElementById('reportStart').value);
-            const endDate = new Date(document.getElementById('reportEnd').value);
-            endDate.setHours(23, 59, 59, 999);
-            
-            // Filter by date range
-            const periodAccounts = allData.filter(row => {
-                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                return subjects.some(sub => {
-                    const date = row[sub];
-                    if (!date) return false;
-                    const d = new Date(date);
-                    return d >= startDate && d <= endDate;
-                });
-            });
-            
-            const periodRevenue = periodAccounts.reduce((sum, row) => sum + (parseFloat(row.price) || 0), 0);
-            document.getElementById('reportTotal').textContent = formatCurrency(periodRevenue);
-            document.getElementById('reportCount').textContent = periodAccounts.length;
-            
-            const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-            const dailyAvg = (periodAccounts.length / days).toFixed(1);
-            document.getElementById('dailyAvg').textContent = dailyAvg;
-            
-            // Monthly trend
-            const prevStart = new Date(startDate);
-            const prevEnd = new Date(endDate);
-            const diff = endDate - startDate;
-            prevStart.setTime(prevStart.getTime() - diff);
-            prevEnd.setTime(prevEnd.getTime() - diff);
-            
-            const prevAccounts = allData.filter(row => {
-                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-                return subjects.some(sub => {
-                    const date = row[sub];
-                    if (!date) return false;
-                    const d = new Date(date);
-                    return d >= prevStart && d <= prevEnd;
-                });
-            });
-            
-            const trend = prevAccounts.length > 0 ? 
-                ((periodAccounts.length - prevAccounts.length) / prevAccounts.length * 100).toFixed(0) : 0;
-            const trendText = trend >= 0 ? `+${trend}%` : `${trend}%`;
-            document.getElementById('monthlyTrend').textContent = trendText;
-            document.getElementById('monthlyDetail').textContent = `${prevAccounts.length} → ${periodAccounts.length}`;
-            
-            // Subject distribution
-            const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
-            const subjectCounts = subjects.map(sub => ({
-                name: sub.toUpperCase(),
-                count: allData.filter(row => row[sub] && row[sub] !== '').length
-            }));
-            
-            const maxCount = Math.max(...subjectCounts.map(s => s.count), 1);
-            
-            document.getElementById('subjectStats').innerHTML = subjectCounts.map(sub => `
-                <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <div style="width: 60px; font-size: 13px; font-weight: 600;">${sub.name}</div>
-                    <div style="flex: 1; height: 24px; background: var(--tg-theme-secondary-bg-color); border-radius: 12px; overflow: hidden; margin: 0 12px;">
-                        <div style="height: 100%; width: ${(sub.count / maxCount * 100)}%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 12px; transition: width 0.5s;"></div>
-                    </div>
-                    <div style="width: 40px; text-align: right; font-size: 13px; font-weight: 600;">${sub.count}</div>
+            <div class="subjects-section">
+              <div class="section-title">📚 Subjects (Exam Dates)</div>
+              <div class="subjects-grid">
+                <div class="field-group">
+                  <label>🇲🇲 Myanmar</label>
+                  <input type="text" id="mm_${i}" value="${mm}" placeholder="YYYY-MM-DD">
                 </div>
-            `).join('');
-        }
-
-        // ==================== AFFILIATE ====================
-        function generateAffiliateReport() {
-            const affiliateMap = {};
-            
-            allData.forEach(row => {
-                const code = (row.affiliate || '').toString().trim();
-                if (!code) return;
-                
-                if (!affiliateMap[code]) {
-                    affiliateMap[code] = { code, total: 0, count: 0, commission: 0 };
-                }
-                
-                const price = parseFloat(row.price) || 0;
-                affiliateMap[code].total += price;
-                affiliateMap[code].count += 1;
-            });
-            
-            Object.values(affiliateMap).forEach(aff => {
-                const rate = aff.total >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
-                aff.commission = Math.round(aff.total * rate);
-                aff.rate = rate * 100;
-            });
-            
-            const totalRevenue = Object.values(affiliateMap).reduce((sum, a) => sum + a.total, 0);
-            const totalCommission = Object.values(affiliateMap).reduce((sum, a) => sum + a.commission, 0);
-            
-            document.getElementById('affiliateTotal').textContent = formatCurrency(totalRevenue);
-            document.getElementById('commissionTotal').textContent = formatCurrency(totalCommission);
-            
-            const sorted = Object.values(affiliateMap).sort((a, b) => b.total - a.total);
-            
-            document.getElementById('affiliateList').innerHTML = sorted.map(aff => `
-                <div class="affiliate-row">
-                    <div>
-                        <div class="affiliate-name">${aff.code}</div>
-                        <div class="affiliate-code">${aff.count} sales</div>
-                    </div>
-                    <div class="affiliate-amount">
-                        <div class="total">${formatCurrency(aff.total)}</div>
-                        <div class="commission">${aff.rate}% → ${formatCurrency(aff.commission)}</div>
-                    </div>
+                <div class="field-group">
+                  <label>🇬🇧 English</label>
+                  <input type="text" id="en_${i}" value="${en}" placeholder="YYYY-MM-DD">
                 </div>
-            `).join('');
+                <div class="field-group">
+                  <label>📐 Math</label>
+                  <input type="text" id="math_${i}" value="${math}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="field-group">
+                  <label>⚛️ Physics</label>
+                  <input type="text" id="phy_${i}" value="${phy}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="field-group">
+                  <label>🧪 Chemistry</label>
+                  <input type="text" id="chem_${i}" value="${chem}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="field-group">
+                  <label>🧬 Biology</label>
+                  <input type="text" id="bio_${i}" value="${bio}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="field-group">
+                  <label>🌿 Eco</label>
+                  <input type="text" id="eco_${i}" value="${eco}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="field-group">
+                  <label>📖 All Subjects</label>
+                  <input type="text" id="all_${i}" value="${all}" placeholder="YYYY-MM-DD">
+                </div>
+              </div>
+            </div>
             
-            if (sorted.length === 0) {
-                document.getElementById('affiliateList').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🤝</div>
-                        <div>No affiliate data yet</div>
-                    </div>
-                `;
-            }
-        }
-
-        // ==================== EXPORT ====================
-        function exportAccounts() {
-            const headers = ['telegram_id', 'mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all', 'accounttype', 'price', 'affiliate', 'comission'];
-            const csv = [
-                headers,
-                ...allData.map(row => headers.map(h => row[h] || ''))
-            ].map(row => row.join(',')).join('\n');
+            <div class="financial-section">
+              <div class="section-title">💰 Financial Information</div>
+              <div class="financial-grid">
+                <div class="field-group">
+                  <label>💵 Price</label>
+                  <input type="text" id="price_${i}" value="${price}" placeholder="0">
+                </div>
+                <div class="field-group">
+                  <label>🔗 Affiliate Code</label>
+                  <input type="text" id="affiliate_${i}" value="${affiliate}" placeholder="e.g. AFF001">
+                </div>
+                <div class="field-group">
+                  <label>📊 Commission %</label>
+                  <input type="text" id="comission_${i}" value="${comission}" placeholder="20% or 30%">
+                </div>
+              </div>
+            </div>
             
-            downloadCSV(csv, `accounts_${new Date().toISOString().split('T')[0]}.csv`);
-            showToast('📥 Accounts exported!', 'success');
-        }
-
-        function exportAffiliate() {
-            const affiliateMap = {};
+            <div class="account-section">
+              <div class="section-title">⚙️ Account Settings</div>
+              <select id="accounttype_${i}">
+                <option value="normal acc" ${accountType === 'normal acc' ? 'selected' : ''}>Normal Account</option>
+                <option value="admin acc" ${accountType === 'admin acc' ? 'selected' : ''}>Admin Account</option>
+                <option value="giveaway winner acc" ${accountType === 'giveaway winner acc' ? 'selected' : ''}>Giveaway Winner</option>
+              </select>
+            </div>
             
-            allData.forEach(row => {
-                const code = (row.affiliate || '').toString().trim();
-                if (!code) return;
-                
-                if (!affiliateMap[code]) {
-                    affiliateMap[code] = { code, total: 0, count: 0, commission: 0 };
-                }
-                
-                const price = parseFloat(row.price) || 0;
-                affiliateMap[code].total += price;
-                affiliateMap[code].count += 1;
-            });
-            
-            Object.values(affiliateMap).forEach(aff => {
-                const rate = aff.total >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
-                aff.commission = Math.round(aff.total * rate);
-                aff.rate = rate * 100;
-            });
-            
-            const csv = [
-                ['Affiliate Code', 'Total Sales', 'Total Revenue', 'Commission Rate', 'Commission Amount'],
-                ...Object.values(affiliateMap).map(a => [
-                    a.code, a.count, a.total, `${a.rate}%`, a.commission
-                ])
-            ].map(row => row.join(',')).join('\n');
-            
-            downloadCSV(csv, `affiliate_report_${new Date().toISOString().split('T')[0]}.csv`);
-            showToast('📥 Affiliate report exported!', 'success');
-        }
-
-        function downloadCSV(csv, filename) {
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // ==================== UTILITIES ====================
-        function formatCurrency(amount) {
-            if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
-            if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
-            return amount.toString();
-        }
-
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast show ${type}`;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        function refreshData() {
-            loadData();
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-            document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-            document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            
-            if (tab === 'reports') generateReport();
-            if (tab === 'affiliate') generateAffiliateReport();
-        }
-
-        // ==================== KEYBOARD SHORTCUTS ====================
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                if (dirtyRows.size > 0) saveAll();
-            }
-        });
-
-        // ==================== AUTO REFRESH ====================
-        setInterval(() => {
-            if (dirtyRows.size === 0) {
-                // Silently refresh every 5 minutes if no pending changes
-                // loadData(); 
-            }
-        }, 300000);
-
-        window.refreshData = refreshData;
-    </script>
+            <button class="save-btn" id="btn_${i}" onclick="saveRow(${i})">
+              <span>💾</span> Save Changes (ပြင်ထားတာသိမ်းမယ်)
+            </button>
+          </div>
+        `;
+      }
+      
+      html += `</div></div>`;
+      document.getElementById('app').innerHTML = html;
+      document.getElementById('loadingScreen').classList.add('hidden');
+    }
+    
+    // ============================================
+    // INTERACTIONS
+    // ============================================
+    function filterCards() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.student-card');
+      cards.forEach(card => {
+        const telegram = card.getAttribute('data-telegram').toLowerCase();
+        const type = card.getAttribute('data-type').toLowerCase();
+        card.style.display = (telegram.includes(search) || type.includes(search)) ? 'block' : 'none';
+      });
+    }
+    
+    async function saveRow(rowIndex) {
+      const btn = document.getElementById(`btn_${rowIndex}`);
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span>⏳</span> Saving...';
+      btn.disabled = true;
+      
+      const card = btn.closest('.student-card');
+      const telegramId = card.querySelector('.telegram-id').textContent.trim().replace('👤', '').trim();
+      
+      const rowData = [
+        telegramId,
+        document.getElementById(`mm_${rowIndex}`).value,
+        document.getElementById(`en_${rowIndex}`).value,
+        document.getElementById(`math_${rowIndex}`).value,
+        document.getElementById(`phy_${rowIndex}`).value,
+        document.getElementById(`chem_${rowIndex}`).value,
+        document.getElementById(`bio_${rowIndex}`).value,
+        document.getElementById(`eco_${rowIndex}`).value,
+        document.getElementById(`all_${rowIndex}`).value,
+        document.getElementById(`accounttype_${rowIndex}`).value,
+        document.getElementById(`price_${rowIndex}`).value,
+        document.getElementById(`affiliate_${rowIndex}`).value,
+        document.getElementById(`comission_${rowIndex}`).value
+      ];
+      
+      const result = await saveToSheet(rowIndex + 1, rowData);
+      
+      if (result.success) {
+        btn.innerHTML = '<span>✅</span> Saved! (သိမ်းပြီးပြီ)';
+        btn.classList.add('saved');
+        showToast('✅ Saved successfully!');
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('saved');
+          btn.disabled = false;
+        }, 2000);
+      } else {
+        btn.innerHTML = '<span>❌</span> Error! ထပ်စမ်းကြည့်ပါ';
+        showToast('❌ Error: ' + (result.error || 'Unknown error'), true);
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }, 2000);
+      }
+    }
+    
+    // ============================================
+    // INIT
+    // ============================================
+    async function init() {
+      // Check admin
+      if (userId !== ADMIN_ID) {
+        renderAccessDenied();
+        return;
+      }
+      
+      // Fetch data
+      const success = await fetchData();
+      if (success) {
+        renderApp();
+      } else {
+        document.getElementById('loadingScreen').innerHTML = `
+          <div style="color:white;text-align:center;padding:20px;">
+            <div style="font-size:50px;margin-bottom:15px;">❌</div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:10px;">Failed to Load Data</div>
+            <div style="opacity:0.8;">Please check your internet connection and try again.</div>
+          </div>
+        `;
+      }
+    }
+    
+    init();
+  </script>
 </body>
 </html>
