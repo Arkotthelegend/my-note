@@ -7,7 +7,6 @@
   <title>Subscription Manager Pro</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -16,13 +15,7 @@
       margin: 0;
       min-height: 100vh;
     }
-    
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 12px;
-    }
-    
+    .container { max-width: 600px; margin: 0 auto; padding: 12px; }
     .header {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
@@ -32,7 +25,6 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       text-align: center;
     }
-    
     .header h1 {
       font-size: 24px;
       font-weight: 800;
@@ -41,7 +33,6 @@
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-    
     .status-badge {
       display: inline-block;
       padding: 6px 16px;
@@ -50,17 +41,8 @@
       font-weight: 700;
       margin-top: 8px;
     }
-    
-    .status-admin {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-    
-    .status-user {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-    }
-    
+    .status-admin { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+    .status-user { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
     .tabs {
       display: flex;
       gap: 8px;
@@ -70,7 +52,6 @@
       border-radius: 16px;
       backdrop-filter: blur(10px);
     }
-    
     .tab {
       flex: 1;
       padding: 14px;
@@ -83,14 +64,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    
-    .tab.active {
-      background: white;
-      color: #667eea;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      transform: translateY(-2px);
-    }
-    
+    .tab.active { background: white; color: #667eea; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: translateY(-2px); }
     .card {
       background: rgba(255, 255, 255, 0.95);
       border-radius: 20px;
@@ -99,29 +73,9 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       animation: slideUp 0.3s ease;
     }
-    
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .card-title {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 16px;
-      color: #2d3748;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .card-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .stat-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -130,50 +84,14 @@
       text-align: center;
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
-    
-    .stat-card.green {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
-    }
-    
-    .stat-card.orange {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
-    }
-    
-    .stat-card.purple {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
-    }
-    
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    
-    .stat-label {
-      font-size: 12px;
-      opacity: 0.9;
-      font-weight: 600;
-    }
-    
-    .form-group {
-      margin-bottom: 14px;
-    }
-    
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #4a5568;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .form-group input,
-    .form-group select {
+    .stat-card.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4); }
+    .stat-card.orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4); }
+    .stat-card.purple { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4); }
+    .stat-value { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; opacity: 0.9; font-weight: 600; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select {
       width: 100%;
       padding: 12px 16px;
       border: 2px solid #e2e8f0;
@@ -183,22 +101,8 @@
       transition: all 0.3s;
       font-weight: 600;
     }
-    
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #667eea;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    .subjects-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+    .subjects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .subject-card {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       padding: 12px;
@@ -206,34 +110,9 @@
       border: 2px solid transparent;
       transition: all 0.3s;
     }
-    
-    .subject-card:focus-within {
-      border-color: #667eea;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-    
-    .subject-card label {
-      display: block;
-      font-size: 12px;
-      font-weight: 800;
-      color: #2d3748;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .subject-card input {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      text-align: center;
-      background: white;
-    }
-    
+    .subject-card:focus-within { border-color: #667eea; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .subject-card label { display: block; font-size: 12px; font-weight: 800; color: #2d3748; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .subject-card input { width: 100%; padding: 8px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; background: white; }
     .btn {
       width: 100%;
       padding: 16px;
@@ -247,28 +126,10 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
-    .btn:active {
-      transform: scale(0.98);
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-    }
-    
-    .btn-secondary {
-      background: #edf2f7;
-      color: #4a5568;
-      border: 2px solid #cbd5e0;
-    }
-    
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5); }
+    .btn-secondary { background: #edf2f7; color: #4a5568; border: 2px solid #cbd5e0; }
     .commission-box {
       background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
       color: white;
@@ -279,175 +140,31 @@
       box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
       animation: pulse 2s infinite;
     }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-    }
-    
-    .commission-box strong {
-      font-size: 28px;
-      font-weight: 800;
-      display: block;
-      margin-top: 4px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .message {
-      padding: 14px 16px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      animation: slideDown 0.3s ease;
-    }
-    
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .message.error {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
-    }
-    
-    .message.success {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
-    }
-    
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+    .commission-box strong { font-size: 28px; font-weight: 800; display: block; margin-top: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .message { padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; font-size: 14px; font-weight: 600; animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .message.error { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4); }
+    .message.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4); }
     .hidden { display: none !important; }
-    
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      overflow-x: auto;
-      display: block;
-    }
-    
-    .data-table th,
-    .data-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .data-table th {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-    }
-    
-    .data-table tr:hover {
-      background: #f7fafc;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    
-    .badge-normal {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-    }
-    
-    .badge-giveaway {
-      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-      color: white;
-    }
-    
-    .chart-container {
-      margin: 16px 0;
-    }
-    
-    .chart-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f7fafc;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
-    
-    .chart-label {
-      font-weight: 700;
-      color: #4a5568;
-      font-size: 13px;
-    }
-    
-    .chart-value {
-      font-weight: 800;
-      color: #667eea;
-      font-size: 14px;
-    }
-    
-    .period-selector {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    
-    .period-btn {
-      flex: 1;
-      padding: 10px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      background: white;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .period-btn.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-color: #667eea;
-    }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #667eea;
-    }
-    
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #667eea;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .warning-box {
-      background: linear-gradient(135deg, #fff6bf 0%, #ffed8c 100%);
-      border-left: 4px solid #f59e0b;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #92400e;
-      font-weight: 600;
-    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; overflow-x: auto; display: block; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .data-table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    .data-table tr:hover { background: #f7fafc; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .badge-normal { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+    .badge-giveaway { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+    .chart-container { margin: 16px 0; }
+    .chart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f7fafc; border-radius: 8px; margin-bottom: 8px; }
+    .chart-label { font-weight: 700; color: #4a5568; font-size: 13px; }
+    .chart-value { font-weight: 800; color: #667eea; font-size: 14px; }
+    .period-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .period-btn { flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+    .period-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
+    .loading { text-align: center; padding: 40px; color: #667eea; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .warning-box { background: linear-gradient(135deg, #fff6bf 0%, #ffed8c 100%); border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #92400e; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -462,15 +179,13 @@
     
     <div class="tabs">
       <button class="tab active" onclick="showTab('add')">➕ Add New</button>
-      <button class="tab hidden" id="listTabBtn" onclick="showTab('list')">📋 All Data</button>
+      <button class="tab hidden" id="listTabBtn" onclick="showTab('list')"> All Data</button>
       <button class="tab hidden" id="analyticsTabBtn" onclick="showTab('analytics')">📊 Analytics</button>
     </div>
     
     <!-- Add Subscription Form -->
     <div id="addTab" class="card">
-      <div class="warning-box">
-        ⚠️ <strong>Important:</strong> Price cannot be changed after saving!
-      </div>
+      <div class="warning-box">️ <strong>Important:</strong> Price cannot be changed after saving!</div>
       
       <div class="card-title">👤 Customer Information</div>
       
@@ -479,34 +194,34 @@
         <input type="number" id="targetUserId" placeholder="Enter customer's Telegram ID">
       </div>
       
-      <div class="card-title" style="margin-top: 20px;">📚 Select Subjects & Duration</div>
+      <div class="card-title" style="margin-top: 20px;"> Select Subjects & Duration</div>
       <div class="subjects-grid">
         <div class="subject-card">
           <label>🇲🇲 Myanmar</label>
           <input type="number" id="mm" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>🇬🇧 English</label>
+          <label>🇧 English</label>
           <input type="number" id="en" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>📐 Mathematics</label>
+          <label> Mathematics</label>
           <input type="number" id="math" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>⚛️ Physics</label>
+          <label>️ Physics</label>
           <input type="number" id="phy" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>🧪 Chemistry</label>
+          <label> Chemistry</label>
           <input type="number" id="chem" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>🧬 Biology</label>
+          <label> Biology</label>
           <input type="number" id="bio" placeholder="0" min="0">
         </div>
         <div class="subject-card">
-          <label>📈 Economics</label>
+          <label> Economics</label>
           <input type="number" id="eco" placeholder="0" min="0">
         </div>
         <div class="subject-card">
@@ -567,7 +282,7 @@
       
       <div class="period-selector">
         <button class="period-btn active" onclick="setPeriod('daily')">📅 Daily</button>
-        <button class="period-btn" onclick="setPeriod('monthly')">📆 Monthly</button>
+        <button class="period-btn" onclick="setPeriod('monthly')"> Monthly</button>
       </div>
       
       <div class="stats-grid">
@@ -592,7 +307,7 @@
       <div class="card-title" style="margin-top: 20px;">📚 Subjects Popularity</div>
       <div class="chart-container" id="subjectChart"></div>
       
-      <div class="card-title" style="margin-top: 20px;">👥 Account Types</div>
+      <div class="card-title" style="margin-top: 20px;"> Account Types</div>
       <div class="chart-container" id="accountTypeChart"></div>
       
       <div class="card-title" style="margin-top: 20px;" id="periodTitle">📅 Daily Breakdown</div>
@@ -601,6 +316,7 @@
   </div>
 
   <script>
+    // ✅ URL အတိအကျထည့်ထားသည်
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCtDNW_MsXzmPNNV4anuRvRbtUaxpi-WDWzfp5wnOzBhJo4mwsHhHPcRMHZ9XN1d3y/exec';
     const ADMIN_ID = '8432363664';
     
@@ -613,8 +329,9 @@
     var currentPeriod = 'daily';
     
     window.onload = function() {
+      console.log('🚀 App loaded, User ID:', currentUserId);
       if (!currentUserId) {
-        showMessage('⚠️ Please open this app from Telegram', 'error');
+        showMessage('️ Please open this app from Telegram', 'error');
         return;
       }
       checkAdmin();
@@ -622,89 +339,41 @@
     
     async function apiCall(action, data) {
       try {
+        console.log('📡 API Call:', action, data);
         const response = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: action, ...data })
         });
-        return await response.json();
+        const result = await response.json();
+        console.log('✅ API Response:', result);
+        return result;
       } catch (error) {
+        console.error('❌ API Error:', error);
         return { success: false, message: 'Connection error: ' + error.message };
       }
     }
     
-  // အောက်ပါ function ကို အစားထိုးပါ
-async function checkAdmin() {
-  const result = await apiCall('checkAdmin', { telegramId: currentUserId });
-  
-  // Always check against ADMIN_ID directly
-  isAdmin = (currentUserId === ADMIN_ID);
-  
-  var statusEl = document.getElementById('userStatus');
-  
-  if (isAdmin) {
-    statusEl.textContent = '👑 ADMIN ACCESS - ' + currentUserId;
-    statusEl.className = 'status-badge status-admin';
-    
-    // Show admin tabs
-    document.getElementById('listTabBtn').classList.remove('hidden');
-    document.getElementById('analyticsTabBtn').classList.remove('hidden');
-    
-    console.log('✅ Admin detected! ID:', currentUserId);
-  } else {
-    statusEl.textContent = '👤 User Mode - ' + currentUserId;
-    statusEl.className = 'status-badge status-user';
-    console.log(' Not admin. ID:', currentUserId, 'Expected:', ADMIN_ID);
-  }
-}
-
-// addSubscription function ကိုလည်း ပြင်ပါ
-async function addSubscription() {
-  var targetUserId = document.getElementById('targetUserId').value;
-  var price = document.getElementById('price').value;
-  
-  if (!targetUserId || !price) {
-    showMessage('❌ Customer ID and Price are required!', 'error');
-    return;
-  }
-  
-  // Double check admin
-  if (currentUserId !== ADMIN_ID) {
-    showMessage(' Only admin (ID: ' + ADMIN_ID + ') can add subscriptions! Your ID: ' + currentUserId, 'error');
-    return;
-  }
-  
-  var data = {
-    telegramId: currentUserId,
-    targetUserId: targetUserId,
-    mm: parseInt(document.getElementById('mm').value) || 0,
-    en: parseInt(document.getElementById('en').value) || 0,
-    math: parseInt(document.getElementById('math').value) || 0,
-    phy: parseInt(document.getElementById('phy').value) || 0,
-    chem: parseInt(document.getElementById('chem').value) || 0,
-    bio: parseInt(document.getElementById('bio').value) || 0,
-    eco: parseInt(document.getElementById('eco').value) || 0,
-    all: parseInt(document.getElementById('all').value) || 0,
-    accounttype: document.getElementById('accountType').value,
-    price: parseFloat(price),
-    affiliate: document.getElementById('affiliate').value.trim(),
-    comission: parseFloat(document.getElementById('commission').value) || 0
-  };
-  
-  showMessage('⏳ Saving...', 'success');
-  const result = await apiCall('addSubscription', data);
-  
-  if (result.success) {
-    var msg = result.message;
-    if (result.commissionAmount > 0) {
-      msg += ' | 💰 Commission: ' + result.commissionAmount.toLocaleString() + ' MMK';
+    async function checkAdmin() {
+      console.log('🔍 Checking admin for ID:', currentUserId);
+      const result = await apiCall('checkAdmin', { telegramId: currentUserId });
+      console.log('👑 Admin check result:', result);
+      
+      isAdmin = (currentUserId == ADMIN_ID);
+      var statusEl = document.getElementById('userStatus');
+      
+      if (isAdmin) {
+        statusEl.textContent = ' ADMIN ACCESS - ' + currentUserId;
+        statusEl.className = 'status-badge status-admin';
+        document.getElementById('listTabBtn').classList.remove('hidden');
+        document.getElementById('analyticsTabBtn').classList.remove('hidden');
+        console.log('✅ Admin detected!');
+      } else {
+        statusEl.textContent = '👤 User Mode - ' + currentUserId;
+        statusEl.className = 'status-badge status-user';
+        console.log('️ Not admin');
+      }
     }
-    showMessage('✅ ' + msg, 'success');
-    clearForm();
-  } else {
-    showMessage('❌ ' + result.message, 'error');
-  }
-}
     
     function calculateCommission() {
       var price = parseFloat(document.getElementById('price').value) || 0;
@@ -729,8 +398,8 @@ async function addSubscription() {
         return;
       }
       
-      if (!isAdmin) {
-        showMessage('❌ Only admin can add subscriptions!', 'error');
+      if (currentUserId != ADMIN_ID) {
+        showMessage('❌ Only admin (ID: ' + ADMIN_ID + ') can add subscriptions!', 'error');
         return;
       }
       
@@ -757,7 +426,7 @@ async function addSubscription() {
       if (result.success) {
         var msg = result.message;
         if (result.commissionAmount > 0) {
-          msg += ' | Commission: ' + result.commissionAmount.toLocaleString() + ' MMK';
+          msg += ' | 💰 Commission: ' + result.commissionAmount.toLocaleString() + ' MMK';
         }
         showMessage('✅ ' + msg, 'success');
         clearForm();
@@ -852,10 +521,7 @@ async function addSubscription() {
     }
     
     async function loadAnalytics() {
-      const result = await apiCall('getAnalytics', { 
-        telegramId: currentUserId, 
-        period: currentPeriod 
-      });
+      const result = await apiCall('getAnalytics', { telegramId: currentUserId });
       
       if (result.success && result.data) {
         var data = result.data;
@@ -866,11 +532,10 @@ async function addSubscription() {
         document.getElementById('avgRevenue').textContent = 
           data.totalUsers > 0 ? Math.round(data.totalRevenue / data.totalUsers).toLocaleString() : '0';
         
-        // Subject chart
         var subjectHtml = '';
         var subjects = {
-          '🇲🇲 Myanmar': data.bySubject.mm,
-          '🇧 English': data.bySubject.en,
+          '🇲 Myanmar': data.bySubject.mm,
+          '🇬🇧 English': data.bySubject.en,
           '📐 Math': data.bySubject.math,
           '⚛️ Physics': data.bySubject.phy,
           '🧪 Chemistry': data.bySubject.chem,
@@ -891,10 +556,9 @@ async function addSubscription() {
         }
         document.getElementById('subjectChart').innerHTML = subjectHtml || '<p style="color:#999;text-align:center;">No data</p>';
         
-        // Account type chart
         document.getElementById('accountTypeChart').innerHTML = `
           <div class="chart-item">
-            <span class="chart-label"> Normal Accounts</span>
+            <span class="chart-label">👤 Normal Accounts</span>
             <span class="chart-value">${data.byAccountType.normal} users</span>
           </div>
           <div class="chart-item">
@@ -903,7 +567,6 @@ async function addSubscription() {
           </div>
         `;
         
-        // Period data
         var periodData = currentPeriod === 'daily' ? data.dailyData : data.monthlyData;
         var periodHtml = '<div style="max-height:400px;overflow-y:auto;">';
         
