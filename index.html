@@ -1,748 +1,752 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Admin Panel - Student Records</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    :root {
-      --primary: #667eea;
-      --primary-dark: #764ba2;
-      --success: #2ecc71;
-      --danger: #e74c3c;
-      --warning: #f39c12;
-      --bg: #f0f2f5;
-      --card-bg: #ffffff;
-      --text: #1a1a2e;
-      --text-light: #666;
-      --border: #e0e0e0;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      min-height: 100vh;
-      color: var(--text);
-    }
-    
-    /* Loading Screen */
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.5s;
-    }
-    .loading-screen.hidden { opacity: 0; pointer-events: none; }
-    
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 20px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .loading-text {
-      color: white;
-      font-size: 16px;
-      font-weight: 500;
-    }
-    
-    /* Access Denied */
-    .access-denied {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-      text-align: center;
-      color: white;
-    }
-    .access-denied .icon { font-size: 80px; margin-bottom: 20px; }
-    .access-denied h1 { font-size: 28px; margin-bottom: 10px; }
-    .access-denied p { opacity: 0.85; font-size: 15px; line-height: 1.6; }
-    .access-denied .user-id {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 10px;
-      font-family: monospace;
-      font-size: 14px;
-    }
-    
-    /* Main App */
-    .app-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 15px;
-      padding-bottom: 100px;
-    }
-    
-    /* Header */
-    .header {
-      text-align: center;
-      color: white;
-      padding: 20px 0 25px;
-    }
-    .header .avatar {
-      width: 60px;
-      height: 60px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin: 0 auto 12px;
-      backdrop-filter: blur(10px);
-    }
-    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-    .header p { opacity: 0.85; font-size: 13px; }
-    
-    /* Stats */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      border-radius: 14px;
-      padding: 14px 8px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .stat-card .number {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--primary);
-      line-height: 1;
-    }
-    .stat-card .label {
-      font-size: 10px;
-      color: var(--text-light);
-      margin-top: 6px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    /* Search */
-    .search-box {
-      background: var(--card-bg);
-      border-radius: 14px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .search-box .search-icon { font-size: 18px; opacity: 0.5; }
-    .search-box input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 15px;
-      background: transparent;
-      color: var(--text);
-    }
-    .search-box input::placeholder { color: #aaa; }
-    
-    /* Student Card */
-    .student-card {
-      background: var(--card-bg);
-      border-radius: 18px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .student-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 35px rgba(0,0,0,0.15);
-    }
-    
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 18px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-bottom: 1px solid var(--border);
-    }
-    .telegram-id {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .telegram-id .icon { font-size: 20px; }
-    
-    .account-badge {
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .badge-admin { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-    .badge-normal { background: linear-gradient(135deg, #3498db, #2980b9); }
-    .badge-giveaway { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-    .badge-default { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
-    
-    /* Subjects */
-    .subjects-section {
-      padding: 16px 18px;
-    }
-    .section-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-light);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .subjects-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .field-group {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 10px 12px;
-      border: 1px solid transparent;
-      transition: border-color 0.2s;
-    }
-    .field-group:focus-within {
-      border-color: var(--primary);
-      background: #f0f4ff;
-    }
-    .field-group label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-light);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 6px;
-    }
-    .field-group input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      outline: none;
-      text-align: center;
-      font-family: monospace;
-    }
-    .field-group input::placeholder { color: #bbb; font-weight: 400; }
-    
-    /* Financial Section */
-    .financial-section {
-      margin: 0 18px 16px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 14px;
+      background: var(--tg-theme-bg-color, #fff);
+      color: var(--tg-theme-text-color, #000);
       padding: 16px;
-      color: white;
     }
-    .financial-section .section-title { color: rgba(255,255,255,0.8); margin-bottom: 12px; }
     
-    .financial-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
     }
-    .financial-grid .field-group {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-    }
-    .financial-grid .field-group:focus-within {
-      background: rgba(255,255,255,0.25);
-      border-color: rgba(255,255,255,0.5);
-    }
-    .financial-grid label { color: rgba(255,255,255,0.8) !important; }
-    .financial-grid input {
-      color: white !important;
-      text-align: left;
-      font-weight: 700;
-    }
-    .financial-grid input::placeholder { color: rgba(255,255,255,0.5); }
     
-    /* Account Type Select */
-    .account-section {
-      padding: 0 18px 16px;
-    }
-    .account-section select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid var(--border);
+    .header {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #fff);
+      padding: 20px;
       border-radius: 12px;
-      font-size: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .card-title {
+      font-size: 18px;
       font-weight: 600;
-      color: var(--text);
-      background: #f8f9fa;
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-    }
-    .account-section select:focus { border-color: var(--primary); }
-    
-    /* Save Button */
-    .save-btn {
-      width: calc(100% - 36px);
-      margin: 0 18px 18px;
-      padding: 14px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
-    }
-    .save-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102,126,234,0.5);
-    }
-    .save-btn:active { transform: scale(0.98); }
-    .save-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .save-btn.saved {
-      background: linear-gradient(135deg, var(--success), #27ae60);
-      box-shadow: 0 4px 15px rgba(46,204,113,0.4);
+      margin-bottom: 12px;
+      color: var(--tg-theme-button-color, #3390ec);
     }
     
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 25px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--success);
-      color: white;
-      padding: 14px 28px;
-      border-radius: 30px;
-      font-weight: 700;
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    .form-group label {
+      display: block;
       font-size: 14px;
-      box-shadow: 0 8px 25px rgba(46,204,113,0.4);
-      z-index: 1000;
-      opacity: 0;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--tg-theme-hint-color, #999);
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--tg-theme-hint-color, #ddd);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--tg-theme-bg-color, #fff);
+      color: var(--tg-theme-text-color, #000);
     }
-    .toast.error { background: var(--danger); box-shadow: 0 8px 25px rgba(231,76,60,0.4); }
     
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+    .form-group input:disabled {
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      opacity: 0.6;
+    }
     
-    /* Responsive */
-    @media (max-width: 400px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .subjects-grid { grid-template-columns: 1fr; }
-      .financial-grid { grid-template-columns: 1fr; }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    
+    .btn:active {
+      opacity: 0.8;
+    }
+    
+    .btn-primary {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #fff);
+    }
+    
+    .btn-secondary {
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      color: var(--tg-theme-text-color, #000);
+      border: 1px solid var(--tg-theme-button-color, #3390ec);
+    }
+    
+    .btn-danger {
+      background: #ff4444;
+      color: #fff;
+    }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .data-item {
+      background: var(--tg-theme-bg-color, #fff);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    
+    .data-item strong {
+      display: block;
+      color: var(--tg-theme-hint-color, #999);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge-admin {
+      background: #ff4444;
+      color: #fff;
+    }
+    
+    .badge-normal {
+      background: #3390ec;
+      color: #fff;
+    }
+    
+    .badge-giveaway {
+      background: #00aa00;
+      color: #fff;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--tg-theme-hint-color, #999);
+    }
+    
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .admin-panel {
+      border: 2px solid var(--tg-theme-button-color, #3390ec);
+    }
+    
+    .commission-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--tg-theme-hint-color, #ddd);
+    }
+    
+    th {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #fff);
+      font-weight: 600;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      color: var(--tg-theme-text-color, #000);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .tab.active {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #fff);
     }
   </style>
 </head>
 <body>
-  <!-- Loading Screen -->
-  <div class="loading-screen" id="loadingScreen">
-    <div class="spinner"></div>
-    <div class="loading-text">Loading Admin Panel...</div>
+  <div class="container">
+    <div class="header">
+      <h1>📚 Subscription Manager</h1>
+      <p id="userStatus">Loading...</p>
+    </div>
+    
+    <div id="message"></div>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('profile')">My Profile</button>
+      <button class="tab hidden" id="adminTab" onclick="showTab('admin')">Admin Panel</button>
+    </div>
+    
+    <!-- Profile View -->
+    <div id="profileTab" class="card">
+      <div class="card-title">👤 Your Subscription</div>
+      <div id="profileContent" class="loading">Loading...</div>
+    </div>
+    
+    <!-- Admin Panel -->
+    <div id="adminTab" class="card admin-panel hidden">
+      <div class="card-title">️ Admin Panel</div>
+      
+      <div class="form-group">
+        <label>Search by Telegram ID</label>
+        <input type="text" id="searchId" placeholder="Enter Telegram ID">
+        <button class="btn btn-secondary" onclick="searchUser()">Search</button>
+      </div>
+      
+      <div id="editForm" class="hidden">
+        <div class="form-group">
+          <label>Telegram ID</label>
+          <input type="text" id="edit_telegram_id" disabled>
+        </div>
+        
+        <div class="data-grid">
+          <div class="form-group">
+            <label>MM</label>
+            <input type="date" id="edit_mm">
+          </div>
+          <div class="form-group">
+            <label>EN</label>
+            <input type="date" id="edit_en">
+          </div>
+          <div class="form-group">
+            <label>Math</label>
+            <input type="date" id="edit_math">
+          </div>
+          <div class="form-group">
+            <label>Physics</label>
+            <input type="date" id="edit_phy">
+          </div>
+          <div class="form-group">
+            <label>Chemistry</label>
+            <input type="date" id="edit_chem">
+          </div>
+          <div class="form-group">
+            <label>Biology</label>
+            <input type="date" id="edit_bio">
+          </div>
+          <div class="form-group">
+            <label>Economics</label>
+            <input type="date" id="edit_eco">
+          </div>
+          <div class="form-group">
+            <label>All Subjects</label>
+            <input type="date" id="edit_all">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Account Type</label>
+          <select id="edit_accounttype">
+            <option value="normal acc">Normal Account</option>
+            <option value="admin acc">Admin Account</option>
+            <option value="giveaway winner acc">Giveaway Winner</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Price (Admin Only)</label>
+          <input type="number" id="edit_price" placeholder="Enter price">
+        </div>
+        
+        <div class="form-group">
+          <label>Affiliate Code</label>
+          <input type="text" id="edit_affiliate" placeholder="Affiliate code">
+        </div>
+        
+        <div class="form-group">
+          <label>Commission (%)</label>
+          <select id="edit_comission">
+            <option value="0">0%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+        
+        <div class="commission-info" id="commissionCalc" style="display:none;">
+          Commission Amount: <strong id="commissionAmount">0</strong>
+        </div>
+        
+        <button class="btn btn-primary" onclick="updateUser()">Update User</button>
+        <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+      </div>
+      
+      <div id="addUserForm" style="margin-top: 20px;">
+        <div class="card-title">➕ Add New User</div>
+        <div class="form-group">
+          <label>Telegram ID</label>
+          <input type="text" id="add_telegram_id" placeholder="Enter Telegram ID">
+        </div>
+        
+        <div class="data-grid">
+          <div class="form-group">
+            <label>MM</label>
+            <input type="date" id="add_mm">
+          </div>
+          <div class="form-group">
+            <label>EN</label>
+            <input type="date" id="add_en">
+          </div>
+          <div class="form-group">
+            <label>Math</label>
+            <input type="date" id="add_math">
+          </div>
+          <div class="form-group">
+            <label>Physics</label>
+            <input type="date" id="add_phy">
+          </div>
+          <div class="form-group">
+            <label>Chemistry</label>
+            <input type="date" id="add_chem">
+          </div>
+          <div class="form-group">
+            <label>Biology</label>
+            <input type="date" id="add_bio">
+          </div>
+          <div class="form-group">
+            <label>Economics</label>
+            <input type="date" id="add_eco">
+          </div>
+          <div class="form-group">
+            <label>All Subjects</label>
+            <input type="date" id="add_all">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Account Type</label>
+          <select id="add_accounttype">
+            <option value="normal acc">Normal Account</option>
+            <option value="admin acc">Admin Account</option>
+            <option value="giveaway winner acc">Giveaway Winner</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" id="add_price" placeholder="Enter price">
+        </div>
+        
+        <div class="form-group">
+          <label>Affiliate Code</label>
+          <input type="text" id="add_affiliate" placeholder="Affiliate code">
+        </div>
+        
+        <div class="form-group">
+          <label>Commission (%)</label>
+          <select id="add_comission">
+            <option value="0">0%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+        
+        <button class="btn btn-primary" onclick="addUser()">Add User</button>
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="viewLogs()">View Logs</button>
+      </div>
+    </div>
+    
+    <!-- Logs View -->
+    <div id="logsTab" class="card hidden">
+      <div class="card-title">📋 Activity Logs</div>
+      <div id="logsContent" class="loading">Loading...</div>
+      <button class="btn btn-secondary" onclick="showTab('admin')">Back to Admin</button>
+    </div>
   </div>
-  
-  <!-- Main App -->
-  <div id="app"></div>
-  
-  <!-- Toast -->
-  <div class="toast" id="toast">Saved! 💾</div>
 
   <script>
-    // ============================================
-    // CONFIG - EDIT THIS WITH YOUR WEB APP URL
-    // ============================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyajWCH3_uyXzW5ObpVF1xEWLZo5HI2OKS_DobOIaevl57nKHpvT2UfK08fi_kQDkpr/exec";
-    const ADMIN_ID = "8432363664";
-    
-    // ============================================
-    // TELEGRAM WEB APP INIT
-    // ============================================
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    var tg = window.Telegram.WebApp;
     tg.expand();
     
-    // Set theme colors
-    tg.setHeaderColor('#667eea');
-    tg.setBackgroundColor('#667eea');
+    var currentUserId = tg.initDataUnsafe.user?.id?.toString() || '';
+    var isAdmin = false;
     
-    const userId = tg.initDataUnsafe?.user?.id?.toString() || "";
-    const userName = tg.initDataUnsafe?.user?.first_name || "Admin";
+    // Initialize
+    window.onload = function() {
+      checkAdminStatus();
+      loadUserData();
+    };
     
-    let sheetData = [];
-    let headers = [];
+    function checkAdminStatus() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            isAdmin = result.isAdmin;
+            document.getElementById('userStatus').textContent = isAdmin ? '👑 Admin Access' : '👤 User';
+            if (isAdmin) {
+              document.getElementById('adminTab').classList.remove('hidden');
+            }
+          }
+        })
+        .checkAdmin(currentUserId);
+    }
     
-    // ============================================
-    // UTILS
-    // ============================================
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.className = 'toast' + (isError ? ' error' : '');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+    function loadUserData() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            displayUserData(result.data);
+          } else {
+            document.getElementById('profileContent').innerHTML = 
+              '<div class="error">' + result.message + '</div>';
+          }
+        })
+        .getUserData(currentUserId);
+    }
+    
+    function displayUserData(data) {
+      var accountBadge = '';
+      if (data.accounttype === 'admin acc') {
+        accountBadge = '<span class="badge badge-admin">Admin</span>';
+      } else if (data.accounttype === 'giveaway winner acc') {
+        accountBadge = '<span class="badge badge-giveaway">Giveaway Winner</span>';
+      } else {
+        accountBadge = '<span class="badge badge-normal">Normal</span>';
+      }
+      
+      var commissionInfo = '';
+      if (data.affiliate && data.comission > 0) {
+        var commissionAmount = (data.price || 0) * (data.comission / 100);
+        commissionInfo = '<div class="commission-info">Affiliate: ' + data.affiliate + 
+                        '<br>Commission: ' + data.comission + '% (' + commissionAmount + ' MMK)</div>';
+      }
+      
+      var html = `
+        <div class="data-grid">
+          <div class="data-item">
+            <strong>Telegram ID</strong>
+            ${data.telegram_id || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Account Type</strong>
+            ${accountBadge}
+          </div>
+          <div class="data-item">
+            <strong>MM</strong>
+            ${data.mm || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>EN</strong>
+            ${data.en || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Math</strong>
+            ${data.math || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Physics</strong>
+            ${data.phy || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Chemistry</strong>
+            ${data.chem || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Biology</strong>
+            ${data.bio || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Economics</strong>
+            ${data.eco || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>All Subjects</strong>
+            ${data.all || 'N/A'}
+          </div>
+          <div class="data-item">
+            <strong>Price</strong>
+            ${data.price ? data.price + ' MMK' : 'N/A'}
+          </div>
+        </div>
+        ${commissionInfo}
+      `;
+      
+      document.getElementById('profileContent').innerHTML = html;
+    }
+    
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('profileTab').classList.add('hidden');
+      document.getElementById('adminTab').classList.add('hidden');
+      document.getElementById('logsTab').classList.add('hidden');
+      
+      if (tab === 'profile') {
+        document.querySelector('.tab:nth-child(1)').classList.add('active');
+        document.getElementById('profileTab').classList.remove('hidden');
+      } else if (tab === 'admin') {
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
+        document.getElementById('adminTab').classList.remove('hidden');
+      }
+    }
+    
+    function searchUser() {
+      var searchId = document.getElementById('searchId').value;
+      if (!searchId) {
+        showMessage('Please enter Telegram ID', 'error');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            fillEditForm(result.data);
+          } else {
+            showMessage(result.message, 'error');
+          }
+        })
+        .getUserData(searchId);
+    }
+    
+    function fillEditForm(data) {
+      document.getElementById('edit_telegram_id').value = data.telegram_id || '';
+      document.getElementById('edit_mm').value = formatDate(data.mm);
+      document.getElementById('edit_en').value = formatDate(data.en);
+      document.getElementById('edit_math').value = formatDate(data.math);
+      document.getElementById('edit_phy').value = formatDate(data.phy);
+      document.getElementById('edit_chem').value = formatDate(data.chem);
+      document.getElementById('edit_bio').value = formatDate(data.bio);
+      document.getElementById('edit_eco').value = formatDate(data.eco);
+      document.getElementById('edit_all').value = formatDate(data.all);
+      document.getElementById('edit_accounttype').value = data.accounttype || 'normal acc';
+      document.getElementById('edit_price').value = data.price || '';
+      document.getElementById('edit_affiliate').value = data.affiliate || '';
+      document.getElementById('edit_comission').value = data.comission || '0';
+      
+      document.getElementById('editForm').classList.remove('hidden');
+      calculateCommission();
     }
     
     function formatDate(dateStr) {
       if (!dateStr) return '';
-      if (typeof dateStr === 'string') {
-        // Already formatted
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
-        // Google Sheets date format
-        const match = dateStr.match(/(\w{3}) (\d{1,2}),? (\d{4})/);
-        if (match) {
-          const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
-                          'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-          const m = months[match[1]];
-          const d = match[2].padStart(2, '0');
-          const y = match[3];
-          return `${y}-${m}-${d}`;
-        }
-        return dateStr;
-      }
-      if (dateStr instanceof Date) {
-        return dateStr.toISOString().split('T')[0];
-      }
-      return String(dateStr);
+      var date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
     }
     
-    // ============================================
-    // API CALLS
-    // ============================================
-    async function fetchData() {
-      try {
-        const response = await fetch(`${WEB_APP_URL}?action=getData`);
-        const result = await response.json();
-        if (result.success) {
-          sheetData = result.data;
-          headers = result.data[0];
-          return true;
-        }
-        throw new Error(result.error || 'Failed to fetch data');
-      } catch (err) {
-        console.error('Fetch error:', err);
-        showToast('❌ Failed to load data: ' + err.message, true);
-        return false;
-      }
-    }
+    document.getElementById('edit_price').addEventListener('input', calculateCommission);
+    document.getElementById('edit_comission').addEventListener('change', calculateCommission);
     
-    async function saveToSheet(rowIndex, rowData) {
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'updateRow',
-            rowIndex: rowIndex,
-            rowData: rowData
-          })
-        });
-        const result = await response.json();
-        return result;
-      } catch (err) {
-        console.error('Save error:', err);
-        return { success: false, error: err.message };
-      }
-    }
-    
-    // ============================================
-    // RENDERS
-    // ============================================
-    function renderAccessDenied() {
-      document.getElementById('app').innerHTML = `
-        <div class="access-denied">
-          <div class="icon">⛔</div>
-          <h1>Access Denied</h1>
-          <p>ဒီ Web App ကို Admin ဘဲသုံးလို့ရပါတယ်။<br>Only Admin can use this Web App.</p>
-          <div class="user-id">Your ID: ${userId || 'Not detected'}</div>
-        </div>
-      `;
-      document.getElementById('loadingScreen').classList.add('hidden');
-    }
-    
-    function renderApp() {
-      const totalStudents = sheetData.length - 1;
-      const rows = sheetData.slice(1);
-      const adminCount = rows.filter(r => r[9] === 'admin acc').length;
-      const normalCount = rows.filter(r => r[9] === 'normal acc').length;
-      const giveawayCount = rows.filter(r => r[9] === 'giveaway winner acc').length;
+    function calculateCommission() {
+      var price = parseFloat(document.getElementById('edit_price').value) || 0;
+      var percentage = parseFloat(document.getElementById('edit_comission').value) || 0;
+      var commission = price * (percentage / 100);
       
-      let html = `
-        <div class="app-container">
-          <div class="header">
-            <div class="avatar">👑</div>
-            <h1>မင်္ဂလာပါ ${userName}</h1>
-            <p>Admin Panel • Student Records Management</p>
-          </div>
-          
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="number">${totalStudents}</div>
-              <div class="label">Total</div>
-            </div>
-            <div class="stat-card">
-              <div class="number">${adminCount}</div>
-              <div class="label">Admin</div>
-            </div>
-            <div class="stat-card">
-              <div class="number">${normalCount}</div>
-              <div class="label">Normal</div>
-            </div>
-            <div class="stat-card">
-              <div class="number">${giveawayCount}</div>
-              <div class="label">Giveaway</div>
-            </div>
-          </div>
-          
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Search by Telegram ID or Account Type..." onkeyup="filterCards()">
-          </div>
-          
-          <div id="cardsContainer">
-      `;
-      
-      for (let i = 1; i < sheetData.length; i++) {
-        const row = sheetData[i];
-        const telegramId = row[0] || '';
-        const mm = formatDate(row[1]);
-        const en = formatDate(row[2]);
-        const math = formatDate(row[3]);
-        const phy = formatDate(row[4]);
-        const chem = formatDate(row[5]);
-        const bio = formatDate(row[6]);
-        const eco = formatDate(row[7]);
-        const all = formatDate(row[8]);
-        const accountType = row[9] || 'normal acc';
-        const price = row[10] || '';
-        const affiliate = row[11] || '';
-        const comission = row[12] || '';
-        
-        const badgeClass = accountType === 'admin acc' ? 'badge-admin' : 
-                          accountType === 'giveaway winner acc' ? 'badge-giveaway' : 'badge-normal';
-        
-        html += `
-          <div class="student-card" data-telegram="${telegramId}" data-type="${accountType}">
-            <div class="card-header">
-              <div class="telegram-id">
-                <span class="icon">👤</span>
-                ${telegramId}
-              </div>
-              <div class="account-badge ${badgeClass}">${accountType}</div>
-            </div>
-            
-            <div class="subjects-section">
-              <div class="section-title">📚 Subjects (Exam Dates)</div>
-              <div class="subjects-grid">
-                <div class="field-group">
-                  <label>🇲🇲 Myanmar</label>
-                  <input type="text" id="mm_${i}" value="${mm}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>🇬🇧 English</label>
-                  <input type="text" id="en_${i}" value="${en}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>📐 Math</label>
-                  <input type="text" id="math_${i}" value="${math}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>⚛️ Physics</label>
-                  <input type="text" id="phy_${i}" value="${phy}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>🧪 Chemistry</label>
-                  <input type="text" id="chem_${i}" value="${chem}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>🧬 Biology</label>
-                  <input type="text" id="bio_${i}" value="${bio}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>🌿 Eco</label>
-                  <input type="text" id="eco_${i}" value="${eco}" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="field-group">
-                  <label>📖 All Subjects</label>
-                  <input type="text" id="all_${i}" value="${all}" placeholder="YYYY-MM-DD">
-                </div>
-              </div>
-            </div>
-            
-            <div class="financial-section">
-              <div class="section-title">💰 Financial Information</div>
-              <div class="financial-grid">
-                <div class="field-group">
-                  <label>💵 Price</label>
-                  <input type="text" id="price_${i}" value="${price}" placeholder="0">
-                </div>
-                <div class="field-group">
-                  <label>🔗 Affiliate Code</label>
-                  <input type="text" id="affiliate_${i}" value="${affiliate}" placeholder="e.g. AFF001">
-                </div>
-                <div class="field-group">
-                  <label>📊 Commission %</label>
-                  <input type="text" id="comission_${i}" value="${comission}" placeholder="20% or 30%">
-                </div>
-              </div>
-            </div>
-            
-            <div class="account-section">
-              <div class="section-title">⚙️ Account Settings</div>
-              <select id="accounttype_${i}">
-                <option value="normal acc" ${accountType === 'normal acc' ? 'selected' : ''}>Normal Account</option>
-                <option value="admin acc" ${accountType === 'admin acc' ? 'selected' : ''}>Admin Account</option>
-                <option value="giveaway winner acc" ${accountType === 'giveaway winner acc' ? 'selected' : ''}>Giveaway Winner</option>
-              </select>
-            </div>
-            
-            <button class="save-btn" id="btn_${i}" onclick="saveRow(${i})">
-              <span>💾</span> Save Changes (ပြင်ထားတာသိမ်းမယ်)
-            </button>
-          </div>
-        `;
-      }
-      
-      html += `</div></div>`;
-      document.getElementById('app').innerHTML = html;
-      document.getElementById('loadingScreen').classList.add('hidden');
-    }
-    
-    // ============================================
-    // INTERACTIONS
-    // ============================================
-    function filterCards() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const cards = document.querySelectorAll('.student-card');
-      cards.forEach(card => {
-        const telegram = card.getAttribute('data-telegram').toLowerCase();
-        const type = card.getAttribute('data-type').toLowerCase();
-        card.style.display = (telegram.includes(search) || type.includes(search)) ? 'block' : 'none';
-      });
-    }
-    
-    async function saveRow(rowIndex) {
-      const btn = document.getElementById(`btn_${rowIndex}`);
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span>⏳</span> Saving...';
-      btn.disabled = true;
-      
-      const card = btn.closest('.student-card');
-      const telegramId = card.querySelector('.telegram-id').textContent.trim().replace('👤', '').trim();
-      
-      const rowData = [
-        telegramId,
-        document.getElementById(`mm_${rowIndex}`).value,
-        document.getElementById(`en_${rowIndex}`).value,
-        document.getElementById(`math_${rowIndex}`).value,
-        document.getElementById(`phy_${rowIndex}`).value,
-        document.getElementById(`chem_${rowIndex}`).value,
-        document.getElementById(`bio_${rowIndex}`).value,
-        document.getElementById(`eco_${rowIndex}`).value,
-        document.getElementById(`all_${rowIndex}`).value,
-        document.getElementById(`accounttype_${rowIndex}`).value,
-        document.getElementById(`price_${rowIndex}`).value,
-        document.getElementById(`affiliate_${rowIndex}`).value,
-        document.getElementById(`comission_${rowIndex}`).value
-      ];
-      
-      const result = await saveToSheet(rowIndex + 1, rowData);
-      
-      if (result.success) {
-        btn.innerHTML = '<span>✅</span> Saved! (သိမ်းပြီးပြီ)';
-        btn.classList.add('saved');
-        showToast('✅ Saved successfully!');
-        setTimeout(() => {
-          btn.innerHTML = originalText;
-          btn.classList.remove('saved');
-          btn.disabled = false;
-        }, 2000);
+      if (percentage > 0) {
+        document.getElementById('commissionCalc').style.display = 'block';
+        document.getElementById('commissionAmount').textContent = commission.toFixed(2) + ' MMK';
       } else {
-        btn.innerHTML = '<span>❌</span> Error! ထပ်စမ်းကြည့်ပါ';
-        showToast('❌ Error: ' + (result.error || 'Unknown error'), true);
-        setTimeout(() => {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-        }, 2000);
+        document.getElementById('commissionCalc').style.display = 'none';
       }
     }
     
-    // ============================================
-    // INIT
-    // ============================================
-    async function init() {
-      // Check admin
-      if (userId !== ADMIN_ID) {
-        renderAccessDenied();
+    function updateUser() {
+      var formData = {
+        telegram_id: document.getElementById('edit_telegram_id').value,
+        mm: document.getElementById('edit_mm').value,
+        en: document.getElementById('edit_en').value,
+        math: document.getElementById('edit_math').value,
+        phy: document.getElementById('edit_phy').value,
+        chem: document.getElementById('edit_chem').value,
+        bio: document.getElementById('edit_bio').value,
+        eco: document.getElementById('edit_eco').value,
+        all: document.getElementById('edit_all').value,
+        accounttype: document.getElementById('edit_accounttype').value,
+        price: parseFloat(document.getElementById('edit_price').value) || 0,
+        affiliate: document.getElementById('edit_affiliate').value,
+        comission: parseFloat(document.getElementById('edit_comission').value) || 0
+      };
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showMessage(result.message, 'success');
+            clearForm();
+            loadUserData();
+          } else {
+            showMessage(result.message, 'error');
+          }
+        })
+        .updateUserData(formData);
+    }
+    
+    function addUser() {
+      var formData = {
+        telegram_id: document.getElementById('add_telegram_id').value,
+        mm: document.getElementById('add_mm').value,
+        en: document.getElementById('add_en').value,
+        math: document.getElementById('add_math').value,
+        phy: document.getElementById('add_phy').value,
+        chem: document.getElementById('add_chem').value,
+        bio: document.getElementById('add_bio').value,
+        eco: document.getElementById('add_eco').value,
+        all: document.getElementById('add_all').value,
+        accounttype: document.getElementById('add_accounttype').value,
+        price: parseFloat(document.getElementById('add_price').value) || 0,
+        affiliate: document.getElementById('add_affiliate').value,
+        comission: parseFloat(document.getElementById('add_comission').value) || 0
+      };
+      
+      if (!formData.telegram_id) {
+        showMessage('Telegram ID is required', 'error');
         return;
       }
       
-      // Fetch data
-      const success = await fetchData();
-      if (success) {
-        renderApp();
-      } else {
-        document.getElementById('loadingScreen').innerHTML = `
-          <div style="color:white;text-align:center;padding:20px;">
-            <div style="font-size:50px;margin-bottom:15px;">❌</div>
-            <div style="font-size:18px;font-weight:700;margin-bottom:10px;">Failed to Load Data</div>
-            <div style="opacity:0.8;">Please check your internet connection and try again.</div>
-          </div>
-        `;
-      }
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showMessage(result.message, 'success');
+            clearAddForm();
+          } else {
+            showMessage(result.message, 'error');
+          }
+        })
+        .addNewUser(formData);
     }
     
-    init();
+    function clearForm() {
+      document.getElementById('editForm').classList.add('hidden');
+      document.getElementById('searchId').value = '';
+    }
+    
+    function clearAddForm() {
+      document.getElementById('add_telegram_id').value = '';
+      document.getElementById('add_mm').value = '';
+      document.getElementById('add_en').value = '';
+      document.getElementById('add_math').value = '';
+      document.getElementById('add_phy').value = '';
+      document.getElementById('add_chem').value = '';
+      document.getElementById('add_bio').value = '';
+      document.getElementById('add_eco').value = '';
+      document.getElementById('add_all').value = '';
+      document.getElementById('add_price').value = '';
+      document.getElementById('add_affiliate').value = '';
+      document.getElementById('add_comission').value = '0';
+    }
+    
+    function viewLogs() {
+      document.getElementById('adminTab').classList.add('hidden');
+      document.getElementById('logsTab').classList.remove('hidden');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            displayLogs(result.data);
+          } else {
+            document.getElementById('logsContent').innerHTML = 
+              '<div class="error">' + result.message + '</div>';
+          }
+        })
+        .getLogs(currentUserId);
+    }
+    
+    function displayLogs(data) {
+      if (!data || data.length === 0) {
+        document.getElementById('logsContent').innerHTML = '<p>No logs found</p>';
+        return;
+      }
+      
+      var html = '<table><thead><tr>';
+      for (var i = 0; i < data[0].length; i++) {
+        html += '<th>' + data[0][i] + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+      
+      for (var i = 1; i < data.length; i++) {
+        html += '<tr>';
+        for (var j = 0; j < data[i].length; j++) {
+          html += '<td>' + (data[i][j] || '') + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      
+      document.getElementById('logsContent').innerHTML = html;
+    }
+    
+    function showMessage(message, type) {
+      var msgDiv = document.getElementById('message');
+      msgDiv.innerHTML = '<div class="' + type + '">' + message + '</div>';
+      setTimeout(function() {
+        msgDiv.innerHTML = '';
+      }, 3000);
+    }
   </script>
 </body>
 </html>
