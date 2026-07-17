@@ -1,763 +1,332 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Analytics Command Center</title>
+    <title>G-12 Admin Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-primary: #0b0f19;
-            --bg-secondary: #111827;
-            --bg-card: #1f2937;
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-cyan: #06b6d4;
-            --accent-purple: #8b5cf6;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-yellow: #f59e0b;
-            --border: #374151;
-        }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        
+        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
+        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
+        .tab.active { background: var(--primary); color: white; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 40px;
-            text-align: center;
-            word-break: break-word;
-        }
-
-        .nav-item {
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            white-space: nowrap;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--accent-cyan);
-            border-left: 3px solid var(--accent-cyan);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 280px;
-            flex: 1;
-            padding: 30px;
-            width: calc(100% - 280px);
-            max-width: 100%;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            word-break: break-word;
-        }
-
-        .live-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-green);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-
-        .sync-btn {
-            background: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: 10px;
-        }
-
-        .sync-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            min-width: 0;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-        }
-
-        .stat-card:nth-child(1)::before { background: var(--accent-cyan); }
-        .stat-card:nth-child(2)::before { background: var(--accent-purple); }
-        .stat-card:nth-child(3)::before { background: var(--accent-yellow); }
-        .stat-card:nth-child(4)::before { background: var(--accent-green); }
-
-        .stat-card h3 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            word-break: break-word;
-        }
-
-        .stat-card p {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            word-break: break-word;
-        }
-
-        .stat-card span {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            display: block;
-            word-break: break-word;
-        }
-
-        /* Panels */
-        .panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
-
-        .panel-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        /* Form Styles */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            word-break: break-word;
-        }
-
-        input, select, textarea {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            outline: none;
-            transition: border 0.3s;
-            width: 100%;
-            max-width: 100%;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--accent-cyan);
-        }
-
-        small {
-            color: var(--accent-yellow);
-            font-size: 0.8rem;
-            word-break: break-word;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            background: var(--bg-primary);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .btn {
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: transform 0.2s, opacity 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
-        }
-
-        .btn-danger {
-            background: var(--accent-red);
-        }
-
-        /* Table */
-        .table-container {
-            overflow-x: auto;
-            width: 100%;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-            word-break: break-word;
-        }
-
-        th {
-            color: var(--text-secondary);
-            font-weight: 600;
-            background: var(--bg-primary);
-            white-space: nowrap;
-        }
-
-        tr:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .badge-regular {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--accent-cyan);
-        }
-
-        .badge-admin {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--accent-red);
-        }
-
-        .badge-giveaway {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-green);
-        }
-
-        .badge-affiliate {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--accent-yellow);
-        }
-
-        .action-btn {
-            background: transparent;
-            border: 1px solid var(--accent-red);
-            color: var(--accent-red);
-            padding: 5px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            white-space: nowrap;
-        }
-
-        .note-text {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            background: rgba(239, 68, 68, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 3px solid var(--accent-red);
-            word-break: break-word;
-        }
-
-        .filter-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 240px;
-            }
-            .main-content {
-                margin-left: 240px;
-                width: calc(100% - 240px);
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-                padding: 15px;
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .panel-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-
-        /* Loading State */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
+        .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
+        .sub-main { display: flex; justify-content: space-between; align-items: center; }
+        .sub-name { font-weight: bold; color: #333; }
+        .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
+        
+        .status-expired { color: var(--danger); }
+        .status-warning { color: var(--warning); }
+        .status-ok { color: var(--success); }
+        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">G-12 ANALYTICS</div>
-        <div class="nav-item active">📊 Dashboard</div>
-        <div class="nav-item" onclick="document.getElementById('addUserPanel').scrollIntoView({behavior: 'smooth'})">➕ Add New Entry</div>
-        <div class="nav-item" onclick="document.getElementById('dataPanel').scrollIntoView({behavior: 'smooth'})">📝 Database Logs</div>
-    </aside>
+<div id="loading-overlay">⏳ Loading...</div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="header">
-            <h1>Command Center</h1>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <div class="live-badge">
-                    <div class="live-dot"></div>
-                    LIVE
-                </div>
-                <button class="sync-btn" id="syncBtn" onclick="loadDataFromSheet()">
-                    🔄 Sync
-                </button>
-            </div>
+<div class="container">
+    <div class="card">
+        <h2>👤 Add/Update Sub (G-12)</h2>
+        <div class="form-group">
+            <label>Telegram ID (Only Numbers)</label>
+            <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
-
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>စုစုပေါင်း ဝင်ငွေ (Total Revenue)</h3>
-                <p id="statRevenue">0 Ks</p>
-                <span>Excludes Admins & Giveaways</span>
-            </div>
-            <div class="stat-card">
-                <h3>အမှန်တကယ် ဝယ်ယူသူ (Paying Users)</h3>
-                <p id="statUsers">0</p>
-                <span>Active Paying Customers</span>
-            </div>
-            <div class="stat-card">
-                <h3>Affiliate Commission (20%)</h3>
-                <p id="statAffiliate">0 Ks</p>
-                <span>Total Payouts Owed</span>
-            </div>
-            <div class="stat-card">
-                <h3>အခမဲ့ ခွင့်ပြုထားသူ (Giveaways)</h3>
-                <p id="statGiveaway">0</p>
-                <span>Free Access Granted</span>
-            </div>
-        </div>
-
-        <!-- Add User Panel -->
-        <div class="panel" id="addUserPanel">
-            <div class="panel-title">➕ အသုံးပြုသူအသစ် / ခွင့်ပြုချက်သစ် ထည့်သွင်းရန်</div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>User ID / ဖုန်းနံပါတ်</label>
-                    <input type="text" id="userId" placeholder="e.g., 09123456789">
-                </div>
-                <div class="form-group">
-                    <label>အကောင့်အမျိုးအစား</label>
-                    <select id="userType">
-                        <option value="Regular">ပုံမှန် ဝယ်ယူသူ</option>
-                        <option value="Admin">Admin (မရေတွက်ရန်)</option>
-                        <option value="Giveaway">Giveaway (အခမဲ့)</option>
-                        <option value="Affiliate">Affiliate Partner</option>
-                    </select>
-                </div>
-                
-                <div class="form-group full-width">
-                    <label>ဘာသာရပ်များ ရွေးချယ်ရန်</label>
-                    <div class="checkbox-grid" id="subjectsGrid">
-                        <!-- JS will populate this -->
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>သက်တမ်း (လ)</label>
-                    <select id="duration">
-                        <option value="1">၁ လ</option>
-                        <option value="2">၂ လ</option>
-                        <option value="3"> လ</option>
-                        <option value="5">၅ လ</option>
-                        <option value="6">၆ လ</option>
-                        <option value="12">၁ ှစ်</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Affiliate Code (ရှိလျှင်)</label>
-                    <input type="text" id="affiliateCode" placeholder="e.g., MINA20">
-                </div>
-                
-                <div class="form-group">
-                    <label>ရရှိထားသော ငွေပမာဏ (Ks)</label>
-                    <input type="number" id="finalPrice" placeholder="Manual Entry">
-                    <small>⚠️ ဈေးလျှော့ပေးထားပြီးသား အမှန်တကယ်ရငွေကို ထည့်ပါ။</small>
-                </div>
-                <div class="form-group">
-                    <label>မှတ်ချက်</label>
-                    <input type="text" id="notes" placeholder="Promo code, အထူးလျှော့စသည်...">
-                </div>
-            </div>
-            <br>
-            <button class="btn" onclick="saveEntryToSheet()">💾 Save to Google Sheet</button>
-        </div>
-
-        <!-- Data Table Panel -->
-        <div class="panel" id="dataPanel">
-            <div class="panel-header">
-                <div class="panel-title"> မှတ်တမ်းများ (Google Sheet Data)</div>
-                <select id="filterType" class="filter-select" onchange="renderTable()">
-                    <option value="all">All Entries</option>
-                    <option value="Regular">Paying Users</option>
-                    <option value="Admin">Admins</option>
-                    <option value="Giveaway">Giveaways</option>
-                    <option value="Affiliate">Affiliates</option>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 2;">
+                <label>Subject</label>
+                <select id="subject">
+                    <option value="Myanmar">Myanmar</option>
+                    <option value="English">English</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Economics">Economics</option>
+                    <option value="All">All Subjects (all)</option>
                 </select>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>ID</th>
-                            <th>Type</th>
-                            <th>Subjects</th>
-                            <th>Duration</th>
-                            <th>Price</th>
-                            <th>Affiliate</th>
-                            <th>Commission</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody">
-                        <!-- JS will populate this -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="note-text">
-                💡 <strong>မှတ်ချက်:</strong> မှတ်တမ်းတစ်ခုခုကို ဖျက်ချင်ပါက / ပြင်ဆင်ချင်ပါက ဤနေရာမှတစ်ဆင့် မလုပ်ဘဲ <strong>Google Sheet</strong> ထဲသို့ သွားရောက် ပြင်ဆင်/ဖျက်ပေးပါ။ (Dashboard သည် Sheet ရှိ ဒေတာအတိုင်း အလိုအလျောက် ပြန်လည်ပြသပါမည်)
+            <div class="form-group" style="flex: 1;">
+                <label>Months</label>
+                <input type="number" id="months" value="1" min="1">
             </div>
         </div>
-    </main>
+        <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="date" id="expiryDate">
+        </div>
+        <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
+    </div>
 
-    <script>
-        // ⚠️ အဆင့်(၂) က ရလာတဲ့ Web App URL ကို ဒီနေရာမှာ အစားထိုးထည့်ပါ ⚠️
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC-c3o7iGK-YWpWTdlafrD4Sj5SX9VVyye4LtpDvCxdTjFNw-7QCJSXSqjiGhGgiz_/exec"; 
+    <div class="tabs">
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
+        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
+       <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
+    </div>
 
-        const subjectsList = ["မြန်မာစာ", "အင်္ဂလိပ်စာ", "သင်္ချာ", "ရူပဗေဒ", "ဓာတုဗေဒ", "ဇီဝဗေဒ", "ဘောဂဗေဒ", "ပထဝီ", "သမိုင်း"];
-        let db = [];
+    <div id="search-container">
+        <input type="text" id="search" class="search-box" placeholder="🔍 Search ID or Subject..." onkeyup="renderData()">
+    </div>
 
-        // Initialize UI
-        const subjectsGrid = document.getElementById('subjectsGrid');
-        subjectsList.forEach(sub => {
-            subjectsGrid.innerHTML += `
-                <label class="checkbox-item">
-                    <input type="checkbox" value="${sub}" class="subject-check"> ${sub}
-                </label>
-            `;
-        });
+    <div id="displayArea"></div>
+</div>
 
-        // Fetch Data from Google Sheet
-        async function loadDataFromSheet() {
-            const btn = document.getElementById('syncBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="loading"></span> Syncing...';
-            btn.disabled = true;
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-            try {
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                db = data;
-                renderDashboard();
-                btn.innerHTML = '✅ Synced!';
-            } catch (error) {
-                console.error("Sync Error:", error);
-                btn.innerHTML = '❌ Error';
-                alert("Google Sheet နှင့် ချိတ်ဆက်မှု အဆင်မပြေဖြစ်နေပါသည်။ URL မှန်ကန်မှုနှင့် Internet Connection ကို စစ်ဆေးပါ။");
-            } finally {
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }, 2000);
+    // 🔒 Admin ID ဖြည့်ရန်
+    const ADMIN_IDS = ["8432363664","7273479209"]; 
+
+    const currentUserId = tg.initDataUnsafe?.user?.id;
+    const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
+
+    if (!isAdmin) {
+        document.body.innerHTML = `<div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
+            <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1><h2 style="color:#721c24; margin-top:10px;">Access Denied</h2></div>`;
+        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။");
+        throw new Error("Unauthorized Access");
+    }
+
+    // 🔗 Google Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVC5RE4A9A_Se0cTTYMDJ1GmMLMU5Fu45dJIW9-_3_gNhyOovz_jdTi0z893k6wEV4ag/exec";
+    
+    let currentTab = 'manage';
+    let cachedData = [];
+    let cachedLogs = []; 
+
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
+    function getLocalDateStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(0, 10);
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Time (AM/PM) ပြောင်းပေးသည့် Function
+    function getLocalTimeStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(11, 16);
+        let hh = d.getHours();
+        let min = String(d.getMinutes()).padStart(2, '0');
+        let ampm = hh >= 12 ? 'PM' : 'AM';
+        hh = hh % 12 || 12; // 12-hour format
+        return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
+    }
+
+    function updateExpiryDate() {
+        const id = document.getElementById('tgId').value.trim();
+        const sub = document.getElementById('subject').value;
+        const months = parseInt(document.getElementById('months').value) || 0;
+
+        let baseDate = new Date(); 
+
+        if (id && sub && cachedData.length > 0) {
+            const existingRecord = cachedData.find(item => String(item.id) === id && item.subject === sub);
+            if (existingRecord && existingRecord.expiry) {
+                let existingExp = new Date(existingRecord.expiry);
+                if (existingExp > baseDate) {
+                    baseDate = existingExp; 
+                }
             }
         }
 
-        // Save Data to Google Sheet
-        async function saveEntryToSheet() {
-            const id = document.getElementById('userId').value.trim();
-            const type = document.getElementById('userType').value;
-            const subjects = Array.from(document.querySelectorAll('.subject-check:checked')).map(cb => cb.value).join(", ");
-            const duration = document.getElementById('duration').value;
-            const affiliate = document.getElementById('affiliateCode').value.trim();
-            const price = parseFloat(document.getElementById('finalPrice').value) || 0;
-            const notes = document.getElementById('notes').value.trim();
+        baseDate.setMonth(baseDate.getMonth() + months);
+        document.getElementById('expiryDate').value = baseDate.toISOString().split('T')[0];
+    }
 
-            if (!id || !subjects) {
-                alert('User ID နှင့် ဘာသာရပ် အနည်းဆုံး ၁ ခု ထည့်သွင်းရန် လိုအပ်ပါသည်။');
-                return;
-            }
+    document.getElementById('months').addEventListener('input', updateExpiryDate);
+    document.getElementById('tgId').addEventListener('input', updateExpiryDate);
+    document.getElementById('subject').addEventListener('change', updateExpiryDate);
 
-            let commission = 0;
-            if (affiliate && type === 'Regular') {
-                commission = price * 0.20;
-            }
+    function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
 
-            const payload = { id, type, subjects, duration, affiliate, price, commission, notes };
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
+        renderData();
+    }
 
-            try {
-                const formData = new FormData();
-                formData.append("data", JSON.stringify(payload));
-
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: formData
-                });
-
-                alert('အချက်အလက်များ Google Sheet သို့ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။');
-                
-                // Reset Form
-                document.getElementById('userId').value = '';
-                document.getElementById('affiliateCode').value = '';
-                document.getElementById('finalPrice').value = '';
-                document.getElementById('notes').value = '';
-                document.querySelectorAll('.subject-check').forEach(cb => cb.checked = false);
-
-                // Auto Sync after save
-                setTimeout(loadDataFromSheet, 2000); 
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
+    async function fetchFromSheet() {
+        showLoading(true);
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+            cachedData = data.active || [];
+            cachedLogs = data.logs || [];
+            updateExpiryDate(); 
+            renderData();
+        } catch (e) {
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
         }
+        showLoading(false);
+    }
 
-        function renderDashboard() {
-            let totalRevenue = 0, payingUsers = 0, affiliatePayouts = 0, giveaways = 0;
+    async function saveRecord() {
+        const id = document.getElementById('tgId').value.trim();
+        const sub = document.getElementById('subject').value;
+        const months = document.getElementById('months').value;
+        const exp = document.getElementById('expiryDate').value;
 
-            db.forEach(entry => {
-                const price = parseFloat(entry.FinalPrice) || 0;
-                const commission = parseFloat(entry.Commission) || 0;
+        if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
+        
+        showLoading(true);
+        const payload = { action: "save", id, subject: sub, months, expiry: exp, timestamp: Date.now() };
 
-                if (entry.AccountType === 'Regular') {
-                    totalRevenue += price;
-                    payingUsers++;
-                    affiliatePayouts += commission;
-                } else if (entry.AccountType === 'Giveaway') {
-                    giveaways++;
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            tg.HapticFeedback.notificationOccurred('success');
+            await fetchFromSheet();
+            document.getElementById('tgId').value = "";
+        } catch(e) { tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); }
+        showLoading(false);
+    }
+
+    async function deleteSubject(id, subject) {
+        if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
+        showLoading(true);
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
+            await fetchFromSheet();
+        } catch(e) { tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); }
+        showLoading(false);
+    }
+
+    function renderData() {
+        const area = document.getElementById('displayArea');
+        area.innerHTML = "";
+
+        if (currentTab === 'manage') {
+            let db = {};
+            cachedData.forEach(item => { if(!db[item.id]) db[item.id] = []; db[item.id].push(item); });
+            const search = document.getElementById('search').value.toLowerCase();
+            const sortedIds = Object.keys(db).reverse();
+
+            sortedIds.forEach(studentId => {
+                const subs = db[studentId];
+                if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                    let subHtml = "";
+                    subs.forEach(s => {
+                        subHtml += `<div class="sub-item">
+                            <div class="sub-main">
+                                <span class="sub-name">📘 ${s.subject}</span>
+                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
+                            </div>
+                            <div class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</div>
+                        </div>`;
+                    });
+                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
                 }
             });
+        } 
+        else if (currentTab === 'expire') {
+            let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            allItems.forEach(s => {
+                let expDate = new Date(s.expiry);
+                const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
+                let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
+                if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
+                else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
 
-            document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + ' Ks';
-            document.getElementById('statUsers').innerText = payingUsers;
-            document.getElementById('statAffiliate').innerText = affiliatePayouts.toLocaleString() + ' Ks';
-            document.getElementById('statGiveaway').innerText = giveaways;
-
-            renderTable();
-        }
-
-        function renderTable() {
-            const filter = document.getElementById('filterType').value;
-            const tbody = document.getElementById('dataTableBody');
-            tbody.innerHTML = '';
-
-            let filteredDb = filter === 'all' ? db : db.filter(e => e.AccountType === filter);
-            filteredDb = [...filteredDb].reverse(); // Newest first
-
-            filteredDb.forEach(entry => {
-                const badgeClass = `badge-${(entry.AccountType || 'regular').toLowerCase()}`;
-                const typeLabel = {
-                    'Regular': 'Paying User',
-                    'Admin': 'Admin',
-                    'Giveaway': 'Giveaway',
-                    'Affiliate': 'Affiliate'
-                }[entry.AccountType] || 'Unknown';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${entry.Timestamp || '-'}</td>
-                        <td>${entry.UserID || '-'}</td>
-                        <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
-                        <td>${entry.Subjects || '-'}</td>
-                        <td>${entry.Duration || '-'} လ</td>
-                        <td>${parseFloat(entry.FinalPrice || 0).toLocaleString()}</td>
-                        <td>${entry.AffiliateCode || '-'}</td>
-                        <td>${parseFloat(entry.Commission || 0).toLocaleString()}</td>
-                        <td>${entry.Notes || '-'}</td>
-                    </tr>
-                `;
+                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
+                    <div class="sub-main">
+                        <span>👤 <b>${s.id}</b> - ${s.subject}</span>
+                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
+                    </div>
+                    <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
+                </div>`;
             });
         }
+        else if (currentTab === 'logs') {
+            let logsByDate = {};
+            let totalMonthsByDate = {};
+            let countByDate = {};
 
-        // Initial Load
-        window.onload = () => {
-            if(SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                alert("⚠️ ကျေးဇူးပြု၍ Google Apps Script Web App URL ကို Code ထဲတွင် အစားထိုးထည့်သွင်းပါ။");
+            cachedLogs.forEach(log => {
+                if (!log.timestamp) return;
+                
+                // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
+                let dateStr = getLocalDateStr(log.timestamp);
+                let timeStr = getLocalTimeStr(log.timestamp);
+                let expiryStr = getLocalDateStr(log.expiry); // Expiry Date ကို ပြုပြင်ခြင်း
+
+                if (!logsByDate[dateStr]) {
+                    logsByDate[dateStr] = [];
+                    totalMonthsByDate[dateStr] = 0;
+                    countByDate[dateStr] = 0;
+                }
+                
+                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
+                totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
+                countByDate[dateStr] += 1;
+            });
+
+            let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
+
+            if (sortedDates.length === 0) {
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
             } else {
-                loadDataFromSheet();
+                sortedDates.forEach(date => {
+                    let dailyTotal = totalMonthsByDate[date];
+                    let dailyCount = countByDate[date];
+
+                    let html = `
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🗓 ${date}</span>
+                            <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
+                        </div>
+                        <div style="color:#444; font-size: 0.95rem;">
+                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
+                        </div>
+                    </div>`;
+                    
+                    logsByDate[date].forEach(log => {
+                        html += `
+                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
+                                    <span>⏰ ${log.displayTime}</span>
+                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                                </div>
+                                <div class="sub-main">
+                                    <span>👤 <b>${log.id}</b></span>
+                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
+                                </div>
+                                <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
+                                    📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
+                                </div>
+                            </div>`;
+                    });
+                    area.innerHTML += html;
+                });
             }
-        };
-    </script>
+        }
+    }
+
+    fetchFromSheet();
+</script>
+
 </body>
 </html>
