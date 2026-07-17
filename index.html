@@ -4,280 +4,617 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <title>Subscription Manager</title>
+  <title>Subscription Manager Pro</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--tg-theme-bg-color, #fff);
-      color: var(--tg-theme-text-color, #000);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2d3748;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
       padding: 12px;
     }
+    
     .header {
-      background: linear-gradient(135deg, var(--tg-theme-button-color, #3390ec), #1a73c7);
-      color: white;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
       padding: 20px;
-      border-radius: 12px;
       margin-bottom: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       text-align: center;
     }
-    .header h1 { font-size: 22px; margin-bottom: 4px; }
-    .card {
-      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
     }
-    .card-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--tg-theme-button-color, #3390ec);
-    }
-    .form-group { margin-bottom: 12px; }
-    .form-group label {
-      display: block;
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
       font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .form-group input, .form-group select {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
       font-weight: 700;
-      cursor: pointer;
       margin-top: 8px;
     }
-    .btn-primary {
-      background: var(--tg-theme-button-color, #3390ec);
+    
+    .status-admin {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: white;
     }
-    .btn-secondary {
-      background: #f5f5f5;
-      color: #000;
-      border: 2px solid var(--tg-theme-button-color, #3390ec);
-    }
-    .subjects-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .subject-item {
-      background: white;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #e0e0e0;
-    }
-    .subject-item label {
-      font-size: 12px;
-      font-weight: 600;
-      display: block;
-      margin-bottom: 4px;
-    }
-    .subject-item input {
-      width: 100%;
-      padding: 6px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    .commission-box {
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    
+    .status-user {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
-      padding: 12px;
-      border-radius: 8px;
-      margin: 12px 0;
-      text-align: center;
     }
-    .commission-box strong {
-      font-size: 20px;
-      display: block;
-      margin-top: 4px;
-    }
-    .error {
-      background: #ffebee;
-      color: #c62828;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 13px;
-    }
-    .success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 13px;
-    }
-    .hidden { display: none; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    th {
-      background: var(--tg-theme-button-color, #3390ec);
-      color: white;
-      font-weight: 700;
-    }
+    
     .tabs {
       display: flex;
       gap: 8px;
       margin-bottom: 12px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
     }
+    
     .tab {
       flex: 1;
-      padding: 10px;
+      padding: 14px;
       border: none;
-      border-radius: 8px;
-      background: #f5f5f5;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: var(--tg-theme-button-color, #3390ec);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.3);
       color: white;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
+    
+    .tab.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stat-card.green {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+    }
+    
+    .stat-card.orange {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+    
+    .stat-card.purple {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+      font-weight: 600;
+    }
+    
+    .form-group {
+      margin-bottom: 14px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      background: #f7fafc;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .subjects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .subject-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .subject-card:focus-within {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .subject-card label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #2d3748;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .subject-card input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      background: white;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .btn-secondary {
+      background: #edf2f7;
+      color: #4a5568;
+      border: 2px solid #cbd5e0;
+    }
+    
+    .commission-box {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    
+    .commission-box strong {
+      font-size: 28px;
+      font-weight: 800;
+      display: block;
+      margin-top: 4px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .message {
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message.error {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
+    }
+    
+    .message.success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+    }
+    
+    .hidden { display: none !important; }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      overflow-x: auto;
+      display: block;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    
+    .data-table tr:hover {
+      background: #f7fafc;
+    }
+    
     .badge {
       display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
+      text-transform: uppercase;
     }
-    .badge-normal { background: #3390ec; color: white; }
-    .badge-giveaway { background: #00aa00; color: white; }
-    .loading { text-align: center; padding: 20px; color: #999; }
+    
+    .badge-normal {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .badge-giveaway {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+    }
+    
+    .chart-container {
+      margin: 16px 0;
+    }
+    
+    .chart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .chart-label {
+      font-weight: 700;
+      color: #4a5568;
+      font-size: 13px;
+    }
+    
+    .chart-value {
+      font-weight: 800;
+      color: #667eea;
+      font-size: 14px;
+    }
+    
+    .period-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .period-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .period-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #667eea;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .warning-box {
+      background: linear-gradient(135deg, #fff6bf 0%, #ffed8c 100%);
+      border-left: 4px solid #f59e0b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #92400e;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>📚 Subscription Manager</h1>
-    <p id="userStatus">Loading...</p>
-  </div>
-  
-  <div id="message"></div>
-  
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('add')">Add Subscription</button>
-    <button class="tab" id="listTab" onclick="showTab('list')">View All</button>
-  </div>
-  
-  <!-- Add Subscription Form -->
-  <div id="addTab" class="card">
-    <div class="card-title">➕ Add New Subscription</div>
-    
-    <div class="form-group">
-      <label>Telegram ID *</label>
-      <input type="number" id="telegramId" placeholder="Enter user's Telegram ID">
+  <div class="container">
+    <div class="header">
+      <h1>📚 Subscription Manager</h1>
+      <p style="color: #718096; font-size: 14px;">Professional Edition</p>
+      <div id="userStatus" class="status-badge status-user">Loading...</div>
     </div>
     
-    <div class="card-title" style="margin-top: 16px;">📚 Select Subjects & Months</div>
-    <div class="subjects-grid">
-      <div class="subject-item">
-        <label>MM (Months)</label>
-        <input type="number" id="mm" placeholder="0" min="0">
+    <div id="message"></div>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('add')">➕ Add New</button>
+      <button class="tab hidden" id="listTabBtn" onclick="showTab('list')">📋 All Data</button>
+      <button class="tab hidden" id="analyticsTabBtn" onclick="showTab('analytics')">📊 Analytics</button>
+    </div>
+    
+    <!-- Add Subscription Form -->
+    <div id="addTab" class="card">
+      <div class="warning-box">
+        ⚠️ <strong>Important:</strong> Price cannot be changed after saving!
       </div>
-      <div class="subject-item">
-        <label>EN (Months)</label>
-        <input type="number" id="en" placeholder="0" min="0">
+      
+      <div class="card-title">👤 Customer Information</div>
+      
+      <div class="form-group">
+        <label>Customer Telegram ID *</label>
+        <input type="number" id="targetUserId" placeholder="Enter customer's Telegram ID">
       </div>
-      <div class="subject-item">
-        <label>Math (Months)</label>
-        <input type="number" id="math" placeholder="0" min="0">
+      
+      <div class="card-title" style="margin-top: 20px;">📚 Select Subjects & Duration</div>
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <label>🇲🇲 Myanmar</label>
+          <input type="number" id="mm" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>🇬🇧 English</label>
+          <input type="number" id="en" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>📐 Mathematics</label>
+          <input type="number" id="math" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>⚛️ Physics</label>
+          <input type="number" id="phy" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>🧪 Chemistry</label>
+          <input type="number" id="chem" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>🧬 Biology</label>
+          <input type="number" id="bio" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>📈 Economics</label>
+          <input type="number" id="eco" placeholder="0" min="0">
+        </div>
+        <div class="subject-card">
+          <label>🎯 All Subjects</label>
+          <input type="number" id="all" placeholder="0" min="0">
+        </div>
       </div>
-      <div class="subject-item">
-        <label>Physics (Months)</label>
-        <input type="number" id="phy" placeholder="0" min="0">
+      
+      <div class="form-group">
+        <label>Account Type *</label>
+        <select id="accountType">
+          <option value="normal acc">👤 Normal Account</option>
+          <option value="giveaway winner acc">🎁 Giveaway Winner</option>
+        </select>
       </div>
-      <div class="subject-item">
-        <label>Chemistry (Months)</label>
-        <input type="number" id="chem" placeholder="0" min="0">
+      
+      <div class="form-group">
+        <label>Total Price (MMK) * <small style="color: #e53e3e;">Cannot be modified later</small></label>
+        <input type="number" id="price" placeholder="Enter total price" oninput="calculateCommission()">
       </div>
-      <div class="subject-item">
-        <label>Biology (Months)</label>
-        <input type="number" id="bio" placeholder="0" min="0">
+      
+      <div class="form-group">
+        <label>Affiliate Code (Optional)</label>
+        <input type="text" id="affiliate" placeholder="Enter affiliate code" oninput="calculateCommission()">
       </div>
-      <div class="subject-item">
-        <label>Economics (Months)</label>
-        <input type="number" id="eco" placeholder="0" min="0">
+      
+      <div class="form-group">
+        <label>Commission Percentage</label>
+        <select id="commission" onchange="calculateCommission()">
+          <option value="0">No Commission (0%)</option>
+          <option value="20">20% Commission</option>
+          <option value="30">30% Commission</option>
+        </select>
       </div>
-      <div class="subject-item">
-        <label>All (Months)</label>
-        <input type="number" id="all" placeholder="0" min="0">
+      
+      <div class="commission-box hidden" id="commissionBox">
+        💰 Commission to Pay:
+        <strong id="commissionAmount">0 MMK</strong>
+      </div>
+      
+      <button class="btn btn-primary" onclick="addSubscription()">💾 Save Subscription</button>
+      <button class="btn btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+    </div>
+    
+    <!-- List View -->
+    <div id="listTab" class="card hidden">
+      <div class="card-title">📋 All Subscriptions</div>
+      <div class="stats-grid" id="listStats"></div>
+      <div id="listContent" class="loading">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
       </div>
     </div>
     
-    <div class="form-group" style="margin-top: 12px;">
-      <label>Account Type *</label>
-      <select id="accountType">
-        <option value="normal acc">Normal Account</option>
-        <option value="giveaway winner acc">Giveaway Winner</option>
-      </select>
+    <!-- Analytics View -->
+    <div id="analyticsTab" class="card hidden">
+      <div class="card-title"> Business Analytics</div>
+      
+      <div class="period-selector">
+        <button class="period-btn active" onclick="setPeriod('daily')">📅 Daily</button>
+        <button class="period-btn" onclick="setPeriod('monthly')">📆 Monthly</button>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalUsers">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="totalRevenue">0</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-value" id="totalCommission">0</div>
+          <div class="stat-label">Total Commission</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-value" id="avgRevenue">0</div>
+          <div class="stat-label">Avg per User</div>
+        </div>
+      </div>
+      
+      <div class="card-title" style="margin-top: 20px;">📚 Subjects Popularity</div>
+      <div class="chart-container" id="subjectChart"></div>
+      
+      <div class="card-title" style="margin-top: 20px;">👥 Account Types</div>
+      <div class="chart-container" id="accountTypeChart"></div>
+      
+      <div class="card-title" style="margin-top: 20px;" id="periodTitle">📅 Daily Breakdown</div>
+      <div id="periodData"></div>
     </div>
-    
-    <div class="form-group">
-      <label>Price (MMK) * <small>(Cannot be changed later)</small></label>
-      <input type="number" id="price" placeholder="Enter price" oninput="calculateCommission()">
-    </div>
-    
-    <div class="form-group">
-      <label>Affiliate Code (Optional)</label>
-      <input type="text" id="affiliate" placeholder="Enter affiliate code" oninput="calculateCommission()">
-    </div>
-    
-    <div class="form-group">
-      <label>Commission % (If affiliate)</label>
-      <select id="commission" onchange="calculateCommission()">
-        <option value="0">0%</option>
-        <option value="20">20%</option>
-        <option value="30">30%</option>
-      </select>
-    </div>
-    
-    <div class="commission-box hidden" id="commissionBox">
-      Commission to Pay:
-      <strong id="commissionAmount">0 MMK</strong>
-    </div>
-    
-    <button class="btn btn-primary" onclick="addSubscription()">💾 Save Subscription</button>
-  </div>
-  
-  <!-- List View -->
-  <div id="listTab" class="card hidden">
-    <div class="card-title">📋 All Subscriptions</div>
-    <div id="listContent" class="loading">Loading...</div>
   </div>
 
   <script>
-    // ⚠️ REPLACE WITH YOUR GOOGLE APPS SCRIPT URL
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCKkIpLMa7Q3696WBLm8qaKIGcAxtwK7YRsYYxFE94ieutKbNwVOTJu5fh6ry925K_/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz32yOLEAfDcYZ-G45yq7gNDeEis25OhpaNUbTKOcG_lsbr_e-Aei43vxG7AmqH6mrq/exec';
+    const ADMIN_ID = '8432363664';
     
     var tg = window.Telegram.WebApp;
     tg.expand();
+    tg.ready();
     
     var currentUserId = tg.initDataUnsafe.user?.id?.toString() || '';
     var isAdmin = false;
+    var currentPeriod = 'daily';
     
     window.onload = function() {
       if (!currentUserId) {
-        showMessage('Please open from Telegram', 'error');
+        showMessage('⚠️ Please open this app from Telegram', 'error');
         return;
       }
       checkAdmin();
@@ -287,6 +624,7 @@
       try {
         const response = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: action, ...data })
         });
         return await response.json();
@@ -298,10 +636,17 @@
     async function checkAdmin() {
       const result = await apiCall('checkAdmin', { telegramId: currentUserId });
       if (result.success) {
-        isAdmin = result.isAdmin;
-        document.getElementById('userStatus').textContent = isAdmin ? '👑 Admin' : 'User';
-        if (!isAdmin) {
-          document.getElementById('listTab').style.display = 'none';
+        isAdmin = (currentUserId === ADMIN_ID);
+        var statusEl = document.getElementById('userStatus');
+        
+        if (isAdmin) {
+          statusEl.textContent = '👑 ADMIN ACCESS';
+          statusEl.className = 'status-badge status-admin';
+          document.getElementById('listTabBtn').classList.remove('hidden');
+          document.getElementById('analyticsTabBtn').classList.remove('hidden');
+        } else {
+          statusEl.textContent = '👤 User Mode';
+          statusEl.className = 'status-badge status-user';
         }
       }
     }
@@ -321,43 +666,53 @@
     }
     
     async function addSubscription() {
-      var telegramId = document.getElementById('telegramId').value;
+      var targetUserId = document.getElementById('targetUserId').value;
       var price = document.getElementById('price').value;
       
-      if (!telegramId || !price) {
-        showMessage('Telegram ID and Price are required', 'error');
+      if (!targetUserId || !price) {
+        showMessage('❌ Customer ID and Price are required!', 'error');
+        return;
+      }
+      
+      if (!isAdmin) {
+        showMessage('❌ Only admin can add subscriptions!', 'error');
         return;
       }
       
       var data = {
-        telegramId: telegramId,
-        mm: document.getElementById('mm').value || 0,
-        en: document.getElementById('en').value || 0,
-        math: document.getElementById('math').value || 0,
-        phy: document.getElementById('phy').value || 0,
-        chem: document.getElementById('chem').value || 0,
-        bio: document.getElementById('bio').value || 0,
-        eco: document.getElementById('eco').value || 0,
-        all: document.getElementById('all').value || 0,
+        telegramId: currentUserId,
+        targetUserId: targetUserId,
+        mm: parseInt(document.getElementById('mm').value) || 0,
+        en: parseInt(document.getElementById('en').value) || 0,
+        math: parseInt(document.getElementById('math').value) || 0,
+        phy: parseInt(document.getElementById('phy').value) || 0,
+        chem: parseInt(document.getElementById('chem').value) || 0,
+        bio: parseInt(document.getElementById('bio').value) || 0,
+        eco: parseInt(document.getElementById('eco').value) || 0,
+        all: parseInt(document.getElementById('all').value) || 0,
         accounttype: document.getElementById('accountType').value,
         price: parseFloat(price),
         affiliate: document.getElementById('affiliate').value.trim(),
         comission: parseFloat(document.getElementById('commission').value) || 0
       };
       
-      showMessage('Saving...', 'success');
+      showMessage(' Saving...', 'success');
       const result = await apiCall('addSubscription', data);
       
       if (result.success) {
-        showMessage(result.message + (result.commissionAmount ? ' | Commission: ' + result.commissionAmount + ' MMK' : ''), 'success');
+        var msg = result.message;
+        if (result.commissionAmount > 0) {
+          msg += ' | Commission: ' + result.commissionAmount.toLocaleString() + ' MMK';
+        }
+        showMessage('✅ ' + msg, 'success');
         clearForm();
       } else {
-        showMessage(result.message, 'error');
+        showMessage('❌ ' + result.message, 'error');
       }
     }
     
     function clearForm() {
-      document.getElementById('telegramId').value = '';
+      document.getElementById('targetUserId').value = '';
       document.getElementById('mm').value = '';
       document.getElementById('en').value = '';
       document.getElementById('math').value = '';
@@ -376,6 +731,7 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById('addTab').classList.add('hidden');
       document.getElementById('listTab').classList.add('hidden');
+      document.getElementById('analyticsTab').classList.add('hidden');
       
       if (tab === 'add') {
         document.querySelector('.tab:nth-child(1)').classList.add('active');
@@ -383,48 +739,147 @@
       } else if (tab === 'list') {
         document.querySelector('.tab:nth-child(2)').classList.add('active');
         document.getElementById('listTab').classList.remove('hidden');
-        loadSubscriptions();
+        await loadSubscriptions();
+      } else if (tab === 'analytics') {
+        document.querySelector('.tab:nth-child(3)').classList.add('active');
+        document.getElementById('analyticsTab').classList.remove('hidden');
+        await loadAnalytics();
       }
     }
     
     async function loadSubscriptions() {
       const result = await apiCall('getAllSubscriptions', { telegramId: currentUserId });
       if (result.success && result.data) {
+        document.getElementById('listStats').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${result.totalUsers}</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-value">${result.totalRevenue.toLocaleString()}</div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+        `;
         displaySubscriptions(result.data);
       } else {
-        document.getElementById('listContent').innerHTML = '<div class="error">' + result.message + '</div>';
+        document.getElementById('listContent').innerHTML = '<div class="message error">' + result.message + '</div>';
       }
     }
     
     function displaySubscriptions(data) {
       if (data.length === 0) {
-        document.getElementById('listContent').innerHTML = '<p>No subscriptions found</p>';
+        document.getElementById('listContent').innerHTML = '<p style="text-align:center;padding:20px;color:#999;">No data found</p>';
         return;
       }
       
-      var html = '<table><thead><tr><th>Telegram ID</th><th>Type</th><th>Price</th><th>Affiliate</th><th>Commission</th></tr></thead><tbody>';
+      var html = '<table class="data-table"><thead><tr>' +
+        '<th>ID</th><th>Type</th><th>Price</th><th>Commission</th>' +
+        '</tr></thead><tbody>';
       
       data.forEach(function(sub) {
-        var badgeClass = sub.accounttype === 'giveaway winner acc' ? 'badge-giveaway' : 'badge-normal';
-        var commissionText = sub.comission > 0 ? sub.comission + '% (' + (sub.price * sub.comission / 100).toLocaleString() + ' MMK)' : '-';
-        
-        html += '<tr>' +
-          '<td>' + sub.telegram_id + '</td>' +
-          '<td><span class="badge ' + badgeClass + '">' + (sub.accounttype === 'giveaway winner acc' ? 'Giveaway' : 'Normal') + '</span></td>' +
-          '<td>' + (sub.price || 0).toLocaleString() + '</td>' +
-          '<td>' + (sub.affiliate || '-') + '</td>' +
-          '<td>' + commissionText + '</td>' +
-          '</tr>';
+        if (sub.price && sub.price > 0) {
+          var badgeClass = sub.accounttype === 'giveaway winner acc' ? 'badge-giveaway' : 'badge-normal';
+          var badgeText = sub.accounttype === 'giveaway winner acc' ? 'Giveaway' : 'Normal';
+          var commissionText = sub.comission > 0 ? 
+            sub.comission + '% (' + (sub.price * sub.comission / 100).toLocaleString() + ')' : '-';
+          
+          html += '<tr>' +
+            '<td><strong>' + sub.telegram_id + '</strong></td>' +
+            '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>' +
+            '<td><strong>' + sub.price.toLocaleString() + '</strong></td>' +
+            '<td>' + commissionText + '</td>' +
+            '</tr>';
+        }
       });
       
       html += '</tbody></table>';
       document.getElementById('listContent').innerHTML = html;
     }
     
+    async function loadAnalytics() {
+      const result = await apiCall('getAnalytics', { 
+        telegramId: currentUserId, 
+        period: currentPeriod 
+      });
+      
+      if (result.success && result.data) {
+        var data = result.data;
+        
+        document.getElementById('totalUsers').textContent = data.totalUsers;
+        document.getElementById('totalRevenue').textContent = data.totalRevenue.toLocaleString();
+        document.getElementById('totalCommission').textContent = data.totalCommission.toLocaleString();
+        document.getElementById('avgRevenue').textContent = 
+          data.totalUsers > 0 ? Math.round(data.totalRevenue / data.totalUsers).toLocaleString() : '0';
+        
+        // Subject chart
+        var subjectHtml = '';
+        var subjects = {
+          '🇲🇲 Myanmar': data.bySubject.mm,
+          '🇧 English': data.bySubject.en,
+          '📐 Math': data.bySubject.math,
+          '⚛️ Physics': data.bySubject.phy,
+          '🧪 Chemistry': data.bySubject.chem,
+          '🧬 Biology': data.bySubject.bio,
+          '📈 Economics': data.bySubject.eco,
+          '🎯 All': data.bySubject.all
+        };
+        
+        for (var subj in subjects) {
+          if (subjects[subj] > 0) {
+            subjectHtml += `
+              <div class="chart-item">
+                <span class="chart-label">${subj}</span>
+                <span class="chart-value">${subjects[subj]} users</span>
+              </div>
+            `;
+          }
+        }
+        document.getElementById('subjectChart').innerHTML = subjectHtml || '<p style="color:#999;text-align:center;">No data</p>';
+        
+        // Account type chart
+        document.getElementById('accountTypeChart').innerHTML = `
+          <div class="chart-item">
+            <span class="chart-label"> Normal Accounts</span>
+            <span class="chart-value">${data.byAccountType.normal} users</span>
+          </div>
+          <div class="chart-item">
+            <span class="chart-label">🎁 Giveaway Winners</span>
+            <span class="chart-value">${data.byAccountType.giveaway} users</span>
+          </div>
+        `;
+        
+        // Period data
+        var periodData = currentPeriod === 'daily' ? data.dailyData : data.monthlyData;
+        var periodHtml = '<div style="max-height:400px;overflow-y:auto;">';
+        
+        periodData.slice().reverse().forEach(function(item) {
+          var label = currentPeriod === 'daily' ? item.date : item.month;
+          periodHtml += `
+            <div class="chart-item">
+              <span class="chart-label">${label}</span>
+              <span class="chart-value">${item.count} users | ${item.revenue.toLocaleString()} MMK</span>
+            </div>
+          `;
+        });
+        
+        periodHtml += '</div>';
+        document.getElementById('periodData').innerHTML = periodHtml;
+      }
+    }
+    
+    function setPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('periodTitle').textContent = period === 'daily' ? '📅 Daily Breakdown' : '📆 Monthly Breakdown';
+      loadAnalytics();
+    }
+    
     function showMessage(msg, type) {
       var div = document.getElementById('message');
-      div.innerHTML = '<div class="' + type + '">' + msg + '</div>';
-      setTimeout(function() { div.innerHTML = ''; }, 4000);
+      div.innerHTML = '<div class="message ' + type + '">' + msg + '</div>';
+      setTimeout(function() { div.innerHTML = ''; }, 5000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>
 </body>
