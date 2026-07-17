@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Admin Panel Pro</title>
+    <title>G-12 Admin Panel Debug</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; --purple: #6f42c1; }
@@ -36,7 +36,6 @@
         .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
         .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
         
-        /* Subject Grid */
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .subject-box { background: #f8f9fa; padding: 12px; border-radius: 10px; border: 2px solid #eee; }
         .subject-box.active { border-color: var(--primary); background: #e3f2fd; }
@@ -47,7 +46,6 @@
         
         .commission-display { background: #e8f5e9; padding: 12px; border-radius: 10px; margin-top: 10px; text-align: center; font-weight: bold; color: #2e7d32; }
         
-        /* Analytics */
         .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .analytics-item { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .analytics-item .number { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
@@ -66,6 +64,13 @@
         .affiliate-list { max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 10px; padding: 10px; margin-top: 10px; }
         .affiliate-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
         .affiliate-item:last-child { border-bottom: none; }
+        
+        /* Debug console */
+        .debug-console { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 10px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+        .debug-console .log-time { color: #858585; }
+        .debug-console .log-info { color: #4fc1ff; }
+        .debug-console .log-error { color: #f48771; }
+        .debug-console .log-success { color: #89d185; }
     </style>
 </head>
 <body>
@@ -76,6 +81,15 @@
 </div>
 
 <div class="container">
+    <!-- DEBUG CONSOLE -->
+    <div class="card" style="background: #1e1e1e;">
+        <h2 style="color: #4fc1ff;">🔧 Debug Console</h2>
+        <div class="debug-console" id="debugConsole">
+            <div><span class="log-time">[INIT]</span> App starting...</div>
+        </div>
+        <button onclick="testConnection()" style="background: var(--success); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer;">🔄 Test Connection</button>
+    </div>
+
     <!-- ADD/UPDATE FORM -->
     <div class="card">
         <h2>👤 Add/Update Sub (G-12 Pro)</h2>
@@ -162,7 +176,8 @@
         throw new Error("Unauthorized Access");
     }
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7hVSTCvNgIBhKMpwmaIk7DjdbJx-Y7qbJT4AWBJ6mMTaRyId1-RscHSZMlEywd17A/exec";
+    // ⚠️⚠️⚠️ သင့် SCRIPT_URL မှန်မှန်ထည့် ⚠️⚠️⚠️
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRpShHEtBEW4b5TQbodZXynNDmFkzNStm4Vk5wZ3_w6qlpzgk9g1nReWnEG6WzFemE/exec";
     
     const AFFILIATE_CODES = ["AGENT01", "AGENT02", "AGENT03", "WINNER", "REF2024", "VIP001", "PROMO99"];
     
@@ -183,10 +198,22 @@
     let analyticsData = [];
     let currentPeriod = 'daily';
 
+    // =================== DEBUG LOGGER ===================
+    function debugLog(message, type = 'info') {
+        const console = document.getElementById('debugConsole');
+        const time = new Date().toLocaleTimeString();
+        const className = type === 'error' ? 'log-error' : type === 'success' ? 'log-success' : 'log-info';
+        console.innerHTML += `<div><span class="log-time">[${time}]</span> <span class="${className}">${message}</span></div>`;
+        console.scrollTop = console.scrollHeight;
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
     // =================== INITIALIZATION ===================
     function init() {
+        debugLog('App initializing...', 'info');
         populateAffiliateCodes();
         generateSubjectGrid();
+        debugLog('SCRIPT_URL: ' + SCRIPT_URL.substring(0, 50) + '...', 'info');
         fetchFromSheet();
     }
 
@@ -198,6 +225,38 @@
             option.textContent = code;
             select.appendChild(option);
         });
+        debugLog('Affiliate codes loaded: ' + AFFILIATE_CODES.length, 'success');
+    }
+
+    // =================== TEST CONNECTION ===================
+    async function testConnection() {
+        debugLog('Testing connection...', 'info');
+        showLoading(true);
+        
+        try {
+            const response = await fetch(SCRIPT_URL);
+            debugLog('Response status: ' + response.status, 'info');
+            
+            const text = await response.text();
+            debugLog('Response length: ' + text.length, 'info');
+            
+            try {
+                const data = JSON.parse(text);
+                if (data.error) {
+                    debugLog('SERVER ERROR: ' + data.message, 'error');
+                } else {
+                    debugLog('Connection OK! Active: ' + (data.active?.length || 0) + ', Logs: ' + (data.logs?.length || 0), 'success');
+                }
+            } catch (e) {
+                debugLog('JSON Parse Error: ' + e.message, 'error');
+                debugLog('Raw response: ' + text.substring(0, 200), 'error');
+            }
+        } catch (e) {
+            debugLog('FETCH ERROR: ' + e.message, 'error');
+            debugLog('Check: 1) Deployed? 2) URL correct? 3) Access = Anyone?', 'error');
+        }
+        
+        showLoading(false);
     }
 
     // =================== SUBJECT GRID ===================
@@ -220,6 +279,7 @@
             `;
             grid.appendChild(box);
         });
+        debugLog('Subject grid generated', 'success');
     }
 
     function toggleSubject(key) {
@@ -246,7 +306,6 @@
         
         let baseDate = new Date();
         
-        // Check existing expiry for this ID + Subject
         if (id && cachedData.length > 0) {
             const existing = cachedData.find(item => String(item.id) === id && item.subjectKey === key);
             if (existing && existing.expiry) {
@@ -335,14 +394,41 @@
     // =================== FETCH ===================
     async function fetchFromSheet() {
         showLoading(true);
+        debugLog('Fetching data...', 'info');
+        
         try {
             const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
+            debugLog('Fetch response status: ' + response.status, 'info');
+            
+            const text = await response.text();
+            debugLog('Response text length: ' + text.length, 'info');
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                debugLog('JSON parse failed: ' + e.message, 'error');
+                debugLog('First 200 chars: ' + text.substring(0, 200), 'error');
+                throw new Error('Invalid JSON response');
+            }
+            
+            if (data.error) {
+                debugLog('Server returned error: ' + data.message, 'error');
+                debugLog('Stack: ' + (data.stack || 'N/A'), 'error');
+                tg.showAlert("Server Error: " + data.message);
+                showLoading(false);
+                return;
+            }
+            
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
+            debugLog('Data loaded: ' + cachedData.length + ' active, ' + cachedLogs.length + ' logs', 'success');
             renderData();
+            
         } catch (e) {
-            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+            debugLog('Fetch failed: ' + e.message, 'error');
+            debugLog('Possible causes: 1) Not deployed 2) Wrong URL 3) CORS issue 4) Sheet not accessible', 'error');
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။ Console ကို စစ်ကြည့်ပါ။");
         }
         showLoading(false);
     }
@@ -357,6 +443,7 @@
             analyticsData = await response.json();
             renderAnalytics();
         } catch (e) {
+            debugLog('Analytics fetch failed: ' + e.message, 'error');
             tg.showAlert("Analytics data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
         }
         showLoading(false);
@@ -375,12 +462,11 @@
             return; 
         }
         
-        // Collect selected subjects
         const subjects = [];
         Object.keys(SUBJECT_CONFIG).forEach(key => {
             if (document.getElementById(`chk-${key}`).checked) {
                 const months = document.getElementById(`months-${key}`).value;
-                const expiry = updateExpiry(key); // Get calculated expiry
+                const expiry = updateExpiry(key);
                 subjects.push({ subjectKey: key, months, expiry });
             }
         });
@@ -390,7 +476,9 @@
             return;
         }
         
+        debugLog('Saving: ID=' + id + ', subjects=' + subjects.length, 'info');
         showLoading(true);
+        
         const payload = { 
             action: "save", 
             id, 
@@ -403,7 +491,20 @@
         };
 
         try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            const response = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const text = await response.text();
+            debugLog('Save response: ' + text.substring(0, 100), 'info');
+            
+            const result = JSON.parse(text);
+            if (result.error) {
+                throw new Error(result.message);
+            }
+            
             tg.HapticFeedback.notificationOccurred('success');
             await fetchFromSheet();
             
@@ -412,12 +513,13 @@
             document.getElementById('price').value = "";
             document.getElementById('affiliate').value = "";
             document.getElementById('commission').value = "0";
-            generateSubjectGrid(); // Reset all checkboxes
+            generateSubjectGrid();
             calculateCommission();
             
             tg.showAlert(`✅ ${subjects.length} ဘာသာရပ် သိမ်းဆည်းပြီးပါပြီ!`);
         } catch(e) { 
-            tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); 
+            debugLog('Save failed: ' + e.message, 'error');
+            tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ: " + e.message); 
         }
         showLoading(false);
     }
@@ -429,12 +531,17 @@
         
         showLoading(true);
         try {
-            await fetch(SCRIPT_URL, { 
+            const response = await fetch(SCRIPT_URL, { 
                 method: "POST", 
-                body: JSON.stringify({ action: "delete", id, subjectKey }) 
+                body: JSON.stringify({ action: "delete", id, subjectKey }),
+                headers: { 'Content-Type': 'application/json' }
             });
+            
+            const result = await response.json();
+            debugLog('Delete result: ' + JSON.stringify(result), 'info');
             await fetchFromSheet();
         } catch(e) { 
+            debugLog('Delete failed: ' + e.message, 'error');
             tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); 
         }
         showLoading(false);
@@ -455,7 +562,6 @@
     }
 
     function renderManageTab(area) {
-        // Group by ID
         let db = {};
         cachedData.forEach(item => { 
             if (!db[item.id]) db[item.id] = []; 
@@ -469,7 +575,7 @@
             const subs = db[studentId];
             if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
                 let subHtml = "";
-                const firstSub = subs[0]; // Metadata from first subject
+                const firstSub = subs[0];
                 
                 subs.forEach(s => {
                     subHtml += `<div class="sub-item">
