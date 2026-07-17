@@ -1,1373 +1,716 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>EduPass Admin Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap');
-    
-    * {
-      font-family: 'Noto Sans Myanmar', 'Padauk', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      box-sizing: border-box;
-    }
-    
-    body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    
-    .glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .card-hover {
-      transition: all 0.3s ease;
-    }
-    .card-hover:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    
-    .nav-item {
-      transition: all 0.2s;
-      position: relative;
-    }
-    .nav-item.active {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      transform: scale(1.05);
-    }
-    .nav-item.active::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      background: white;
-      border-radius: 50%;
-    }
-    
-    .input-field {
-      transition: all 0.2s;
-      border: 2px solid #e5e7eb;
-      background: white;
-    }
-    .input-field:focus {
-      border-color: #667eea;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    .btn-primary:active {
-      transform: scale(0.98);
-    }
-    
-    .table-row {
-      transition: all 0.2s;
-    }
-    .table-row:hover {
-      background: #f8fafc;
-    }
-    
-    .tab-btn {
-      transition: all 0.2s;
-      border: 2px solid transparent;
-    }
-    .tab-btn.active {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      border-color: transparent;
-    }
-    
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 2px;
-    }
-    
-    .loading {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.3s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .slide-up {
-      animation: slideUp 0.3s ease-out;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    
-    .stat-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.05);
-      border-radius: 50%;
-    }
-    
-    .badge {
-      padding: 2px 8px;
-      border-radius: 9999px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    
-    .cell-editable {
-      cursor: pointer;
-      border-radius: 4px;
-      padding: 2px 6px;
-      transition: all 0.2s;
-    }
-    .cell-editable:hover {
-      background: #e0e7ff;
-      color: #4338ca;
-    }
-    
-    .toast {
-      animation: toastSlide 0.3s ease-out;
-    }
-    @keyframes toastSlide {
-      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-      to { transform: translateX(-50%) translateY(0); opacity: 1; }
-    }
-    
-    .modal-overlay {
-      animation: modalFade 0.2s ease-out;
-    }
-    @keyframes modalFade {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    .modal-content {
-      animation: modalScale 0.2s ease-out;
-    }
-    @keyframes modalScale {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    
-    .search-box {
-      position: relative;
-    }
-    .search-box i {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-    }
-    .search-box input {
-      padding-left: 36px;
-    }
-    
-    /* Touch-friendly */
-    @media (max-width: 640px) {
-      .nav-item {
-        padding: 8px 4px;
-      }
-      .nav-item i {
-        font-size: 1.1rem;
-      }
-      .nav-item span {
-        font-size: 0.65rem;
-      }
-    }
-    
-    .chart-container {
-      position: relative;
-      height: 220px;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #9ca3af;
-    }
-    .empty-state i {
-      font-size: 3rem;
-      margin-bottom: 12px;
-      opacity: 0.5;
-    }
-    
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background: #22c55e;
-      border-radius: 50%;
-      display: inline-block;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-12 Admin Panel Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; --purple: #6f42c1; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .btn-add:active { transform: scale(0.98); }
+        
+        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
+        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.75rem; transition: 0.3s; color: #666; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
+        .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
+        .sub-main { display: flex; justify-content: space-between; align-items: center; }
+        .sub-name { font-weight: bold; color: #333; }
+        .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
+        
+        .status-expired { color: var(--danger); }
+        .status-warning { color: var(--warning); }
+        .status-ok { color: var(--success); }
+        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        
+        /* Multi-Subject Styles */
+        .subject-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #eee; }
+        .subject-row select { flex: 2; }
+        .subject-row input { flex: 1; min-width: 60px; }
+        .subject-row .remove-btn { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 0.8rem; }
+        .add-subject-btn { background: var(--success); color: white; border: none; padding: 10px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+        
+        /* Commission Display */
+        .commission-display { background: #e8f5e9; padding: 12px; border-radius: 10px; margin-top: 10px; text-align: center; font-weight: bold; color: #2e7d32; }
+        
+        /* Analytics Styles */
+        .analytics-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
+        .analytics-card h3 { margin: 0 0 10px 0; font-size: 1.3rem; }
+        .analytics-card .big-number { font-size: 2rem; font-weight: bold; }
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .analytics-item { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .analytics-item .number { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .analytics-item .label { font-size: 0.8rem; color: #777; margin-top: 4px; }
+        
+        .affiliate-tag { display: inline-block; background: var(--purple); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 5px; }
+        .price-tag { color: var(--success); font-weight: bold; }
+        .gw-badge { background: #ff6b6b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); flex-direction: column; }
+        
+        .period-selector { display: flex; gap: 8px; margin-bottom: 15px; }
+        .period-btn { flex: 1; padding: 10px; border: 2px solid var(--primary); background: white; color: var(--primary); border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .period-btn.active { background: var(--primary); color: white; }
+        
+        .affiliate-list { max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 10px; padding: 10px; margin-top: 10px; }
+        .affiliate-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
+        .affiliate-item:last-child { border-bottom: none; }
+    </style>
 </head>
-<body class="text-gray-800">
+<body>
 
-  <!-- Login Screen -->
-  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-    <div class="glass rounded-3xl p-8 w-full max-w-sm shadow-2xl">
-      <div class="text-center mb-8">
-        <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mx-auto mb-5 flex items-center justify-center shadow-lg">
-          <i class="fas fa-graduation-cap text-white text-3xl"></i>
+<div id="loading-overlay">
+    <div style="font-size: 2rem; margin-bottom: 10px;">⏳</div>
+    <div>Loading...</div>
+</div>
+
+<div class="container">
+    <!-- ADD/UPDATE FORM -->
+    <div class="card">
+        <h2>👤 Add/Update Sub (G-12 Pro)</h2>
+        
+        <div class="form-group">
+            <label>Telegram ID (Only Numbers)</label>
+            <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
-        <h1 class="text-2xl font-bold text-gray-800 tracking-tight">EduPass Admin</h1>
-        <p class="text-gray-500 mt-2 text-sm">ဝင်ရောက်ရန် Admin ID ထည့်ပါ</p>
-      </div>
-      
-      <div class="space-y-5">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Telegram ID</label>
-          <div class="search-box">
-            <i class="fas fa-id-card"></i>
-            <input type="text" id="loginId" class="input-field w-full px-4 py-3.5 rounded-xl text-lg" placeholder="ဥပမာ: 8432363664" inputmode="numeric">
-          </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Account Type</label>
+                <select id="accountType" onchange="togglePriceField()">
+                    <option value="Normal">Normal</option>
+                    <option value="GW">GW (Giveaway)</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Price (MMK)</label>
+                <input type="number" id="price" placeholder="5000" min="0">
+            </div>
         </div>
-        <button onclick="login()" class="btn-primary w-full py-3.5 rounded-xl text-white font-bold text-lg shadow-lg">
-          <span id="loginBtnText">ဝင်ရောက်မည်</span>
-          <span id="loginSpinner" class="loading hidden ml-2"></span>
-        </button>
-      </div>
-      
-      <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm text-center font-medium"></div>
-      
-      <p class="text-center text-xs text-gray-400 mt-6">
-        <i class="fas fa-shield-alt mr-1"></i>
-        Admin Only Access
-      </p>
+        
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Affiliate Code</label>
+                <select id="affiliate">
+                    <option value="">None</option>
+                    <!-- Affiliate codes will be populated here -->
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Commission %</label>
+                <select id="commission" onchange="calculateCommission()">
+                    <option value="0">0%</option>
+                    <option value="20">20%</option>
+                    <option value="30">30%</option>
+                    <option value="40">40%</option>
+                    <option value="50">50%</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="commission-display" id="commissionDisplay">
+            💰 Commission: 0 MMK
+        </div>
+        
+        <hr style="border: none; border-top: 2px solid #eee; margin: 15px 0;">
+        
+        <h2 style="font-size: 1rem; color: #555;">📚 Subjects & Months</h2>
+        <div id="subjectsContainer">
+            <!-- Dynamic subject rows -->
+        </div>
+        <button class="add-subject-btn" onclick="addSubjectRow()">➕ Add Subject</button>
+        
+        <button class="btn-add" onclick="saveRecord()">🚀 Save All to Google Sheet</button>
     </div>
-  </div>
 
-  <!-- Main App -->
-  <div id="mainApp" class="hidden min-h-screen pb-24">
-    <!-- Header -->
-    <header class="glass sticky top-0 z-50 px-4 py-3 shadow-sm">
-      <div class="max-w-6xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-            <i class="fas fa-graduation-cap text-white text-lg"></i>
-          </div>
-          <div>
-            <h1 class="font-bold text-gray-800 text-base leading-tight">EduPass</h1>
-            <p class="text-xs text-gray-500">Admin Dashboard</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-full">
-            <span class="pulse-dot"></span>
-            <span class="text-xs font-semibold text-green-700">Online</span>
-          </div>
-          <button onclick="logout()" class="w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-xl text-gray-400 hover:text-red-500 transition-colors">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="glass fixed bottom-0 left-0 right-0 z-50 px-1 py-2 shadow-lg border-t border-gray-100">
-      <div class="max-w-6xl mx-auto flex justify-around items-center">
-        <button onclick="showTab('dashboard')" class="nav-item active flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-gray-400" data-tab="dashboard">
-          <i class="fas fa-chart-line text-lg mb-0.5"></i>
-          <span class="text-[0.65rem] font-medium">Dashboard</span>
-        </button>
-        <button onclick="showTab('users')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-gray-400" data-tab="users">
-          <i class="fas fa-users text-lg mb-0.5"></i>
-          <span class="text-[0.65rem] font-medium">Users</span>
-        </button>
-        <button onclick="showTab('logs')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-gray-400" data-tab="logs">
-          <i class="fas fa-history text-lg mb-0.5"></i>
-          <span class="text-[0.65rem] font-medium">Logs</span>
-        </button>
-        <button onclick="showTab('analytics')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-gray-400" data-tab="analytics">
-          <i class="fas fa-chart-pie text-lg mb-0.5"></i>
-          <span class="text-[0.65rem] font-medium">Analysis</span>
-        </button>
-        <button onclick="showTab('audit')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-gray-400" data-tab="audit">
-          <i class="fas fa-shield-alt text-lg mb-0.5"></i>
-          <span class="text-[0.65rem] font-medium">Audit</span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- Content Area -->
-    <main class="max-w-6xl mx-auto p-4 space-y-4">
-      
-      <!-- Dashboard Tab -->
-      <div id="dashboardTab" class="tab-content fade-in">
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="stat-card rounded-2xl p-4 card-hover">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <i class="fas fa-users text-white/90 text-lg"></i>
-              </div>
-              <span class="text-xs bg-white/20 px-2 py-1 rounded-full font-medium">Total</span>
-            </div>
-            <p class="text-3xl font-bold" id="totalUsers">0</p>
-            <p class="text-xs text-white/70 mt-1">စုစုပေါင်း User</p>
-          </div>
-          <div class="stat-card rounded-2xl p-4 card-hover">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <i class="fas fa-money-bill-wave text-white/90 text-lg"></i>
-              </div>
-              <span class="text-xs bg-white/20 px-2 py-1 rounded-full font-medium">Revenue</span>
-            </div>
-            <p class="text-3xl font-bold" id="totalRevenue">0</p>
-            <p class="text-xs text-white/70 mt-1">စုစုပေါင်း ဝင်ငွေ (Ks)</p>
-          </div>
-          <div class="stat-card rounded-2xl p-4 card-hover">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <i class="fas fa-hand-holding-usd text-white/90 text-lg"></i>
-              </div>
-              <span class="text-xs bg-white/20 px-2 py-1 rounded-full font-medium">Comm.</span>
-            </div>
-            <p class="text-3xl font-bold" id="totalCommission">0</p>
-            <p class="text-xs text-white/70 mt-1">စုစုပေါင်း Commission</p>
-          </div>
-          <div class="stat-card rounded-2xl p-4 card-hover">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <i class="fas fa-book text-white/90 text-lg"></i>
-              </div>
-              <span class="text-xs bg-white/20 px-2 py-1 rounded-full font-medium">Active</span>
-            </div>
-            <p class="text-3xl font-bold" id="activeSubjects">0</p>
-            <p class="text-xs text-white/70 mt-1">ဘာသာရပ်များ</p>
-          </div>
-        </div>
-        
-        <div class="glass rounded-2xl p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-chart-bar text-purple-500"></i>
-              ဘာသာရပ်အလိုက် ဝင်ငွေ
-            </h3>
-            <span class="badge bg-purple-100 text-purple-700">Live</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="subjectChart"></canvas>
-          </div>
-        </div>
-        
-        <div class="glass rounded-2xl p-5 shadow-sm mt-4">
-          <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i class="fas fa-calendar-check text-purple-500"></i>
-            လတ်တလော User အသစ်များ
-          </h3>
-          <div id="recentUsers" class="space-y-2"></div>
-        </div>
-      </div>
-
-      <!-- Users Tab -->
-      <div id="usersTab" class="tab-content hidden fade-in">
-        <div class="flex gap-2 mb-4">
-          <button onclick="showUserSubtab('list')" class="tab-btn active flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-100" data-subtab="list">
-            <i class="fas fa-list mr-1"></i> User စာရင်း
-          </button>
-          <button onclick="showUserSubtab('add')" class="tab-btn flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-100" data-subtab="add">
-            <i class="fas fa-plus mr-1"></i> အသစ်ထည့်ရန်
-          </button>
-        </div>
-        
-        <!-- User List -->
-        <div id="userListSubtab" class="sub-content">
-          <div class="glass rounded-2xl p-4 shadow-sm mb-4">
-            <div class="search-box">
-              <i class="fas fa-search"></i>
-              <input type="text" id="searchUser" onkeyup="searchUsers()" class="input-field w-full pl-10 pr-4 py-3 rounded-xl" placeholder="Telegram ID ဖြင့် ရှာဖွေရန်...">
-            </div>
-          </div>
-          
-          <div class="glass rounded-2xl shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs">
-                <thead class="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600 whitespace-nowrap">ID</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">mm</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">en</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">math</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">phy</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">chem</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">bio</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">eco</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">all</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">price</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">aff.</th>
-                    <th class="px-2 py-3 text-left font-bold text-gray-600">com.</th>
-                    <th class="px-2 py-3 text-center font-bold text-gray-600"></th>
-                  </tr>
-                </thead>
-                <tbody id="usersTableBody"></tbody>
-              </table>
-            </div>
-            <div id="usersEmpty" class="empty-state hidden">
-              <i class="fas fa-inbox"></i>
-              <p>User မတွေ့ပါ</p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Add User -->
-        <div id="userAddSubtab" class="sub-content hidden">
-          <div class="glass rounded-2xl p-6 shadow-sm">
-            <h3 class="font-bold text-lg mb-1">User အသစ်ထည့်ရန်</h3>
-            <p class="text-sm text-gray-500 mb-5">အချက်အလက်များကို ဖြည့်စွက်ပါ</p>
-            
-            <form id="addUserForm" onsubmit="submitNewUser(event)">
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">Telegram ID <span class="text-red-500">*</span></label>
-                  <input type="text" name="telegram_id" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="ဥပမာ: 8432363664" inputmode="numeric">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Account Type</label>
-                    <input type="text" name="accounttype" class="input-field w-full px-4 py-3 rounded-xl" placeholder="ဥပမာ: premium">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Price (Ks)</label>
-                    <input type="number" name="price" class="input-field w-full px-4 py-3 rounded-xl" placeholder="0">
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Affiliate</label>
-                    <input type="text" name="affiliate" class="input-field w-full px-4 py-3 rounded-xl" placeholder="Affiliate code">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Commission</label>
-                    <input type="number" name="comission" class="input-field w-full px-4 py-3 rounded-xl" placeholder="0">
-                  </div>
-                </div>
-                
-                <div class="border-t pt-4">
-                  <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-purple-500"></i>
-                    ဘာသာရပ်များ - Expiry Date များ
-                  </p>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Myanmar</label>
-                      <input type="date" name="mm" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">English</label>
-                      <input type="date" name="en" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Mathematics</label>
-                      <input type="date" name="math" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Physics</label>
-                      <input type="date" name="phy" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Chemistry</label>
-                      <input type="date" name="chem" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Biology</label>
-                      <input type="date" name="bio" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">Economy</label>
-                      <input type="date" name="eco" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-gray-600 mb-1">All Subjects</label>
-                      <input type="date" name="all" class="input-field w-full px-3 py-2.5 rounded-lg text-sm">
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <button type="submit" class="btn-primary w-full mt-6 py-3.5 rounded-xl text-white font-bold shadow-lg">
-                <span id="addUserBtnText">ထည့်သွင်းမည်</span>
-                <span id="addUserSpinner" class="loading hidden ml-2"></span>
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Logs Tab -->
-      <div id="logsTab" class="tab-content hidden fade-in">
-        <div class="glass rounded-2xl shadow-sm overflow-hidden">
-          <div class="p-4 border-b flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-history text-purple-500"></i>
-              ဝယ်ယူမှတ်တမ်း
-            </h3>
-            <span class="badge bg-blue-100 text-blue-700" id="logsCount">0 entries</span>
-          </div>
-          <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
-            <table class="w-full text-xs">
-              <thead class="bg-gray-50 sticky top-0">
-                <tr>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Time</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">ID</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Subject</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Months</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Expiry</th>
-                </tr>
-              </thead>
-              <tbody id="logsTableBody"></tbody>
-            </table>
-          </div>
-          <div id="logsEmpty" class="empty-state hidden">
-            <i class="fas fa-inbox"></i>
-            <p>မှတ်တမ်း မရှိသေးပါ</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Analytics Tab -->
-      <div id="analyticsTab" class="tab-content hidden fade-in">
-        <div class="glass rounded-2xl p-5 shadow-sm mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-calendar-day text-purple-500"></i>
-              နေ့စဉ် ဝင်ငွေ
-            </h3>
-            <span class="badge bg-green-100 text-green-700">Daily</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="dailyChart"></canvas>
-          </div>
-        </div>
-        
-        <div class="glass rounded-2xl p-5 shadow-sm mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-calendar-alt text-purple-500"></i>
-              လစဥ် ဝင်ငွေ
-            </h3>
-            <span class="badge bg-blue-100 text-blue-700">Monthly</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="monthlyChart"></canvas>
-          </div>
-        </div>
-        
-        <div class="glass rounded-2xl p-5 shadow-sm">
-          <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i class="fas fa-book-open text-purple-500"></i>
-            ဘာသာရပ်အလိုက် အသေးစိတ်
-          </h3>
-          <div id="subjectDetails" class="grid grid-cols-2 gap-3"></div>
-        </div>
-      </div>
-
-      <!-- Audit Tab -->
-      <div id="auditTab" class="tab-content hidden fade-in">
-        <div class="glass rounded-2xl shadow-sm overflow-hidden">
-          <div class="p-4 border-b flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-shield-alt text-green-500"></i>
-              ပြောင်းလဲမှတ်တမ်း
-            </h3>
-            <div class="flex items-center gap-2">
-              <span class="pulse-dot"></span>
-              <span class="badge bg-blue-100 text-blue-700">Real-time</span>
-            </div>
-          </div>
-          <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
-            <table class="w-full text-xs">
-              <thead class="bg-gray-50 sticky top-0">
-                <tr>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Time</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Admin</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Action</th>
-                  <th class="px-3 py-3 text-left font-bold text-gray-600">Details</th>
-                </tr>
-              </thead>
-              <tbody id="auditTableBody"></tbody>
-            </table>
-          </div>
-          <div id="auditEmpty" class="empty-state hidden">
-            <i class="fas fa-inbox"></i>
-            <p>မှတ်တမ်း မရှိသေးပါ</p>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Edit Modal -->
-  <div id="editModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4 modal-overlay">
-    <div class="glass rounded-2xl p-6 w-full max-w-sm modal-content">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-          <i class="fas fa-edit text-purple-600"></i>
-        </div>
-        <div>
-          <h3 class="font-bold text-gray-800">Cell ပြင်ဆင်ရန်</h3>
-          <p class="text-xs text-gray-500" id="editModalSubtitle">Row <span id="editRow"></span>, Col <span id="editCol"></span></p>
-        </div>
-      </div>
-      
-      <div id="editModalContent"></div>
-      
-      <div class="flex gap-3 mt-5">
-        <button onclick="closeEditModal()" class="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors">
-          မလုပ်တော့ပါ
-        </button>
-        <button onclick="saveEdit()" class="flex-1 py-3 rounded-xl btn-primary text-white font-semibold shadow-lg">
-          <span id="saveBtnText">သိမ်းမည်</span>
-          <span id="saveSpinner" class="loading hidden ml-2"></span>
-        </button>
-      </div>
+    <!-- TABS -->
+    <div class="tabs">
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
+        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
+        <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Logs</div>
+        <div class="tab" id="tab-analytics" onclick="switchTab('analytics')">📊 Analytics</div>
     </div>
-  </div>
 
-  <!-- Delete Confirm Modal -->
-  <div id="deleteModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4 modal-overlay">
-    <div class="glass rounded-2xl p-6 w-full max-w-sm modal-content text-center">
-      <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-        <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-      </div>
-      <h3 class="font-bold text-lg text-gray-800 mb-2">ဖျက်ရန်သေချာပါသလား?</h3>
-      <p class="text-sm text-gray-500 mb-6">ဒီလုပ်ဆောင်ချက်ကို ပြန်လည်ရုပ်သိမ်းလို့မရပါ</p>
-      <div class="flex gap-3">
-        <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold">မလုပ်တော့ပါ</button>
-        <button onclick="confirmDelete()" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold shadow-lg hover:bg-red-600 transition-colors">
-          <span id="deleteBtnText">ဖျက်မည်</span>
-          <span id="deleteSpinner" class="loading hidden ml-2"></span>
-        </button>
-      </div>
+    <div id="search-container">
+        <input type="text" id="search" class="search-box" placeholder="🔍 Search ID or Subject..." onkeyup="renderData()">
     </div>
-  </div>
 
-  <!-- Toast -->
-  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[70] hidden toast">
-    <div class="glass rounded-xl px-5 py-3 shadow-xl flex items-center gap-3 min-w-[200px]">
-      <i id="toastIcon" class="fas fa-check-circle text-green-500 text-lg"></i>
-      <span id="toastMessage" class="font-semibold text-sm"></span>
-    </div>
-  </div>
+    <div id="displayArea"></div>
+</div>
 
-  <script>
-    // ==================== CONFIG ====================
-    // GAS Web App URL ကို ဒီမှာထည့်
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyWc7AtQmPmfZdSwIsU7apQ_WixNyUn6Fug7UM0EQaalxcskoxuLLB-S0ygtefVa3n/exec';
-    const ADMIN_ID = '8432363664';
-    
-    // ==================== STATE ====================
-    let currentAdminId = null;
-    let sheetData = null;
-    let editingCell = null;
-    let deletingRow = null;
-    let charts = {};
-    
-    // ==================== API HELPERS ====================
-    async function apiGet(action, params = {}) {
-      const url = new URL(GAS_URL);
-      url.searchParams.append('action', action);
-      Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
-      
-      const res = await fetch(url, {
-        method: 'GET',
-        mode: 'cors'
-      });
-      return res.json();
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // 🔒 Admin IDs
+    const ADMIN_IDS = ["8432363664","7273479209"]; 
+    const currentUserId = tg.initDataUnsafe?.user?.id;
+    const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
+
+    if (!isAdmin) {
+        document.body.innerHTML = `<div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
+            <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1><h2 style="color:#721c24; margin-top:10px;">Access Denied</h2></div>`;
+        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။");
+        throw new Error("Unauthorized Access");
     }
+
+    // 🔗 Google Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUMfGqN_x6nK_9Gd1nu661xA8Pop8xW4NZH4QiEaOYTeC8c0GjKASf0BqX9pJ75_Ib/exec";
     
-    async function apiPost(action, data) {
-  const params = new URLSearchParams();
-  params.append('action', action);
-  Object.entries(data).forEach(([k, v]) => {
-    params.append(k, typeof v === 'object' ? JSON.stringify(v) : v);
-  });
-  
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params
-  });
-  
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
+    // 🔧 Affiliate Codes (HTML ထဲမှာပဲ ထည့်ချင်တဲ့ code တွေ)
+    const AFFILIATE_CODES = ["Arkot1","Arkot2"];
     
-    // ==================== AUTH ====================
-    async function login() {
-      const id = document.getElementById('loginId').value.trim();
-      const btnText = document.getElementById('loginBtnText');
-      const spinner = document.getElementById('loginSpinner');
-      const error = document.getElementById('loginError');
-      
-      if (!id) {
-        showLoginError('Telegram ID ထည့်ပါ');
-        return;
-      }
-      
-      btnText.textContent = 'စစ်ဆေးနေသည်...';
-      spinner.classList.remove('hidden');
-      error.classList.add('hidden');
-      
-      try {
-        const data = await apiGet('getData');
-        
-        if (id === data.adminId) {
-          currentAdminId = id;
-          sheetData = data;
-          document.getElementById('loginScreen').classList.add('hidden');
-          document.getElementById('mainApp').classList.remove('hidden');
-          renderAll();
-        } else {
-          showLoginError('Admin အခွင့်အရမ်းမရှိပါ။ သင့်အတွက် မဟုတ်ပါ။');
-        }
-      } catch (err) {
-        showLoginError('Network Error: ' + err.message);
-      } finally {
-        btnText.textContent = 'ဝင်ရောက်မည်';
-        spinner.classList.add('hidden');
-      }
+    let currentTab = 'manage';
+    let cachedData = [];
+    let cachedLogs = [];
+    let analyticsData = [];
+    let currentPeriod = 'daily';
+
+    // =================== INITIALIZATION ===================
+    function init() {
+        populateAffiliateCodes();
+        addSubjectRow(); // First default row
+        fetchFromSheet();
     }
-    
-    function showLoginError(msg) {
-      const error = document.getElementById('loginError');
-      error.textContent = msg;
-      error.classList.remove('hidden');
-    }
-    
-    function logout() {
-      currentAdminId = null;
-      sheetData = null;
-      document.getElementById('mainApp').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-      document.getElementById('loginId').value = '';
-    }
-    
-    // ==================== RENDER ====================
-    function renderAll() {
-      renderUsers();
-      renderLogs();
-      renderRecentUsers();
-      loadAnalytics();
-      loadAuditLog();
-    }
-    
-    function showTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tab + 'Tab').classList.remove('hidden');
-      
-      document.querySelectorAll('.nav-item').forEach(el => {
-        el.classList.remove('active');
-        if (el.dataset.tab === tab) el.classList.add('active');
-      });
-      
-      if (tab === 'analytics') {
-        setTimeout(() => {
-          if (window.analyticsData) renderAnalyticsCharts();
-        }, 100);
-      }
-    }
-    
-    function showUserSubtab(subtab) {
-      document.querySelectorAll('.sub-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(subtab === 'list' ? 'userListSubtab' : 'userAddSubtab').classList.remove('hidden');
-      
-      document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('active');
-        if (el.dataset.subtab === subtab) el.classList.add('active');
-      });
-    }
-    
-    // ==================== USERS ====================
-    function renderUsers() {
-      const tbody = document.getElementById('usersTableBody');
-      tbody.innerHTML = '';
-      
-      if (!sheetData || !sheetData.sheet1) return;
-      
-      const rows = sheetData.sheet1.slice(1);
-      
-      if (rows.length === 0) {
-        document.getElementById('usersEmpty').classList.remove('hidden');
-        return;
-      }
-      document.getElementById('usersEmpty').classList.add('hidden');
-      
-      rows.forEach((row, idx) => {
-        const tr = document.createElement('tr');
-        tr.className = 'table-row border-b';
-        const realRow = idx + 2;
-        
-        // Telegram ID
-        tr.innerHTML = `<td class="px-2 py-2 font-bold text-gray-800 whitespace-nowrap">${row[0] || ''}</td>`;
-        
-        // Subject dates (columns B-I, indices 1-8)
-        for (let i = 1; i <= 8; i++) {
-          const val = row[i] || '';
-          const display = val ? formatDateShort(val) : '<span class="text-gray-300">-</span>';
-          tr.innerHTML += `<td class="px-2 py-2 cell-editable whitespace-nowrap" onclick="editCell('Sheet1', ${realRow}, ${i+1}, '${val}', 'date')">${display}</td>`;
-        }
-        
-        // Price, Affiliate, Commission (columns K-M, indices 10-12)
-        const price = row[10] || '';
-        const affiliate = row[11] || '';
-        const commission = row[12] || '';
-        
-        tr.innerHTML += `<td class="px-2 py-2 cell-editable font-semibold text-purple-600" onclick="editCell('Sheet1', ${realRow}, 11, '${price}', 'price')">${price || '<span class="text-gray-300">-</span>'}</td>`;
-        tr.innerHTML += `<td class="px-2 py-2 cell-editable" onclick="editCell('Sheet1', ${realRow}, 12, '${affiliate}', 'text')">${affiliate || '<span class="text-gray-300">-</span>'}</td>`;
-        tr.innerHTML += `<td class="px-2 py-2 cell-editable" onclick="editCell('Sheet1', ${realRow}, 13, '${commission}', 'number')">${commission || '<span class="text-gray-300">-</span>'}</td>`;
-        
-        // Delete
-        tr.innerHTML += `<td class="px-2 py-2 text-center"><button onclick="showDeleteModal(${realRow})" class="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><i class="fas fa-trash-alt text-xs"></i></button></td>`;
-        
-        tbody.appendChild(tr);
-      });
-    }
-    
-    function renderRecentUsers() {
-      const container = document.getElementById('recentUsers');
-      if (!sheetData || !sheetData.sheet1) return;
-      
-      const rows = sheetData.sheet1.slice(1).reverse().slice(0, 5);
-      
-      container.innerHTML = rows.map(row => `
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-              ${(row[0] || '').toString().slice(-2)}
-            </div>
-            <div>
-              <p class="font-semibold text-sm text-gray-800">${row[0] || ''}</p>
-              <p class="text-xs text-gray-500">${row[10] ? row[10] + ' Ks' : 'No price'}</p>
-            </div>
-          </div>
-          <span class="badge bg-purple-100 text-purple-700">${countActiveSubjects(row)} subjects</span>
-        </div>
-      `).join('');
-    }
-    
-    function countActiveSubjects(row) {
-      let count = 0;
-      for (let i = 1; i <= 8; i++) {
-        if (row[i] && row[i].toString().trim() !== '') count++;
-      }
-      return count;
-    }
-    
-    function formatDateShort(val) {
-      if (!val) return '-';
-      try {
-        const d = new Date(val);
-        if (isNaN(d.getTime())) return val;
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${mm}/${dd}`;
-      } catch {
-        return val;
-      }
-    }
-    
-    // ==================== EDIT CELL ====================
-    function editCell(sheet, row, col, value, type) {
-      editingCell = { sheet, row, col, type };
-      const modal = document.getElementById('editModal');
-      const content = document.getElementById('editModalContent');
-      
-      document.getElementById('editRow').textContent = row;
-      document.getElementById('editCol').textContent = col;
-      
-      let inputHtml = '';
-      if (type === 'date') {
-        const dateVal = value ? new Date(value).toISOString().split('T')[0] : '';
-        inputHtml = `
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-          <input type="date" id="editValue" class="input-field w-full px-4 py-3 rounded-xl" value="${dateVal}">
-        `;
-      } else if (type === 'price' || type === 'number') {
-        inputHtml = `
-          <label class="block text-sm font-semibold text-gray-700 mb-2">${type === 'price' ? 'Price (Ks)' : 'Value'}</label>
-          <input type="number" id="editValue" class="input-field w-full px-4 py-3 rounded-xl" value="${value}" placeholder="0">
-        `;
-      } else {
-        inputHtml = `
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Value</label>
-          <input type="text" id="editValue" class="input-field w-full px-4 py-3 rounded-xl" value="${value}" placeholder="Enter value...">
-        `;
-      }
-      
-      content.innerHTML = inputHtml;
-      modal.classList.remove('hidden');
-    }
-    
-    function closeEditModal() {
-      document.getElementById('editModal').classList.add('hidden');
-      editingCell = null;
-    }
-    
-    async function saveEdit() {
-      if (!editingCell) return;
-      
-      const value = document.getElementById('editValue').value;
-      const btnText = document.getElementById('saveBtnText');
-      const spinner = document.getElementById('saveSpinner');
-      
-      btnText.textContent = 'သိမ်းဆည်းနေသည်...';
-      spinner.classList.remove('hidden');
-      
-      try {
-        const res = await apiPost('updateCell', {
-          sheet: editingCell.sheet,
-          row: editingCell.row,
-          col: editingCell.col,
-          value: value,
-          adminId: currentAdminId
+
+    function populateAffiliateCodes() {
+        const select = document.getElementById('affiliate');
+        AFFILIATE_CODES.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            select.appendChild(option);
         });
+    }
+
+    // =================== SUBJECT ROWS ===================
+    function addSubjectRow() {
+        const container = document.getElementById('subjectsContainer');
+        const rowId = 'sub-row-' + Date.now();
         
-        if (res.success) {
-          showToast('သိမ်းဆည်းပြီးပါပြီ', 'success');
-          // Refresh data
-          const data = await apiGet('getData');
-          sheetData = data;
-          renderUsers();
-          loadAnalytics();
-          loadAuditLog();
-          closeEditModal();
-        } else {
-          showToast(res.error || 'Error', 'error');
-        }
-      } catch (err) {
-        showToast('Error: ' + err.message, 'error');
-      } finally {
-        btnText.textContent = 'သိမ်းမည်';
-        spinner.classList.add('hidden');
-      }
-    }
-    
-    // ==================== ADD USER ====================
-    async function submitNewUser(e) {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      const data = {};
-      formData.forEach((val, key) => data[key] = val);
-      
-      const btnText = document.getElementById('addUserBtnText');
-      const spinner = document.getElementById('addUserSpinner');
-      
-      btnText.textContent = 'ထည့်သွင်းနေသည်...';
-      spinner.classList.remove('hidden');
-      
-      try {
-        const res = await apiPost('addNewUser', {
-          userData: data,
-          adminId: currentAdminId
-        });
-        
-        if (res.success) {
-          showToast('User အသစ်ထည့်သွင်းပြီးပါပြီ', 'success');
-          form.reset();
-          // Refresh
-          const newData = await apiGet('getData');
-          sheetData = newData;
-          renderUsers();
-          renderRecentUsers();
-          loadAnalytics();
-          loadAuditLog();
-        } else {
-          showToast(res.error || 'Error', 'error');
-        }
-      } catch (err) {
-        showToast('Error: ' + err.message, 'error');
-      } finally {
-        btnText.textContent = 'ထည့်သွင်းမည်';
-        spinner.classList.add('hidden');
-      }
-    }
-    
-    // ==================== DELETE USER ====================
-    function showDeleteModal(row) {
-      deletingRow = row;
-      document.getElementById('deleteModal').classList.remove('hidden');
-    }
-    
-    function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.add('hidden');
-      deletingRow = null;
-    }
-    
-    async function confirmDelete() {
-      if (!deletingRow) return;
-      
-      const btnText = document.getElementById('deleteBtnText');
-      const spinner = document.getElementById('deleteSpinner');
-      
-      btnText.textContent = 'ဖျက်နေသည်...';
-      spinner.classList.remove('hidden');
-      
-      try {
-        const res = await apiPost('deleteUser', {
-          row: deletingRow,
-          adminId: currentAdminId
-        });
-        
-        if (res.success) {
-          showToast('ဖျက်ပြီးပါပြီ', 'success');
-          const data = await apiGet('getData');
-          sheetData = data;
-          renderUsers();
-          renderRecentUsers();
-          loadAnalytics();
-          loadAuditLog();
-          closeDeleteModal();
-        } else {
-          showToast(res.error || 'Error', 'error');
-        }
-      } catch (err) {
-        showToast('Error: ' + err.message, 'error');
-      } finally {
-        btnText.textContent = 'ဖျက်မည်';
-        spinner.classList.add('hidden');
-      }
-    }
-    
-    // ==================== LOGS ====================
-    function renderLogs() {
-      const tbody = document.getElementById('logsTableBody');
-      tbody.innerHTML = '';
-      
-      if (!sheetData || !sheetData.logs) return;
-      
-      const logs = sheetData.logs.slice(1).reverse();
-      document.getElementById('logsCount').textContent = logs.length + ' entries';
-      
-      if (logs.length === 0) {
-        document.getElementById('logsEmpty').classList.remove('hidden');
-        return;
-      }
-      document.getElementById('logsEmpty').classList.add('hidden');
-      
-      logs.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.className = 'table-row border-b';
-        tr.innerHTML = `
-          <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap">${row[0] || ''}</td>
-          <td class="px-3 py-2.5 font-semibold text-gray-800">${row[1] || ''}</td>
-          <td class="px-3 py-2.5"><span class="badge bg-purple-100 text-purple-700">${row[2] || ''}</span></td>
-          <td class="px-3 py-2.5 font-medium">${row[3] || ''}</td>
-          <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap">${row[4] || ''}</td>
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.id = rowId;
+        row.innerHTML = `
+            <select class="sub-select">
+                <option value="Myanmar">Myanmar</option>
+                <option value="English">English</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Economics">Economics</option>
+                <option value="All">All Subjects</option>
+            </select>
+            <input type="number" class="sub-months" value="1" min="1" placeholder="Months" onchange="updateExpiryForRow('${rowId}')">
+            <input type="date" class="sub-expiry" placeholder="Expiry">
+            <button class="remove-btn" onclick="removeSubjectRow('${rowId}')">✕</button>
         `;
-        tbody.appendChild(tr);
-      });
+        
+        container.appendChild(row);
+        updateExpiryForRow(rowId);
     }
-    
-    // ==================== ANALYTICS ====================
-    async function loadAnalytics() {
-      try {
-        const data = await apiGet('getAnalytics');
+
+    function removeSubjectRow(rowId) {
+        const rows = document.querySelectorAll('.subject-row');
+        if (rows.length > 1) {
+            document.getElementById(rowId).remove();
+        } else {
+            tg.showAlert("အနည်းဆုံး ဘာသာရပ် တစ်ခု လိုအပ်ပါတယ်!");
+        }
+    }
+
+    function updateExpiryForRow(rowId) {
+        const row = document.getElementById(rowId);
+        const monthsInput = row.querySelector('.sub-months');
+        const expiryInput = row.querySelector('.sub-expiry');
+        const subjectSelect = row.querySelector('.sub-select');
         
-        document.getElementById('totalUsers').textContent = data.totalUsers.toLocaleString();
-        document.getElementById('totalRevenue').textContent = data.totalRevenue.toLocaleString();
-        document.getElementById('totalCommission').textContent = data.totalCommission.toLocaleString();
-        document.getElementById('activeSubjects').textContent = Object.keys(data.subjectStats).length;
+        const months = parseInt(monthsInput.value) || 0;
+        const subject = subjectSelect.value;
+        const id = document.getElementById('tgId').value.trim();
         
-        // Subject chart
-        const ctx = document.getElementById('subjectChart').getContext('2d');
-        if (charts.subject) charts.subject.destroy();
+        let baseDate = new Date();
         
-        const subjects = Object.keys(data.subjectStats);
-        const counts = subjects.map(s => data.subjectStats[s].count);
-        const revenues = subjects.map(s => data.subjectStats[s].revenue);
-        
-        charts.subject = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: subjects.map(s => s.toUpperCase()),
-            datasets: [{
-              label: 'ဝယ်ယူသူအရေအတွက်',
-              data: counts,
-              backgroundColor: 'rgba(102, 126, 234, 0.85)',
-              borderRadius: 8,
-              borderSkipped: false
-            }, {
-              label: 'ဝင်ငွေ (Ks)',
-              data: revenues,
-              backgroundColor: 'rgba(118, 75, 162, 0.85)',
-              borderRadius: 8,
-              borderSkipped: false
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { 
-                position: 'bottom',
-                labels: { usePointStyle: true, padding: 15 }
-              }
-            },
-            scales: {
-              y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-              x: { grid: { display: false } }
+        // Check existing record for this ID + Subject
+        if (id && cachedData.length > 0) {
+            const existing = cachedData.find(item => String(item.id) === id && item.subject === subject);
+            if (existing && existing.expiry) {
+                let existingExp = new Date(existing.expiry);
+                if (existingExp > baseDate) {
+                    baseDate = existingExp;
+                }
             }
-          }
-        });
-        
-        window.analyticsData = data;
-      } catch (err) {
-        console.error('Analytics error:', err);
-      }
-    }
-    
-    function renderAnalyticsCharts() {
-      if (!window.analyticsData) return;
-      const data = window.analyticsData;
-      
-      // Daily chart
-      const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-      if (charts.daily) charts.daily.destroy();
-      
-      const dailyLabels = Object.keys(data.dailyStats).sort();
-      charts.daily = new Chart(dailyCtx, {
-        type: 'line',
-        data: {
-          labels: dailyLabels,
-          datasets: [{
-            label: 'နေ့စဥ် ဝင်ငွေ (Ks)',
-            data: dailyLabels.map(d => data.dailyStats[d].revenue),
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 4,
-            pointBackgroundColor: '#667eea'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-            x: { grid: { display: false } }
-          }
         }
-      });
-      
-      // Monthly chart
-      const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-      if (charts.monthly) charts.monthly.destroy();
-      
-      const monthlyLabels = Object.keys(data.monthlyStats).sort();
-      charts.monthly = new Chart(monthlyCtx, {
-        type: 'bar',
-        data: {
-          labels: monthlyLabels,
-          datasets: [{
-            label: 'လစဥ် ဝင်ငွေ (Ks)',
-            data: monthlyLabels.map(m => data.monthlyStats[m].revenue),
-            backgroundColor: '#764ba2',
-            borderRadius: 8,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-      
-      // Subject details cards
-      const detailsDiv = document.getElementById('subjectDetails');
-      detailsDiv.innerHTML = '';
-      Object.entries(data.subjectStats).forEach(([subj, stats]) => {
-        detailsDiv.innerHTML += `
-          <div class="glass rounded-xl p-4 text-center border border-gray-100">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">${subj}</p>
-            <p class="text-2xl font-bold text-purple-600">${stats.count}</p>
-            <p class="text-xs text-gray-500 mt-1">${stats.revenue.toLocaleString()} Ks</p>
-          </div>
-        `;
-      });
+        
+        baseDate.setMonth(baseDate.getMonth() + months);
+        expiryInput.value = baseDate.toISOString().split('T')[0];
     }
-    
-    // ==================== AUDIT LOG ====================
-    async function loadAuditLog() {
-      try {
-        const res = await apiGet('getAuditLog', { adminId: currentAdminId });
-        const tbody = document.getElementById('auditTableBody');
-        tbody.innerHTML = '';
-        
-        if (!res.data || res.data.length <= 1) {
-          document.getElementById('auditEmpty').classList.remove('hidden');
-          return;
-        }
-        document.getElementById('auditEmpty').classList.add('hidden');
-        
-        const logs = res.data.slice(1).reverse();
-        
-        logs.forEach(row => {
-          const tr = document.createElement('tr');
-          tr.className = 'table-row border-b';
-          
-          let actionBadge = '';
-          if (row[2] === 'ADD_USER') {
-            actionBadge = '<span class="badge bg-green-100 text-green-700"><i class="fas fa-plus text-[0.5rem]"></i> ADD</span>';
-          } else {
-            actionBadge = '<span class="badge bg-blue-100 text-blue-700"><i class="fas fa-edit text-[0.5rem]"></i> EDIT</span>';
-          }
-          
-          const details = row[6] ? `→ ${String(row[6]).substring(0, 30)}` : (row[3] ? String(row[3]).substring(0, 30) : '');
-          
-          tr.innerHTML = `
-            <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap text-xs">${formatDateTime(row[0])}</td>
-            <td class="px-3 py-2.5 font-semibold text-gray-800">${row[1]}</td>
-            <td class="px-3 py-2.5">${actionBadge}</td>
-            <td class="px-3 py-2.5 text-gray-600 text-xs max-w-[150px] truncate" title="${details}">${details}</td>
-          `;
-          tbody.appendChild(tr);
+
+    // Update all expiry dates when ID changes
+    document.getElementById('tgId').addEventListener('input', () => {
+        document.querySelectorAll('.subject-row').forEach(row => {
+            updateExpiryForRow(row.id);
         });
-      } catch (err) {
-        console.error('Audit log error:', err);
-      }
-    }
-    
-    function formatDateTime(val) {
-      if (!val) return '';
-      try {
-        const d = new Date(val);
-        if (isNaN(d.getTime())) return val;
-        return d.toLocaleString('my-MM', { 
-          month: 'short', day: 'numeric', 
-          hour: '2-digit', minute: '2-digit' 
-        });
-      } catch {
-        return val;
-      }
-    }
-    
-    // ==================== SEARCH ====================
-    function searchUsers() {
-      const query = document.getElementById('searchUser').value.toLowerCase().trim();
-      const rows = document.querySelectorAll('#usersTableBody tr');
-      let visibleCount = 0;
-      
-      rows.forEach(row => {
-        const id = row.cells[0].textContent.toLowerCase();
-        const show = id.includes(query);
-        row.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
-      });
-      
-      if (visibleCount === 0 && query !== '') {
-        document.getElementById('usersEmpty').classList.remove('hidden');
-      } else {
-        document.getElementById('usersEmpty').classList.add('hidden');
-      }
-    }
-    
-    // ==================== TOAST ====================
-    function showToast(message, type) {
-      const toast = document.getElementById('toast');
-      const icon = document.getElementById('toastIcon');
-      const msg = document.getElementById('toastMessage');
-      
-      msg.textContent = message;
-      
-      if (type === 'success') {
-        icon.className = 'fas fa-check-circle text-green-500 text-lg';
-      } else if (type === 'error') {
-        icon.className = 'fas fa-exclamation-circle text-red-500 text-lg';
-      } else {
-        icon.className = 'fas fa-info-circle text-blue-500 text-lg';
-      }
-      
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
-    
-    // ==================== TELEGRAM WEB APP ====================
-    if (window.Telegram && Telegram.WebApp) {
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
-      Telegram.WebApp.enableClosingConfirmation();
-      
-      // Auto-fill Telegram ID if available
-      const tgUser = Telegram.WebApp.initDataUnsafe?.user;
-      if (tgUser && tgUser.id) {
-        document.getElementById('loginId').value = tgUser.id;
-      }
-    }
-    
-    // Enter key on login
-    document.getElementById('loginId')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') login();
     });
-  </script>
+
+    // =================== COMMISSION CALCULATION ===================
+    function calculateCommission() {
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        const commission = parseFloat(document.getElementById('commission').value) || 0;
+        const total = (price * commission / 100).toFixed(2);
+        document.getElementById('commissionDisplay').textContent = `💰 Commission: ${total} MMK (${commission}%)`;
+    }
+
+    document.getElementById('price').addEventListener('input', calculateCommission);
+
+    function togglePriceField() {
+        const accType = document.getElementById('accountType').value;
+        if (accType === 'GW') {
+            document.getElementById('price').value = '0';
+            document.getElementById('price').disabled = true;
+            document.getElementById('commission').value = '0';
+            document.getElementById('commission').disabled = true;
+            calculateCommission();
+        } else {
+            document.getElementById('price').disabled = false;
+            document.getElementById('commission').disabled = false;
+        }
+    }
+
+    // =================== DATE HELPERS ===================
+    function getLocalDateStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(0, 10);
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function getLocalTimeStr(dateVal) {
+        if (!dateVal) return "";
+        let d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal).substring(11, 16);
+        let hh = d.getHours();
+        let min = String(d.getMinutes()).padStart(2, '0');
+        let ampm = hh >= 12 ? 'PM' : 'AM';
+        hh = hh % 12 || 12;
+        return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
+    }
+
+    function showLoading(show) { 
+        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; 
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
+        
+        if (tab === 'analytics') {
+            fetchAnalytics();
+        } else {
+            renderData();
+        }
+    }
+
+    // =================== FETCH DATA ===================
+    async function fetchFromSheet() {
+        showLoading(true);
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+            cachedData = data.active || [];
+            cachedLogs = data.logs || [];
+            renderData();
+        } catch (e) {
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+        }
+        showLoading(false);
+    }
+
+    async function fetchAnalytics() {
+        showLoading(true);
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "analytics", period: currentPeriod })
+            });
+            analyticsData = await response.json();
+            renderAnalytics();
+        } catch (e) {
+            tg.showAlert("Analytics data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+        }
+        showLoading(false);
+    }
+
+    // =================== SAVE RECORD ===================
+    async function saveRecord() {
+        const id = document.getElementById('tgId').value.trim();
+        const accountType = document.getElementById('accountType').value;
+        const price = document.getElementById('price').value;
+        const affiliate = document.getElementById('affiliate').value;
+        const commission = document.getElementById('commission').value;
+        
+        if (!id) { 
+            tg.showAlert("Telegram ID ထည့်ပေးပါဗျ။"); 
+            return; 
+        }
+        
+        // Collect all subjects
+        const subjects = [];
+        const rows = document.querySelectorAll('.subject-row');
+        
+        rows.forEach(row => {
+            const subject = row.querySelector('.sub-select').value;
+            const months = row.querySelector('.sub-months').value;
+            const expiry = row.querySelector('.sub-expiry').value;
+            
+            if (subject && months && expiry) {
+                subjects.push({ subject, months, expiry });
+            }
+        });
+        
+        if (subjects.length === 0) {
+            tg.showAlert("အနည်းဆုံး ဘာသာရပ် တစ်ခု ထည့်ပေးပါဗျ။");
+            return;
+        }
+        
+        showLoading(true);
+        const payload = { 
+            action: "save", 
+            id, 
+            subjects, // Array of {subject, months, expiry}
+            accountType,
+            price,
+            affiliate,
+            commission,
+            timestamp: Date.now() 
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            tg.HapticFeedback.notificationOccurred('success');
+            await fetchFromSheet();
+            
+            // Reset form
+            document.getElementById('tgId').value = "";
+            document.getElementById('price').value = "";
+            document.getElementById('affiliate').value = "";
+            document.getElementById('commission').value = "0";
+            document.getElementById('subjectsContainer').innerHTML = "";
+            addSubjectRow();
+            calculateCommission();
+            
+            tg.showAlert(`✅ ${subjects.length} ဘာသာရပ် သိမ်းဆည်းပြီးပါပြီ!`);
+        } catch(e) { 
+            tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); 
+        }
+        showLoading(false);
+    }
+
+    // =================== DELETE ===================
+    async function deleteSubject(id, subject) {
+        if (!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
+        showLoading(true);
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
+            await fetchFromSheet();
+        } catch(e) { 
+            tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); 
+        }
+        showLoading(false);
+    }
+
+    // =================== RENDER DATA ===================
+    function renderData() {
+        const area = document.getElementById('displayArea');
+        area.innerHTML = "";
+
+        if (currentTab === 'manage') {
+            renderManageTab(area);
+        } else if (currentTab === 'expire') {
+            renderExpireTab(area);
+        } else if (currentTab === 'logs') {
+            renderLogsTab(area);
+        }
+    }
+
+    function renderManageTab(area) {
+        let db = {};
+        cachedData.forEach(item => { 
+            if (!db[item.id]) db[item.id] = []; 
+            db[item.id].push(item); 
+        });
+        
+        const search = document.getElementById('search').value.toLowerCase();
+        const sortedIds = Object.keys(db).reverse();
+
+        sortedIds.forEach(studentId => {
+            const subs = db[studentId];
+            if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                let subHtml = "";
+                let totalPrice = 0;
+                
+                subs.forEach(s => {
+                    const accBadge = s.accountType === 'GW' ? `<span class="gw-badge">GW</span>` : '';
+                    const affTag = s.affiliate ? `<span class="affiliate-tag">${s.affiliate}</span>` : '';
+                    
+                    subHtml += `<div class="sub-item">
+                        <div class="sub-main">
+                            <span class="sub-name">📘 ${s.subject} ${accBadge} ${affTag}</span>
+                            <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                            <span class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</span>
+                            <span class="price-tag">${s.price || 0} MMK</span>
+                        </div>
+                        ${s.affiliate ? `<div style="font-size:0.8rem; color:#666; margin-top:4px;">💰 Comm: ${s.totalCommission || 0} MMK (${s.commission}%)</div>` : ''}
+                    </div>`;
+                    
+                    totalPrice += parseFloat(s.price || 0);
+                });
+                
+                area.innerHTML += `<div class="user-record">
+                    <span class="user-id">👤 ID: ${studentId} 
+                        <span style="float:right; color:var(--success); font-size:0.9rem;">${totalPrice} MMK</span>
+                    </span>
+                    ${subHtml}
+                </div>`;
+            }
+        });
+    }
+
+    function renderExpireTab(area) {
+        let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+        
+        allItems.forEach(s => {
+            let expDate = new Date(s.expiry);
+            const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
+            let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
+            let borderColor = 'var(--success)';
+            
+            if (diffDays < 0) { 
+                statusClass = "status-expired"; 
+                statusText = "(သက်တမ်းကုန်ပြီ!)"; 
+                borderColor = 'red';
+            } else if (diffDays <= 7) { 
+                statusClass = "status-warning"; 
+                statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; 
+                borderColor = 'orange';
+            }
+
+            const accBadge = s.accountType === 'GW' ? `<span class="gw-badge">GW</span>` : '';
+            
+            area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${borderColor};">
+                <div class="sub-main">
+                    <span>👤 <b>${s.id}</b> - ${s.subject} ${accBadge}</span>
+                    <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
+                </div>
+                <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
+                ${s.price ? `<div style="font-size:0.8rem; color:#666; margin-top:4px;">💵 ${s.price} MMK | 💰 ${s.totalCommission || 0} MMK</div>` : ''}
+            </div>`;
+        });
+    }
+
+    function renderLogsTab(area) {
+        let logsByDate = {};
+        let totalMonthsByDate = {};
+        let totalSalesByDate = {};
+        let totalCommissionByDate = {};
+        let countByDate = {};
+
+        cachedLogs.forEach(log => {
+            if (!log.timestamp) return;
+            
+            let dateStr = getLocalDateStr(log.timestamp);
+            let timeStr = getLocalTimeStr(log.timestamp);
+            let expiryStr = getLocalDateStr(log.expiry);
+
+            if (!logsByDate[dateStr]) {
+                logsByDate[dateStr] = [];
+                totalMonthsByDate[dateStr] = 0;
+                totalSalesByDate[dateStr] = 0;
+                totalCommissionByDate[dateStr] = 0;
+                countByDate[dateStr] = 0;
+            }
+            
+            logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
+            totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
+            totalSalesByDate[dateStr] += (parseFloat(log.price) || 0);
+            totalCommissionByDate[dateStr] += (parseFloat(log.totalCommission) || 0);
+            countByDate[dateStr] += 1;
+        });
+
+        let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
+
+        if (sortedDates.length === 0) {
+            area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+        } else {
+            sortedDates.forEach(date => {
+                let dailyTotal = totalMonthsByDate[date];
+                let dailySales = totalSalesByDate[date];
+                let dailyComm = totalCommissionByDate[date];
+                let dailyCount = countByDate[date];
+
+                let html = `
+                <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>🗓 ${date}</span>
+                        <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align:center; font-size:0.85rem;">
+                        <div><div style="font-weight:bold; color:var(--primary);">${dailyTotal} လ</div><div style="color:#777;">သက်တမ်း</div></div>
+                        <div><div style="font-weight:bold; color:var(--success);">${dailySales} MMK</div><div style="color:#777;">ရောင်းရငွေ</div></div>
+                        <div><div style="font-weight:bold; color:var(--purple);">${dailyComm.toFixed(2)} MMK</div><div style="color:#777;">ကော်မရှင်</div></div>
+                    </div>
+                </div>`;
+                
+                logsByDate[date].forEach(log => {
+                    const accBadge = log.accountType === 'GW' ? `<span class="gw-badge">GW</span>` : '';
+                    const affTag = log.affiliate ? `<span class="affiliate-tag">${log.affiliate}</span>` : '';
+                    
+                    html += `
+                        <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
+                                <span>⏰ ${log.displayTime}</span>
+                                <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                            </div>
+                            <div class="sub-main">
+                                <span>👤 <b>${log.id}</b> ${accBadge}</span>
+                                <span class="sub-name" style="color:var(--primary);">📘 ${log.subject} ${affTag}</span>
+                            </div>
+                            <div style="margin-top:6px; font-size: 0.8rem; color: #666; display:flex; justify-content:space-between;">
+                                <span>📅 ကုန်ဆုံးရက်: ${log.displayExpiry}</span>
+                                <span>💵 ${log.price || 0} MMK</span>
+                            </div>
+                        </div>`;
+                });
+                area.innerHTML += html;
+            });
+        }
+    }
+
+    // =================== ANALYTICS ===================
+    function renderAnalytics() {
+        const area = document.getElementById('displayArea');
+        
+        let html = `
+        <div class="period-selector">
+            <button class="period-btn ${currentPeriod === 'daily' ? 'active' : ''}" onclick="changePeriod('daily')">📅 Daily</button>
+            <button class="period-btn ${currentPeriod === 'monthly' ? 'active' : ''}" onclick="changePeriod('monthly')">📆 Monthly</button>
+            <button class="period-btn ${currentPeriod === 'yearly' ? 'active' : ''}" onclick="changePeriod('yearly')">📊 Yearly</button>
+        </div>
+        `;
+        
+        if (!analyticsData || analyticsData.length === 0) {
+            html += `<div class="user-record" style="text-align:center; color:#777;">Data မရှိသေးပါဘူး။</div>`;
+            area.innerHTML = html;
+            return;
+        }
+        
+        // Summary Cards
+        let totalSales = 0, totalComm = 0, totalRecords = 0;
+        analyticsData.forEach(d => {
+            totalSales += d.totalSales;
+            totalComm += d.totalCommission;
+            totalRecords += d.totalRecords;
+        });
+        
+        html += `
+        <div class="analytics-grid">
+            <div class="analytics-item">
+                <div class="number">${totalSales.toFixed(0)}</div>
+                <div class="label">Total Sales (MMK)</div>
+            </div>
+            <div class="analytics-item">
+                <div class="number">${totalComm.toFixed(2)}</div>
+                <div class="label">Total Commission</div>
+            </div>
+            <div class="analytics-item">
+                <div class="number">${totalRecords}</div>
+                <div class="label">Total Records</div>
+            </div>
+            <div class="analytics-item">
+                <div class="number">${analyticsData.length}</div>
+                <div class="label">${currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1)}s</div>
+            </div>
+        </div>
+        `;
+        
+        // Per Period Detail
+        analyticsData.forEach(period => {
+            html += `
+            <div class="card" style="margin-bottom: 15px;">
+                <div style="font-weight:bold; color:var(--primary); font-size:1.1rem; margin-bottom:10px; display:flex; justify-content:space-between;">
+                    <span>📅 ${period.period}</span>
+                    <span style="font-size:0.85rem; color:#777;">${period.totalRecords} records</span>
+                </div>
+                
+                <div class="analytics-grid" style="margin-bottom:10px;">
+                    <div class="analytics-item" style="padding:10px;">
+                        <div class="number" style="font-size:1.2rem;">${period.totalSales.toFixed(0)}</div>
+                        <div class="label">Sales</div>
+                    </div>
+                    <div class="analytics-item" style="padding:10px;">
+                        <div class="number" style="font-size:1.2rem; color:var(--purple);">${period.totalCommission.toFixed(2)}</div>
+                        <div class="label">Commission</div>
+                    </div>
+                </div>
+                
+                <div style="font-weight:bold; font-size:0.9rem; color:#555; margin:10px 0 5px 0;">🏢 By Affiliate:</div>
+                <div class="affiliate-list">
+                    ${Object.entries(period.byAffiliate).map(([aff, data]) => `
+                        <div class="affiliate-item">
+                            <span><span class="affiliate-tag">${aff}</span></span>
+                            <span style="font-weight:bold;">${data.sales.toFixed(0)} MMK (${data.count})</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="font-weight:bold; font-size:0.9rem; color:#555; margin:10px 0 5px 0;">📚 By Subject:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                    ${Object.entries(period.bySubject).map(([sub, data]) => `
+                        <span style="background:#f0f2f5; padding:4px 10px; border-radius:15px; font-size:0.8rem;">
+                            ${sub}: ${data.count} (${data.sales.toFixed(0)} MMK)
+                        </span>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top:10px; font-size:0.85rem; color:#666;">
+                    👤 Normal: ${period.byAccountType.Normal || 0} | 🎁 GW: ${period.byAccountType.GW || 0}
+                </div>
+            </div>
+            `;
+        });
+        
+        area.innerHTML = html;
+    }
+
+    function changePeriod(period) {
+        currentPeriod = period;
+        fetchAnalytics();
+    }
+
+    // Start
+    init();
+</script>
+
 </body>
 </html>
