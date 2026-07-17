@@ -19,24 +19,31 @@
             --border: #374151;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
 
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
+            overflow-x: hidden;
         }
 
         /* Sidebar */
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
             padding: 20px;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            z-index: 100;
         }
 
         .logo {
@@ -47,6 +54,7 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 40px;
             text-align: center;
+            word-break: break-word;
         }
 
         .nav-item {
@@ -59,6 +67,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            white-space: nowrap;
         }
 
         .nav-item:hover, .nav-item.active {
@@ -69,10 +78,11 @@
 
         /* Main Content */
         .main-content {
-            margin-left: 260px;
+            margin-left: 280px;
             flex: 1;
             padding: 30px;
-            width: calc(100% - 260px);
+            width: calc(100% - 280px);
+            max-width: 100%;
         }
 
         .header {
@@ -80,29 +90,66 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .header h1 { font-size: 1.8rem; font-weight: 700; }
-        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
         .live-badge {
             background: rgba(16, 185, 129, 0.1);
             color: var(--accent-green);
-            padding: 5px 15px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
-        
-        .live-dot { width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .sync-btn {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .sync-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -114,12 +161,16 @@
             padding: 20px;
             position: relative;
             overflow: hidden;
+            min-width: 0;
         }
 
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 3px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
         }
 
         .stat-card:nth-child(1)::before { background: var(--accent-cyan); }
@@ -127,9 +178,26 @@
         .stat-card:nth-child(3)::before { background: var(--accent-yellow); }
         .stat-card:nth-child(4)::before { background: var(--accent-green); }
 
-        .stat-card h3 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px; }
-        .stat-card p { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; }
-        .stat-card span { font-size: 0.8rem; color: var(--text-secondary); }
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .stat-card p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .stat-card span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: block;
+            word-break: break-word;
+        }
 
         /* Panels */
         .panel {
@@ -138,6 +206,7 @@
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 30px;
+            overflow: hidden;
         }
 
         .panel-title {
@@ -147,20 +216,43 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         /* Form Styles */
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
         }
 
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        
-        label { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
-        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            word-break: break-word;
+        }
+
         input, select, textarea {
             background: var(--bg-primary);
             border: 1px solid var(--border);
@@ -170,15 +262,23 @@
             font-size: 1rem;
             outline: none;
             transition: border 0.3s;
+            width: 100%;
+            max-width: 100%;
         }
 
-        input:focus, select:focus, textarea:focus { border-color: var(--accent-cyan); }
-        textarea { resize: vertical; min-height: 80px; }
-        small { color: var(--accent-yellow); font-size: 0.8rem; }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        small {
+            color: var(--accent-yellow);
+            font-size: 0.8rem;
+            word-break: break-word;
+        }
 
         .checkbox-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 10px;
             background: var(--bg-primary);
             padding: 15px;
@@ -191,6 +291,9 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .btn {
@@ -203,46 +306,159 @@
             cursor: pointer;
             font-size: 1rem;
             transition: transform 0.2s, opacity 0.2s;
+            white-space: nowrap;
         }
 
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
-        .btn-danger { background: var(--accent-red); }
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+        }
 
         /* Table */
-        .table-container { overflow-x: auto; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        th { color: var(--text-secondary); font-weight: 600; background: var(--bg-primary); }
-        tr:hover { background: rgba(255,255,255,0.02); }
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: var(--bg-primary);
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
 
         .badge {
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
         }
 
-        .badge-regular { background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); }
-        .badge-admin { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
-        .badge-giveaway { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
-        .badge-affiliate { background: rgba(245, 158, 11, 0.1); color: var(--accent-yellow); }
+        .badge-regular {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .badge-admin {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+        .badge-giveaway {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .badge-affiliate {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-yellow);
+        }
 
         .action-btn {
             background: transparent;
             border: 1px solid var(--accent-red);
             color: var(--accent-red);
-            padding: 5px 10px;
+            padding: 5px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .note-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 3px solid var(--accent-red);
+            word-break: break-word;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 0.9rem;
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+                width: calc(100% - 240px);
+                padding: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; width: 100%; padding: 15px; }
-            .form-grid { grid-template-columns: 1fr; }
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -252,16 +468,23 @@
     <aside class="sidebar">
         <div class="logo">G-12 ANALYTICS</div>
         <div class="nav-item active">📊 Dashboard</div>
-        <div class="nav-item" onclick="document.getElementById('addUserPanel').scrollIntoView({behavior: 'smooth'})">➕ Add New User</div>
+        <div class="nav-item" onclick="document.getElementById('addUserPanel').scrollIntoView({behavior: 'smooth'})">➕ Add New Entry</div>
         <div class="nav-item" onclick="document.getElementById('dataPanel').scrollIntoView({behavior: 'smooth'})">📝 Database Logs</div>
-        <div class="nav-item" onclick="exportData()">💾 Export Data</div>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
         <div class="header">
             <h1>Command Center</h1>
-            <div class="live-badge"><div class="live-dot"></div> LIVE SYNC</div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div class="live-badge">
+                    <div class="live-dot"></div>
+                    LIVE
+                </div>
+                <button class="sync-btn" id="syncBtn" onclick="loadDataFromSheet()">
+                    🔄 Sync
+                </button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -269,17 +492,17 @@
             <div class="stat-card">
                 <h3>စုစုပေါင်း ဝင်ငွေ (Total Revenue)</h3>
                 <p id="statRevenue">0 Ks</p>
-                <span>↑ Admin များကို ချန်လှပ်ထားသည်</span>
+                <span>Excludes Admins & Giveaways</span>
             </div>
             <div class="stat-card">
                 <h3>အမှန်တကယ် ဝယ်ယူသူ (Paying Users)</h3>
                 <p id="statUsers">0</p>
-                <span>Excludes Admins & Giveaways</span>
+                <span>Active Paying Customers</span>
             </div>
             <div class="stat-card">
-                <h3>Affiliate ပေးချေရမည့်ငွေ (20%)</h3>
+                <h3>Affiliate Commission (20%)</h3>
                 <p id="statAffiliate">0 Ks</p>
-                <span>↑ Total Commission Owed</span>
+                <span>Total Payouts Owed</span>
             </div>
             <div class="stat-card">
                 <h3>အခမဲ့ ခွင့်ပြုထားသူ (Giveaways)</h3>
@@ -290,87 +513,84 @@
 
         <!-- Add User Panel -->
         <div class="panel" id="addUserPanel">
-            <div class="panel-title">➕ အသုံးပြုသူအသစ် ထည့်သွင်းရန် / ခွင့်ပြုချက်ပေးရန်</div>
+            <div class="panel-title">➕ အသုံးပြုသူအသစ် / ခွင့်ပြုချက်သစ် ထည့်သွင်းရန်</div>
             <div class="form-grid">
                 <div class="form-group">
                     <label>User ID / ဖုန်းနံပါတ်</label>
                     <input type="text" id="userId" placeholder="e.g., 09123456789">
                 </div>
                 <div class="form-group">
-                    <label>အကောင့်အမျိုးအစား (Account Type)</label>
+                    <label>အကောင့်အမျိုးအစား</label>
                     <select id="userType">
-                        <option value="Regular">ပုံမှန် ဝယ်ယူသူ (Paying User)</option>
-                        <option value="Admin">Admin (ဝင်ငွေ/အရေအတွက် မရေတွက်ရန်)</option>
-                        <option value="Giveaway">Giveaway Winner (အခမဲ့ ခွင့်ပြုသူ)</option>
+                        <option value="Regular">ပုံမှန် ဝယ်ယူသူ</option>
+                        <option value="Admin">Admin (မရေတွက်ရန်)</option>
+                        <option value="Giveaway">Giveaway (အခမဲ့)</option>
                         <option value="Affiliate">Affiliate Partner</option>
                     </select>
                 </div>
                 
                 <div class="form-group full-width">
-                    <label>ဘာသာရပ်များ ရွေးချယ်ရန် (Subjects)</label>
+                    <label>ဘာသာရပ်များ ရွေးချယ်ရန်</label>
                     <div class="checkbox-grid" id="subjectsGrid">
                         <!-- JS will populate this -->
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>သက်တမ်း (Duration)</label>
+                    <label>သက်တမ်း (လ)</label>
                     <select id="duration">
                         <option value="1">၁ လ</option>
                         <option value="2">၂ လ</option>
-                        <option value="3">၃ လ</option>
+                        <option value="3"> လ</option>
                         <option value="5">၅ လ</option>
                         <option value="6">၆ လ</option>
-                        <option value="12">၁ နှစ်</option>
+                        <option value="12">၁ ှစ်</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Affiliate Code (ရှိလျှင် ထည့်ပါ)</label>
+                    <label>Affiliate Code (ရှိလျှင်)</label>
                     <input type="text" id="affiliateCode" placeholder="e.g., MINA20">
                 </div>
                 
                 <div class="form-group">
-                    <label>ရရှိထားသော ငွေပမာဏ (Final Price - Ks)</label>
+                    <label>ရရှိထားသော ငွေပမာဏ (Ks)</label>
                     <input type="number" id="finalPrice" placeholder="Manual Entry">
-                    <small>⚠️ ဈေးနှုန်းအလိုအလျောက်မတွက်ပါ။ လက်ခံရရှိထားသောငွေကို ထည့်သွင်းပါ။</small>
+                    <small>⚠️ ဈေးလျှော့ပေးထားပြီးသား အမှန်တကယ်ရငွေကို ထည့်ပါ။</small>
                 </div>
                 <div class="form-group">
-                    <label>မှတ်ချက် (Notes)</label>
-                    <input type="text" id="notes" placeholder="ပြမိုရှင်း၊ ဈေးလျှော့ပေးထားမှု စသည်...">
+                    <label>မှတ်ချက်</label>
+                    <input type="text" id="notes" placeholder="Promo code, အထူးလျှော့စသည်...">
                 </div>
             </div>
             <br>
-            <button class="btn" onclick="saveEntry()">💾 Save to Database</button>
+            <button class="btn" onclick="saveEntryToSheet()">💾 Save to Google Sheet</button>
         </div>
 
         <!-- Data Table Panel -->
         <div class="panel" id="dataPanel">
-            <div class="panel-title" style="justify-content: space-between;">
-                <span>📝 မှတ်တမ်းများ (Database Logs)</span>
-                <div style="display: flex; gap: 10px;">
-                    <select id="filterType" onchange="renderTable()" style="padding: 8px;">
-                        <option value="all">All Entries</option>
-                        <option value="Regular">Paying Users Only</option>
-                        <option value="Admin">Admins Only</option>
-                        <option value="Giveaway">Giveaways Only</option>
-                        <option value="Affiliate">Affiliates Only</option>
-                    </select>
-                    <button class="btn btn-danger" onclick="clearData()" style="padding: 8px 15px; font-size: 0.8rem;">🗑️ Clear All</button>
-                </div>
+            <div class="panel-header">
+                <div class="panel-title"> မှတ်တမ်းများ (Google Sheet Data)</div>
+                <select id="filterType" class="filter-select" onchange="renderTable()">
+                    <option value="all">All Entries</option>
+                    <option value="Regular">Paying Users</option>
+                    <option value="Admin">Admins</option>
+                    <option value="Giveaway">Giveaways</option>
+                    <option value="Affiliate">Affiliates</option>
+                </select>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
+                            <th>Date</th>
                             <th>ID</th>
                             <th>Type</th>
                             <th>Subjects</th>
                             <th>Duration</th>
-                            <th>Price (Ks)</th>
+                            <th>Price</th>
                             <th>Affiliate</th>
                             <th>Commission</th>
-                            <th>Date</th>
-                            <th>Action</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody">
@@ -378,14 +598,20 @@
                     </tbody>
                 </table>
             </div>
+            <div class="note-text">
+                💡 <strong>မှတ်ချက်:</strong> မှတ်တမ်းတစ်ခုခုကို ဖျက်ချင်ပါက / ပြင်ဆင်ချင်ပါက ဤနေရာမှတစ်ဆင့် မလုပ်ဘဲ <strong>Google Sheet</strong> ထဲသို့ သွားရောက် ပြင်ဆင်/ဖျက်ပေးပါ။ (Dashboard သည် Sheet ရှိ ဒေတာအတိုင်း အလိုအလျောက် ပြန်လည်ပြသပါမည်)
+            </div>
         </div>
     </main>
 
     <script>
-        const subjectsList = ["မြန်မာစာ", "အင်္ဂလိပ်စာ", "သင်္ချာ", "ရူပဗေဒ", "ဓာတုဗေဒ", "ဇီဝဗေဒ", "ဘောဂဗေဒ", "ပထဝီ", "သမိုင်း"];
-        let db = JSON.parse(localStorage.getItem('g12_analytics_db')) || [];
+        // ⚠️ အဆင့်(၂) က ရလာတဲ့ Web App URL ကို ဒီနေရာမှာ အစားထိုးထည့်ပါ ⚠️
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC-c3o7iGK-YWpWTdlafrD4Sj5SX9VVyye4LtpDvCxdTjFNw-7QCJSXSqjiGhGgiz_/exec"; 
 
-        // Initialize Subjects Checkboxes
+        const subjectsList = ["မြန်မာစာ", "အင်္ဂလိပ်စာ", "သင်္ချာ", "ရူပဗေဒ", "ဓာတုဗေဒ", "ဇီဝဗေဒ", "ဘောဂဗေဒ", "ပထဝီ", "သမိုင်း"];
+        let db = [];
+
+        // Initialize UI
         const subjectsGrid = document.getElementById('subjectsGrid');
         subjectsList.forEach(sub => {
             subjectsGrid.innerHTML += `
@@ -395,60 +621,90 @@
             `;
         });
 
-        function getSelectedSubjects() {
-            return Array.from(document.querySelectorAll('.subject-check:checked')).map(cb => cb.value);
+        // Fetch Data from Google Sheet
+        async function loadDataFromSheet() {
+            const btn = document.getElementById('syncBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Syncing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                db = data;
+                renderDashboard();
+                btn.innerHTML = '✅ Synced!';
+            } catch (error) {
+                console.error("Sync Error:", error);
+                btn.innerHTML = '❌ Error';
+                alert("Google Sheet နှင့် ချိတ်ဆက်မှု အဆင်မပြေဖြစ်နေပါသည်။ URL မှန်ကန်မှုနှင့် Internet Connection ကို စစ်ဆေးပါ။");
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
         }
 
-        function saveEntry() {
+        // Save Data to Google Sheet
+        async function saveEntryToSheet() {
             const id = document.getElementById('userId').value.trim();
             const type = document.getElementById('userType').value;
-            const subjects = getSelectedSubjects();
+            const subjects = Array.from(document.querySelectorAll('.subject-check:checked')).map(cb => cb.value).join(", ");
             const duration = document.getElementById('duration').value;
             const affiliate = document.getElementById('affiliateCode').value.trim();
             const price = parseFloat(document.getElementById('finalPrice').value) || 0;
             const notes = document.getElementById('notes').value.trim();
 
-            if (!id || subjects.length === 0) {
+            if (!id || !subjects) {
                 alert('User ID နှင့် ဘာသာရပ် အနည်းဆုံး ၁ ခု ထည့်သွင်းရန် လိုအပ်ပါသည်။');
                 return;
             }
 
             let commission = 0;
             if (affiliate && type === 'Regular') {
-                commission = price * 0.20; // 20% Commission
+                commission = price * 0.20;
             }
 
-            const entry = {
-                id, type, subjects, duration, affiliate, price, commission, notes,
-                date: new Date().toLocaleString('en-GB')
-            };
+            const payload = { id, type, subjects, duration, affiliate, price, commission, notes };
 
-            db.push(entry);
-            localStorage.setItem('g12_analytics_db', JSON.stringify(db));
-            
-            // Reset Form
-            document.getElementById('userId').value = '';
-            document.getElementById('affiliateCode').value = '';
-            document.getElementById('finalPrice').value = '';
-            document.getElementById('notes').value = '';
-            document.querySelectorAll('.subject-check').forEach(cb => cb.checked = false);
+            try {
+                const formData = new FormData();
+                formData.append("data", JSON.stringify(payload));
 
-            renderDashboard();
-            alert('အချက်အလက်များကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။');
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: formData
+                });
+
+                alert('အချက်အလက်များ Google Sheet သို့ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။');
+                
+                // Reset Form
+                document.getElementById('userId').value = '';
+                document.getElementById('affiliateCode').value = '';
+                document.getElementById('finalPrice').value = '';
+                document.getElementById('notes').value = '';
+                document.querySelectorAll('.subject-check').forEach(cb => cb.checked = false);
+
+                // Auto Sync after save
+                setTimeout(loadDataFromSheet, 2000); 
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
         }
 
         function renderDashboard() {
-            let totalRevenue = 0;
-            let payingUsers = 0;
-            let affiliatePayouts = 0;
-            let giveaways = 0;
+            let totalRevenue = 0, payingUsers = 0, affiliatePayouts = 0, giveaways = 0;
 
             db.forEach(entry => {
-                if (entry.type === 'Regular') {
-                    totalRevenue += entry.price;
+                const price = parseFloat(entry.FinalPrice) || 0;
+                const commission = parseFloat(entry.Commission) || 0;
+
+                if (entry.AccountType === 'Regular') {
+                    totalRevenue += price;
                     payingUsers++;
-                    affiliatePayouts += entry.commission;
-                } else if (entry.type === 'Giveaway') {
+                    affiliatePayouts += commission;
+                } else if (entry.AccountType === 'Giveaway') {
                     giveaways++;
                 }
             });
@@ -466,65 +722,42 @@
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
 
-            let filteredDb = filter === 'all' ? db : db.filter(e => e.type === filter);
-            
-            // Show newest first
-            filteredDb = [...filteredDb].reverse();
+            let filteredDb = filter === 'all' ? db : db.filter(e => e.AccountType === filter);
+            filteredDb = [...filteredDb].reverse(); // Newest first
 
-            filteredDb.forEach((entry, index) => {
-                const realIndex = db.length - 1 - index; // To match original array index for deletion
-                const badgeClass = `badge-${entry.type.toLowerCase()}`;
+            filteredDb.forEach(entry => {
+                const badgeClass = `badge-${(entry.AccountType || 'regular').toLowerCase()}`;
                 const typeLabel = {
                     'Regular': 'Paying User',
                     'Admin': 'Admin',
                     'Giveaway': 'Giveaway',
                     'Affiliate': 'Affiliate'
-                }[entry.type];
+                }[entry.AccountType] || 'Unknown';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${entry.id}</td>
+                        <td>${entry.Timestamp || '-'}</td>
+                        <td>${entry.UserID || '-'}</td>
                         <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
-                        <td>${entry.subjects.join(', ')}</td>
-                        <td>${entry.duration} လ</td>
-                        <td>${entry.price.toLocaleString()}</td>
-                        <td>${entry.affiliate || '-'}</td>
-                        <td>${entry.commission > 0 ? entry.commission.toLocaleString() : '-'}</td>
-                        <td>${entry.date}</td>
-                        <td><button class="action-btn" onclick="deleteEntry(${realIndex})">Delete</button></td>
+                        <td>${entry.Subjects || '-'}</td>
+                        <td>${entry.Duration || '-'} လ</td>
+                        <td>${parseFloat(entry.FinalPrice || 0).toLocaleString()}</td>
+                        <td>${entry.AffiliateCode || '-'}</td>
+                        <td>${parseFloat(entry.Commission || 0).toLocaleString()}</td>
+                        <td>${entry.Notes || '-'}</td>
                     </tr>
                 `;
             });
         }
 
-        function deleteEntry(index) {
-            if (confirm('ဤမှတ်တမ်းကို ပယ်ဖျက်တော့မည်လား?')) {
-                db.splice(index, 1);
-                localStorage.setItem('g12_analytics_db', JSON.stringify(db));
-                renderDashboard();
+        // Initial Load
+        window.onload = () => {
+            if(SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                alert("⚠️ ကျေးဇူးပြု၍ Google Apps Script Web App URL ကို Code ထဲတွင် အစားထိုးထည့်သွင်းပါ။");
+            } else {
+                loadDataFromSheet();
             }
-        }
-
-        function clearData() {
-            if (confirm('မှတ်တမ်းအားလုံးကို ဖျက်ပစ်တော့မည်လား? (ပြန်လည်ရယူ၍ မရပါ)')) {
-                db = [];
-                localStorage.setItem('g12_analytics_db', JSON.stringify(db));
-                renderDashboard();
-            }
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "g12_analytics_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        // Initial Render
-        renderDashboard();
+        };
     </script>
 </body>
 </html>
