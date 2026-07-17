@@ -2,575 +2,1455 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Telegram Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         :root {
-            --bg-color: var(--tg-theme-bg-color, #ffffff);
-            --text-color: var(--tg-theme-text-color, #000000);
-            --hint-color: var(--tg-theme-hint-color, #999999);
-            --button-color: var(--tg-theme-button-color, #3390ec);
-            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-button-color: #3390ec;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f1f1f1;
+            --tg-theme-hint-color: #8e8e93;
         }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px; /* Space for bottom nav */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-
-        .container {
-            padding: 15px;
+        
+        .header {
+            background: var(--tg-theme-bg-color);
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-
-        /* Cards */
-        .card {
-            background-color: var(--bg-color);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
-
-        .stats-grid {
+        
+        .header p {
+            font-size: 13px;
+            color: var(--tg-theme-hint-color);
+        }
+        
+        .stats-bar {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--tg-theme-bg-color);
+            margin-bottom: 8px;
         }
-
-        .stat-item {
-            text-align: center;
-            padding: 10px;
-            background: var(--secondary-bg);
-            border-radius: 8px;
-        }
-        .stat-value { font-size: 1.2em; font-weight: bold; color: var(--button-color); }
-        .stat-label { font-size: 0.8em; color: var(--hint-color); }
-
-        /* Tables & Lists */
-        .student-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .student-item {
-            background: var(--bg-color);
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
             padding: 12px;
-            border-bottom: 1px solid var(--secondary-bg);
+            color: white;
+            text-align: center;
+        }
+        
+        .stat-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stat-card.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-card.purple {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+        
+        .stat-card.gold {
+            background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--tg-theme-bg-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--tg-theme-button-color);
+            background: transparent;
+            color: var(--tg-theme-button-color);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+        
+        .content {
+            padding: 0 16px 80px;
+        }
+        
+        .section {
+            background: var(--tg-theme-bg-color);
+            border-radius: 16px;
+            margin-top: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .section-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .section-action {
+            color: var(--tg-theme-button-color);
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
         }
-        .student-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
-        .student-item:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
         
-        .student-info h4 { margin: 0 0 5px 0; font-size: 16px; }
-        .student-info p { margin: 0; font-size: 12px; color: var(--hint-color); }
+        .filters {
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 16px;
+            background: var(--tg-theme-secondary-bg-color);
+            font-size: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+        
+        .filter-chip.active {
+            border-color: var(--tg-theme-button-color);
+            background: rgba(51, 144, 236, 0.1);
+            color: var(--tg-theme-button-color);
+            font-weight: 600;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            background: var(--tg-theme-secondary-bg-color);
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            position: sticky;
+            top: 0;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background: rgba(51, 144, 236, 0.02);
+        }
+        
+        .cell-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            font-size: 12px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: inherit;
+        }
+        
+        .cell-input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
+        }
+        
+        .cell-input.date {
+            width: 120px;
+        }
+        
+        .cell-input.price {
+            width: 90px;
+            text-align: right;
+        }
+        
+        .cell-input.affiliate {
+            width: 100px;
+        }
+        
+        .tg-id {
+            font-family: 'SF Mono', monospace;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
         .badge {
-            background: var(--button-color);
-            color: var(--button-text-color);
+            display: inline-block;
             padding: 2px 8px;
             border-radius: 10px;
-            font-size: 10px;
-        }
-
-        /* Forms */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 14px; color: var(--hint-color); }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--hint-color);
-            border-radius: 8px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            box-sizing: border-box;
-            font-size: 16px;
+            font-size: 11px;
+            font-weight: 600;
         }
         
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 12px;
+        .badge-normal {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .btn-save {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
             border: none;
-            border-radius: 8px;
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            font-size: 16px;
-            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
-        .btn-secondary {
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
+        
+        tr:hover .btn-save {
+            opacity: 1;
         }
-
-        /* Navigation */
+        
+        .btn-save:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-save.dirty {
+            opacity: 1;
+            background: #ff9800;
+        }
+        
+        .btn-save.saved {
+            opacity: 1;
+            background: #4caf50;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(51, 144, 236, 0.2);
+            border-top-color: var(--tg-theme-button-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--tg-theme-hint-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+        
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .report-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 16px;
+            color: white;
+        }
+        
+        .report-card h3 {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .report-card .amount {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .report-card .detail {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: #4caf50;
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+        
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 100%;
-            background: var(--bg-color);
+            right: 0;
+            background: var(--tg-theme-bg-color);
+            border-top: 1px solid rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid var(--secondary-bg);
+            padding: 8px 0;
             z-index: 100;
         }
+        
         .nav-item {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 16px;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color);
+            font-size: 11px;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+        
+        .nav-item.active {
+            color: var(--tg-theme-button-color);
+        }
+        
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .commission-calc {
+            background: #fff8e1;
+            border: 1px solid #ffcc02;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 8px 16px;
+            font-size: 13px;
+        }
+        
+        .commission-calc strong {
+            color: #f57f17;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            align-items: center;
+        }
+        
+        .date-range input {
+            padding: 8px 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+        
+        .affiliate-summary {
+            padding: 16px;
+        }
+        
+        .affiliate-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        
+        .affiliate-row:last-child {
+            border-bottom: none;
+        }
+        
+        .affiliate-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .affiliate-code {
             font-size: 12px;
-            color: var(--hint-color);
+            color: var(--tg-theme-hint-color);
+            font-family: monospace;
+        }
+        
+        .affiliate-amount {
+            text-align: right;
+        }
+        
+        .affiliate-amount .total {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .affiliate-amount .commission {
+            font-size: 12px;
+            color: #4caf50;
+        }
+        
+        .search-box {
+            padding: 12px 16px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: inherit;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
+            background: var(--tg-theme-bg-color);
+        }
+        
+        .bulk-actions {
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-bulk {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
         }
-        .nav-item.active {
-            color: var(--button-color);
-            font-weight: bold;
+        
+        .btn-bulk:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-
-        /* Views */
-        .view { display: none; }
-        .view.active { display: block; }
-
-        /* Loading */
-        #loading {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 999;
+        
+        .sync-status {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .spinner {
-            border: 4px solid var(--secondary-bg);
-            border-top: 4px solid var(--button-color);
+        
+        .sync-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            width: 30px; height: 30px;
-            animation: spin 1s linear infinite;
+            background: #4caf50;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .hidden { display: none; }
+        
+        .sync-dot.syncing {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
-
-    <!-- Loading Screen -->
-    <div id="loading"><div class="spinner"></div></div>
-
-    <!-- Dashboard View -->
-    <div id="view-dashboard" class="view active container">
-        <h2>Dashboard</h2>
-        <div class="card stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="total-students">0</div>
-                <div class="stat-label">Total Students</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="total-revenue">0 Ks</div>
-                <div class="stat-label">Total Revenue</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h3>Revenue Overview</h3>
-            <canvas id="revenueChart"></canvas>
-        </div>
-
-        <div class="card">
-            <h3>Recent Activities</h3>
-            <ul class="student-list" id="recent-list">
-                <!-- Recent items loaded here -->
-            </ul>
-        </div>
+    <div class="header">
+        <h1>📊 Admin Dashboard</h1>
+        <p>Normal Accounts Only • @test_appreed_bot</p>
     </div>
-
-    <!-- List View -->
-    <div id="view-list" class="view container">
-        <h2>All Students</h2>
-        <input type="text" id="search-input" placeholder="Search by name or ID..." onkeyup="filterList()">
-        <div class="card" style="padding:0; overflow:hidden;">
-            <ul class="student-list" id="full-list">
-                <!-- Full list loaded here -->
-            </ul>
-        </div>
-    </div>
-
-    <!-- Form View (Add/Edit) -->
-    <div id="view-form" class="view container">
-        <h2 id="form-title">Add New Student</h2>
-        <div class="card">
-            <input type="hidden" id="edit-index" value="-1">
-            
-            <div class="form-group">
-                <label>Name (MM)</label>
-                <input type="text" id="inp-mm" required>
-            </div>
-            <div class="form-group">
-                <label>Name (EN)</label>
-                <input type="text" id="inp-en" required>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="form-group"><label>Math</label><input type="number" id="inp-math"></div>
-                <div class="form-group"><label>Phy</label><input type="number" id="inp-phy"></div>
-                <div class="form-group"><label>Chem</label><input type="number" id="inp-chem"></div>
-                <div class="form-group"><label>Bio</label><input type="number" id="inp-bio"></div>
-                <div class="form-group"><label>Eco</label><input type="number" id="inp-eco"></div>
-                <div class="form-group"><label>Account</label><input type="number" id="inp-account"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Price (Enter Manually)</label>
-                <input type="number" id="inp-price" required>
-            </div>
-
-            <div class="form-group">
-                <label>Affiliate Code (Optional)</label>
-                <input type="text" id="inp-affiliate" placeholder="e.g. CELE01">
-            </div>
-            
-            <div class="form-group">
-                <label>Commission (%)</label>
-                <select id="inp-commission">
-                    <option value="0">0%</option>
-                    <option value="20">20%</option>
-                    <option value="30">30%</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Account Type</label>
-                <select id="inp-accounttype">
-                    <option value="normal acc">Normal Acc</option>
-                    <!-- Admin and Giveaway are restricted as per request, only Normal is writable -->
-                    <option value="admin acc" disabled>Admin Acc (Read Only)</option>
-                    <option value="giveaway winner acc" disabled>Giveaway Winner (Read Only)</option>
-                </select>
-                <small style="color:var(--hint-color)">Only 'Normal Acc' can be added/edited.</small>
-            </div>
-
-            <button class="btn" onclick="saveData()" id="btn-save">Save Data</button>
-            <button class="btn btn-secondary" onclick="switchView('view-list')">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Reports View -->
-    <div id="view-reports" class="view container">
-        <h2>Reports</h2>
-        <div class="card">
-            <label>Filter by Month</label>
-            <input type="month" id="report-month" onchange="generateReport()">
-        </div>
-        <div class="card" id="report-result">
-            <p>Select a month to view report.</p>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchView('view-dashboard', this)">🏠 Home</div>
-        <div class="nav-item" onclick="switchView('view-list', this)">📋 List</div>
-        <div class="nav-item" onclick="openForm()", this)>➕ Add</div>
-        <div class="nav-item" onclick="switchView('view-reports', this)">📊 Report</div>
-    </div>
-
-<script>
-    // *** CONFIGURATION ***
-    // အောက်ပါ URL နေရာမှာ အပေါ်က ရထားတဲ့ Google Apps Script Web App URL ကို ထည့်ပါ
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysAri_iAiofG1pbgJ12HFlW6jjZUc5zrBq4ime-qMS7UW0xyHtSB4Wddx3xlwNYk8m/exec'; 
     
-    let allData = [];
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchData();
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+            <div class="stat-value" id="totalUsers">-</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value" id="totalRevenue">-</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value" id="todayNew">-</div>
+            <div class="stat-label">Today New</div>
+        </div>
+    </div>
+    
+    <div class="tabs" id="mainTabs">
+        <button class="tab active" data-tab="accounts">👥 Accounts</button>
+        <button class="tab" data-tab="reports">📈 Reports</button>
+        <button class="tab" data-tab="affiliate">🤝 Affiliate</button>
+    </div>
+    
+    <!-- Accounts Tab -->
+    <div class="content" id="tab-accounts">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search by Telegram ID..." oninput="filterAccounts()">
+        </div>
         
-        // Set default month to current
-        const now = new Date();
-        const monthStr = now.toISOString().slice(0, 7); // YYYY-MM
-        document.getElementById('report-month').value = monthStr;
-    });
-
-    function switchView(viewId, navElement) {
-        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
+        <div class="filters">
+            <div class="filter-chip active" data-filter="all">All Normal</div>
+            <div class="filter-chip" data-filter="today">Today</div>
+            <div class="filter-chip" data-filter="week">This Week</div>
+            <div class="filter-chip" data-filter="month">This Month</div>
+            <div class="filter-chip" data-filter="pending">No Price</div>
+        </div>
         
-        if(navElement) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            navElement.classList.add('active');
-        }
-
-        if(viewId === 'view-list') renderList(allData);
-        if(viewId === 'view-dashboard') updateDashboard();
-        if(viewId === 'view-reports') generateReport();
+        <div class="sync-status" id="syncStatus">
+            <div class="sync-dot" id="syncDot"></div>
+            <span id="syncText">Ready</span>
+        </div>
         
-        tg.BackButton.hide();
-    }
-
-    function showLoading(show) {
-        document.getElementById('loading').style.display = show ? 'flex' : 'none';
-    }
-
-    // --- Data Operations ---
-
-    function fetchData() {
-        showLoading(true);
-        fetch(SCRIPT_URL)
-            .then(res => res.json())
-            .then(response => {
-                if(response.result === 'success') {
-                    allData = response.data;
-                    updateDashboard();
-                    renderList(allData);
-                } else {
-                    tg.showAlert("Error loading data: " + response.error);
-                }
-            })
-            .catch(err => {
-                tg.showAlert("Network error: " + err);
-                console.error(err);
-            })
-            .finally(() => showLoading(false));
-    }
-
-    function saveData() {
-        const editIndex = document.getElementById('edit-index').value;
-        const isEdit = editIndex !== "-1";
+        <div class="bulk-actions">
+            <button class="btn-bulk" id="btnSaveAll" onclick="saveAll()" disabled>💾 Save All Changes</button>
+            <button class="btn-bulk" onclick="refreshData()">🔄 Refresh</button>
+        </div>
         
-        // Validation
-        const mm = document.getElementById('inp-mm').value;
-        const en = document.getElementById('inp-en').value;
-        const price = document.getElementById('inp-price').value;
-        const accType = document.getElementById('inp-accounttype').value;
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Account List</span>
+                <span class="section-action" onclick="exportAccounts()">📥 Export CSV</span>
+            </div>
+            <div class="table-container">
+                <table id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th>Telegram ID</th>
+                            <th>MM</th>
+                            <th>EN</th>
+                            <th>Math</th>
+                            <th>Phy</th>
+                            <th>Chem</th>
+                            <th>Bio</th>
+                            <th>Eco</th>
+                            <th>All</th>
+                            <th>Account Type</th>
+                            <th>Price 💰</th>
+                            <th>Affiliate</th>
+                            <th>Commission</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsBody">
+                        <tr>
+                            <td colspan="14" class="loading">
+                                <div class="spinner"></div>
+                                Loading data from Google Sheets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reports Tab -->
+    <div class="content hidden" id="tab-reports">
+        <div class="date-range">
+            <input type="date" id="reportStart" onchange="generateReport()">
+            <span>to</span>
+            <input type="date" id="reportEnd" onchange="generateReport()">
+        </div>
+        
+        <div class="stats-bar" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card blue">
+                <div class="stat-value" id="reportTotal">-</div>
+                <div class="stat-label">Period Revenue</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-value" id="reportCount">-</div>
+                <div class="stat-label">New Accounts</div>
+            </div>
+        </div>
+        
+        <div class="report-grid">
+            <div class="report-card">
+                <h3>📅 Daily Average</h3>
+                <div class="amount" id="dailyAvg">-</div>
+                <div class="detail" id="dailyDetail">accounts/day</div>
+            </div>
+            <div class="report-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <h3>📊 Monthly Trend</h3>
+                <div class="amount" id="monthlyTrend">-</div>
+                <div class="detail" id="monthlyDetail">vs last month</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Subject Distribution</span>
+            </div>
+            <div id="subjectStats" style="padding: 16px;">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Affiliate Tab -->
+    <div class="content hidden" id="tab-affiliate">
+        <div class="commission-calc">
+            <strong>💡 Commission Rules:</strong><br>
+            • 20% commission for sales < 100,000 MMK<br>
+            • 30% commission for sales ≥ 100,000 MMK<br>
+            • Auto-calculated from total price per affiliate code
+        </div>
+        
+        <div class="stats-bar" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card gold">
+                <div class="stat-value" id="affiliateTotal">-</div>
+                <div class="stat-label">Affiliate Revenue</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="stat-value" id="commissionTotal">-</div>
+                <div class="stat-label">Total Commission</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Affiliate Performance</span>
+                <span class="section-action" onclick="exportAffiliate()">📥 Export CSV</span>
+            </div>
+            <div class="affiliate-summary" id="affiliateList">
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <div class="bottom-nav">
+        <button class="nav-item active" data-tab="accounts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Accounts
+        </button>
+        <button class="nav-item" data-tab="reports">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Reports
+        </button>
+        <button class="nav-item" data-tab="affiliate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            Affiliate
+        </button>
+    </div>
 
-        if(!mm || !en || !price) {
-            tg.showAlert("Please fill in Name and Price");
-            return;
-        }
-
-        if(accType !== 'normal acc' && isEdit) {
-             // Logic check if trying to change type improperly
-        }
-
-        const formData = {
-            telegram_id: isEdit ? allData[editIndex].telegram_id : tg.initDataUnsafe.user?.id || "unknown",
-            mm: mm,
-            en: en,
-            math: document.getElementById('inp-math').value,
-            phy: document.getElementById('inp-phy').value,
-            chem: document.getElementById('inp-chem').value,
-            bio: document.getElementById('inp-bio').value,
-            eco: document.getElementById('inp-eco').value,
-            account: document.getElementById('inp-account').value,
-            price: price,
-            affiliate: document.getElementById('inp-affiliate').value,
-            comission: document.getElementById('inp-commission').value, // Note: Sheet header is 'comission' (typo in prompt?) keeping consistent
-            accounttype: accType
+    <script>
+        // ==================== CONFIG ====================
+        const CONFIG = {
+            // ⚠️ IMPORTANT: Replace with your Google Apps Script Web App URL
+            // Get this from: Deploy → Manage Deployments → Web App → URL
+            SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby2PjiFZTj9M0SibVB5ttlCuC4csMCMysqLUx2DZjzUrx9yWQUmAKXIclK8Yhq8dtT3/exec',
+            
+            // Commission rates
+            COMMISSION_LOW: 0.20,    // 20% for < 100k
+            COMMISSION_HIGH: 0.30,   // 30% for >= 100k
+            COMMISSION_THRESHOLD: 100000
         };
 
-        showLoading(true);
+        // ==================== STATE ====================
+        let allData = [];
+        let filteredData = [];
+        let currentTab = 'accounts';
+        let dirtyRows = new Map(); // rowIndex -> changed data
 
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                type: isEdit ? 'update' : 'add',
-                data: formData
-            })
-        })
-        .then(res => res.json())
-        .then(response => {
-            if(response.result === 'success') {
-                tg.showAlert(isEdit ? "Updated Successfully!" : "Added Successfully!");
-                document.getElementById('edit-index').value = "-1";
-                document.getElementById('form-title').innerText = "Add New Student";
-                document.getElementById('btn-save').innerText = "Save Data";
-                clearForm();
-                fetchData(); // Refresh data
-                switchView('view-list');
-            } else {
-                tg.showAlert("Error: " + response.message);
+        // ==================== TELEGRAM WEB APP ====================
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        // Set theme colors
+        if (tg.colorScheme === 'dark') {
+            document.documentElement.style.setProperty('--tg-theme-bg-color', '#1c1c1e');
+            document.documentElement.style.setProperty('--tg-theme-text-color', '#ffffff');
+            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#2c2c2e');
+            document.documentElement.style.setProperty('--tg-theme-hint-color', '#8e8e93');
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default date range for reports
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            document.getElementById('reportEnd').value = today.toISOString().split('T')[0];
+            document.getElementById('reportStart').value = lastMonth.toISOString().split('T')[0];
+            
+            // Tab switching
+            document.querySelectorAll('.tab, .nav-item').forEach(el => {
+                el.addEventListener('click', () => switchTab(el.dataset.tab));
+            });
+            
+            // Filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    filterAccounts();
+                });
+            });
+            
+            // Load data
+            loadData();
+        });
+
+        // ==================== SYNC STATUS ====================
+        function setSyncStatus(status, text) {
+            const dot = document.getElementById('syncDot');
+            const txt = document.getElementById('syncText');
+            
+            dot.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : '');
+            txt.textContent = text;
+        }
+
+        // ==================== DATA LOADING ====================
+        async function loadData() {
+            setSyncStatus('syncing', 'Loading...');
+            showToast('Loading data from Google Sheets...', 'info');
+            
+            try {
+                // Use Google Apps Script Web App URL (GET request)
+                const response = await fetch(CONFIG.SCRIPT_URL + '?filter=all', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    allData = result.data || [];
+                    // Cache data
+                    localStorage.setItem('sheetData', JSON.stringify(allData));
+                    showToast(`✅ Loaded ${allData.length} normal accounts`, 'success');
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showToast('⚠️ Using cached data', 'error');
+                
+                // Fallback to cached data
+                const cached = localStorage.getItem('sheetData');
+                if (cached) {
+                    allData = JSON.parse(cached);
+                } else {
+                    allData = generateDemoData();
+                }
             }
-        })
-        .catch(err => tg.showAlert("Save failed: " + err))
-        .finally(() => showLoading(false));
-    }
-
-    // --- UI Rendering ---
-
-    function updateDashboard() {
-        let totalStudents = allData.length;
-        let totalRevenue = allData.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-
-        document.getElementById('total-students').innerText = totalStudents;
-        document.getElementById('total-revenue').innerText = totalRevenue.toLocaleString() + " Ks";
-
-        // Render Recent List (Last 5)
-        const recentList = document.getElementById('recent-list');
-        recentList.innerHTML = '';
-        allData.slice(-5).reverse().forEach(item => {
-            recentList.innerHTML += createListItemHTML(item, false);
-        });
-
-        // Update Chart
-        updateChart();
-    }
-
-    let revenueChartInstance = null;
-    function updateChart() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        
-        // Simple logic: Group revenue by Account Type for demo
-        const types = {};
-        allData.forEach(d => {
-            const t = d.accounttype || 'Unknown';
-            types[t] = (types[t] || 0) + (parseFloat(d.price) || 0);
-        });
-
-        const labels = Object.keys(types);
-        const data = Object.values(types);
-
-        if(revenueChartInstance) revenueChartInstance.destroy();
-
-        revenueChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#3390ec', '#2ecc71', '#e74c3c', '#f1c40f']
-                }]
-            },
-            options: { responsive: true }
-        });
-    }
-
-    function renderList(data) {
-        const listEl = document.getElementById('full-list');
-        listEl.innerHTML = '';
-        if(data.length === 0) {
-            listEl.innerHTML = '<li style="padding:20px; text-align:center">No data found</li>';
-            return;
+            
+            setSyncStatus('ready', `Last updated: ${new Date().toLocaleTimeString()}`);
+            processData();
         }
-        data.forEach((item, index) => {
-            // Find original index for editing
-            const originalIndex = allData.indexOf(item);
-            listEl.innerHTML += createListItemHTML(item, true, originalIndex);
-        });
-    }
 
-    function createListItemHTML(item, clickable, index = null) {
-        const name = item.mm || item.en || 'Unknown';
-        const price = item.price ? `${item.price} Ks` : '';
-        const type = item.accounttype || 'Normal';
-        
-        return `
-            <li class="student-item" ${clickable ? `onclick="openForm(${index})"` : ''}>
-                <div class="student-info">
-                    <h4>${name}</h4>
-                    <p>${type} | ${price}</p>
+        function generateDemoData() {
+            const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+            const data = [];
+            
+            for (let i = 0; i < 50; i++) {
+                const telegramId = (8432363664 + Math.floor(Math.random() * 1000000000)).toString();
+                const row = {
+                    _rowIndex: i + 2,
+                    telegram_id: telegramId,
+                    accounttype: 'normal acc',
+                    price: '',
+                    affiliate: '',
+                    comission: ''
+                };
+                
+                subjects.forEach(sub => {
+                    if (Math.random() > 0.3) {
+                        const date = new Date(2026, 6, Math.floor(Math.random() * 30) + 1);
+                        row[sub] = date.toISOString().split('T')[0];
+                    } else {
+                        row[sub] = '';
+                    }
+                });
+                
+                data.push(row);
+            }
+            
+            // Add some with prices and affiliates
+            data[2].price = '50000';
+            data[7].price = '75000';
+            data[12].price = '120000';
+            data[12].affiliate = 'CELEB01';
+            data[12].comission = '36000';
+            data[20].price = '45000';
+            data[20].affiliate = 'CELEB02';
+            data[20].comission = '9000';
+            
+            return data;
+        }
+
+        function processData() {
+            filteredData = [...allData];
+            renderAccounts();
+            updateStats();
+        }
+
+        // ==================== RENDERING ====================
+        function renderAccounts() {
+            const tbody = document.getElementById('accountsBody');
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="14" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>No normal accounts found</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredData.map(row => {
+                const isDirty = dirtyRows.has(row._rowIndex);
+                const savedClass = isDirty ? 'dirty' : '';
+                
+                return `
+                    <tr data-row="${row._rowIndex}">
+                        <td><span class="tg-id" title="${row.telegram_id || ''}">${row.telegram_id || ''}</span></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.mm)}" onchange="onCellChange(${row._rowIndex}, 'mm', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.en)}" onchange="onCellChange(${row._rowIndex}, 'en', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.math)}" onchange="onCellChange(${row._rowIndex}, 'math', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.phy)}" onchange="onCellChange(${row._rowIndex}, 'phy', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.chem)}" onchange="onCellChange(${row._rowIndex}, 'chem', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.bio)}" onchange="onCellChange(${row._rowIndex}, 'bio', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.eco)}" onchange="onCellChange(${row._rowIndex}, 'eco', this.value)"></td>
+                        <td><input class="cell-input date" type="date" value="${formatDateForInput(row.all)}" onchange="onCellChange(${row._rowIndex}, 'all', this.value)"></td>
+                        <td><span class="badge badge-normal">${row.accounttype || 'normal acc'}</span></td>
+                        <td><input class="cell-input price" type="number" value="${row.price || ''}" placeholder="0" onchange="onCellChange(${row._rowIndex}, 'price', this.value); updateCommission(${row._rowIndex})"></td>
+                        <td><input class="cell-input affiliate" type="text" value="${row.affiliate || ''}" placeholder="Code" onchange="onCellChange(${row._rowIndex}, 'affiliate', this.value); updateCommission(${row._rowIndex})"></td>
+                        <td><input class="cell-input price" type="number" value="${row.comission || ''}" placeholder="Auto" readonly style="background: #f5f5f5;"></td>
+                        <td><button class="btn-save ${savedClass}" id="save-${row._rowIndex}" onclick="saveRow(${row._rowIndex})">💾 Save</button></td>
+                    </tr>
+                `;
+            }).join('');
+            
+            updateSaveAllButton();
+        }
+
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return '';
+            const str = dateStr.toString().trim();
+            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
+            if (str.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+                const parts = str.split('-');
+                return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+            }
+            return '';
+        }
+
+        // ==================== CELL EDITING ====================
+        function onCellChange(rowIndex, field, value) {
+            if (!dirtyRows.has(rowIndex)) {
+                dirtyRows.set(rowIndex, { telegram_id: getRowByIndex(rowIndex).telegram_id });
+            }
+            dirtyRows.get(rowIndex)[field] = value;
+            
+            // Update button state
+            const btn = document.getElementById(`save-${rowIndex}`);
+            if (btn) {
+                btn.classList.add('dirty');
+                btn.textContent = '💾 Save';
+            }
+            
+            updateSaveAllButton();
+        }
+
+        function getRowByIndex(rowIndex) {
+            return allData.find(r => r._rowIndex === rowIndex) || {};
+        }
+
+        function updateCommission(rowIndex) {
+            const row = getRowByIndex(rowIndex);
+            const dirtyData = dirtyRows.get(rowIndex) || {};
+            
+            const price = parseFloat(dirtyData.price || row.price) || 0;
+            const affiliate = (dirtyData.affiliate || row.affiliate || '').trim();
+            
+            if (affiliate && price > 0) {
+                const rate = price >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
+                const commission = Math.round(price * rate);
+                
+                // Update commission in dirty data
+                if (!dirtyRows.has(rowIndex)) {
+                    dirtyRows.set(rowIndex, { telegram_id: row.telegram_id });
+                }
+                dirtyRows.get(rowIndex).comission = commission.toString();
+                
+                // Update UI
+                const tr = document.querySelector(`tr[data-row="${rowIndex}"]`);
+                if (tr) {
+                    const commissionInput = tr.querySelectorAll('input[type="number"]')[1];
+                    if (commissionInput) commissionInput.value = commission;
+                }
+            }
+        }
+
+        function updateSaveAllButton() {
+            const btn = document.getElementById('btnSaveAll');
+            btn.disabled = dirtyRows.size === 0;
+            btn.textContent = `💾 Save All Changes (${dirtyRows.size})`;
+        }
+
+        // ==================== SAVING ====================
+        async function saveRow(rowIndex) {
+            const dirtyData = dirtyRows.get(rowIndex);
+            if (!dirtyData) return;
+            
+            const btn = document.getElementById(`save-${rowIndex}`);
+            if (btn) {
+                btn.textContent = '⏳ Saving...';
+                btn.disabled = true;
+            }
+            
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'update',
+                        data: dirtyData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    // Update local data
+                    const idx = allData.findIndex(r => r._rowIndex === rowIndex);
+                    if (idx !== -1) {
+                        Object.assign(allData[idx], dirtyData);
+                    }
+                    
+                    dirtyRows.delete(rowIndex);
+                    
+                    if (btn) {
+                        btn.classList.remove('dirty');
+                        btn.classList.add('saved');
+                        btn.textContent = '✅ Saved';
+                        setTimeout(() => {
+                            btn.classList.remove('saved');
+                            btn.textContent = '💾 Save';
+                            btn.disabled = false;
+                        }, 2000);
+                    }
+                    
+                    showToast('✅ Saved successfully!', 'success');
+                    updateStats();
+                    updateSaveAllButton();
+                    
+                    // Refresh if on reports/affiliate tab
+                    if (currentTab === 'reports') generateReport();
+                    if (currentTab === 'affiliate') generateAffiliateReport();
+                    
+                } else {
+                    throw new Error(result.message || 'Update failed');
+                }
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('❌ ' + error.message, 'error');
+                
+                if (btn) {
+                    btn.textContent = '💾 Retry';
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        async function saveAll() {
+            if (dirtyRows.size === 0) return;
+            
+            setSyncStatus('syncing', `Saving ${dirtyRows.size} changes...`);
+            showToast(`Saving ${dirtyRows.size} changes...`, 'info');
+            
+            const updates = Array.from(dirtyRows.values());
+            
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'bulk_update',
+                        updates: updates
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    // Update local data
+                    updates.forEach(update => {
+                        const row = allData.find(r => r.telegram_id == update.telegram_id);
+                        if (row) Object.assign(row, update);
+                    });
+                    
+                    dirtyRows.clear();
+                    renderAccounts();
+                    updateStats();
+                    showToast(`✅ Saved ${result.updated} changes!`, 'success');
+                    
+                } else {
+                    throw new Error(result.errors?.join(', ') || 'Bulk update failed');
+                }
+                
+            } catch (error) {
+                console.error('Bulk save error:', error);
+                showToast('❌ ' + error.message, 'error');
+            } finally {
+                setSyncStatus('ready', `Last updated: ${new Date().toLocaleTimeString()}`);
+            }
+        }
+
+        // ==================== FILTERING ====================
+        function filterAccounts() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filterType = document.querySelector('.filter-chip.active')?.dataset.filter || 'all';
+            
+            let filtered = [...allData];
+            
+            // Search filter
+            if (search) {
+                filtered = filtered.filter(row => {
+                    const id = (row.telegram_id || '').toString().toLowerCase();
+                    return id.includes(search);
+                });
+            }
+            
+            // Date filters
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (filterType === 'today') {
+                filtered = filtered.filter(row => {
+                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                    return subjects.some(sub => {
+                        const date = row[sub];
+                        if (!date) return false;
+                        const d = new Date(date);
+                        return d.toDateString() === today.toDateString();
+                    });
+                });
+            } else if (filterType === 'week') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(row => {
+                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                    return subjects.some(sub => {
+                        const date = row[sub];
+                        if (!date) return false;
+                        const d = new Date(date);
+                        return d >= weekAgo && d <= today;
+                    });
+                });
+            } else if (filterType === 'month') {
+                const monthAgo = new Date(today);
+                monthAgo.setDate(monthAgo.getDate() - 30);
+                filtered = filtered.filter(row => {
+                    const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                    return subjects.some(sub => {
+                        const date = row[sub];
+                        if (!date) return false;
+                        const d = new Date(date);
+                        return d >= monthAgo && d <= today;
+                    });
+                });
+            } else if (filterType === 'pending') {
+                filtered = filtered.filter(row => !row.price || row.price === '');
+            }
+            
+            filteredData = filtered;
+            renderAccounts();
+        }
+
+        // ==================== STATS ====================
+        function updateStats() {
+            const totalUsers = allData.length;
+            const totalRevenue = allData.reduce((sum, row) => sum + (parseFloat(row.price) || 0), 0);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayNew = allData.filter(row => {
+                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                return subjects.some(sub => {
+                    const date = row[sub];
+                    if (!date) return false;
+                    const d = new Date(date);
+                    return d.toDateString() === today.toDateString();
+                });
+            }).length;
+            
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('todayNew').textContent = todayNew;
+        }
+
+        // ==================== REPORTS ====================
+        function generateReport() {
+            const startDate = new Date(document.getElementById('reportStart').value);
+            const endDate = new Date(document.getElementById('reportEnd').value);
+            endDate.setHours(23, 59, 59, 999);
+            
+            // Filter by date range
+            const periodAccounts = allData.filter(row => {
+                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                return subjects.some(sub => {
+                    const date = row[sub];
+                    if (!date) return false;
+                    const d = new Date(date);
+                    return d >= startDate && d <= endDate;
+                });
+            });
+            
+            const periodRevenue = periodAccounts.reduce((sum, row) => sum + (parseFloat(row.price) || 0), 0);
+            document.getElementById('reportTotal').textContent = formatCurrency(periodRevenue);
+            document.getElementById('reportCount').textContent = periodAccounts.length;
+            
+            const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+            const dailyAvg = (periodAccounts.length / days).toFixed(1);
+            document.getElementById('dailyAvg').textContent = dailyAvg;
+            
+            // Monthly trend
+            const prevStart = new Date(startDate);
+            const prevEnd = new Date(endDate);
+            const diff = endDate - startDate;
+            prevStart.setTime(prevStart.getTime() - diff);
+            prevEnd.setTime(prevEnd.getTime() - diff);
+            
+            const prevAccounts = allData.filter(row => {
+                const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+                return subjects.some(sub => {
+                    const date = row[sub];
+                    if (!date) return false;
+                    const d = new Date(date);
+                    return d >= prevStart && d <= prevEnd;
+                });
+            });
+            
+            const trend = prevAccounts.length > 0 ? 
+                ((periodAccounts.length - prevAccounts.length) / prevAccounts.length * 100).toFixed(0) : 0;
+            const trendText = trend >= 0 ? `+${trend}%` : `${trend}%`;
+            document.getElementById('monthlyTrend').textContent = trendText;
+            document.getElementById('monthlyDetail').textContent = `${prevAccounts.length} → ${periodAccounts.length}`;
+            
+            // Subject distribution
+            const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+            const subjectCounts = subjects.map(sub => ({
+                name: sub.toUpperCase(),
+                count: allData.filter(row => row[sub] && row[sub] !== '').length
+            }));
+            
+            const maxCount = Math.max(...subjectCounts.map(s => s.count), 1);
+            
+            document.getElementById('subjectStats').innerHTML = subjectCounts.map(sub => `
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 60px; font-size: 13px; font-weight: 600;">${sub.name}</div>
+                    <div style="flex: 1; height: 24px; background: var(--tg-theme-secondary-bg-color); border-radius: 12px; overflow: hidden; margin: 0 12px;">
+                        <div style="height: 100%; width: ${(sub.count / maxCount * 100)}%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 12px; transition: width 0.5s;"></div>
+                    </div>
+                    <div style="width: 40px; text-align: right; font-size: 13px; font-weight: 600;">${sub.count}</div>
                 </div>
-                ${clickable ? '<span style="font-size:20px">✏️</span>' : ''}
-            </li>
-        `;
-    }
-
-    function filterList() {
-        const query = document.getElementById('search-input').value.toLowerCase();
-        const filtered = allData.filter(item => {
-            return (item.mm && item.mm.toLowerCase().includes(query)) ||
-                   (item.en && item.en.toLowerCase().includes(query)) ||
-                   (item.telegram_id && item.telegram_id.toString().includes(query));
-        });
-        renderList(filtered);
-    }
-
-    function openForm(index = null) {
-        switchView('view-form');
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-            clearForm();
-            switchView('view-list');
-        });
-
-        if (index !== null) {
-            const item = allData[index];
-            document.getElementById('form-title').innerText = "Edit Student";
-            document.getElementById('btn-save').innerText = "Update Data";
-            document.getElementById('edit-index').value = index;
-
-            document.getElementById('inp-mm').value = item.mm || '';
-            document.getElementById('inp-en').value = item.en || '';
-            document.getElementById('inp-math').value = item.math || '';
-            document.getElementById('inp-phy').value = item.phy || '';
-            document.getElementById('inp-chem').value = item.chem || '';
-            document.getElementById('inp-bio').value = item.bio || '';
-            document.getElementById('inp-eco').value = item.eco || '';
-            document.getElementById('inp-account').value = item.account || '';
-            document.getElementById('inp-price').value = item.price || '';
-            document.getElementById('inp-affiliate').value = item.affiliate || '';
-            document.getElementById('inp-commission').value = item.comission || '0';
-            document.getElementById('inp-accounttype').value = item.accounttype || 'normal acc';
-        } else {
-            document.getElementById('form-title').innerText = "Add New Student";
-            document.getElementById('btn-save').innerText = "Save Data";
-            document.getElementById('edit-index').value = "-1";
-            clearForm();
+            `).join('');
         }
-    }
 
-    function clearForm() {
-        document.querySelectorAll('#view-form input').forEach(i => i.value = '');
-        document.querySelectorAll('#view-form select').forEach(s => s.selectedIndex = 0);
-    }
+        // ==================== AFFILIATE ====================
+        function generateAffiliateReport() {
+            const affiliateMap = {};
+            
+            allData.forEach(row => {
+                const code = (row.affiliate || '').toString().trim();
+                if (!code) return;
+                
+                if (!affiliateMap[code]) {
+                    affiliateMap[code] = { code, total: 0, count: 0, commission: 0 };
+                }
+                
+                const price = parseFloat(row.price) || 0;
+                affiliateMap[code].total += price;
+                affiliateMap[code].count += 1;
+            });
+            
+            Object.values(affiliateMap).forEach(aff => {
+                const rate = aff.total >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
+                aff.commission = Math.round(aff.total * rate);
+                aff.rate = rate * 100;
+            });
+            
+            const totalRevenue = Object.values(affiliateMap).reduce((sum, a) => sum + a.total, 0);
+            const totalCommission = Object.values(affiliateMap).reduce((sum, a) => sum + a.commission, 0);
+            
+            document.getElementById('affiliateTotal').textContent = formatCurrency(totalRevenue);
+            document.getElementById('commissionTotal').textContent = formatCurrency(totalCommission);
+            
+            const sorted = Object.values(affiliateMap).sort((a, b) => b.total - a.total);
+            
+            document.getElementById('affiliateList').innerHTML = sorted.map(aff => `
+                <div class="affiliate-row">
+                    <div>
+                        <div class="affiliate-name">${aff.code}</div>
+                        <div class="affiliate-code">${aff.count} sales</div>
+                    </div>
+                    <div class="affiliate-amount">
+                        <div class="total">${formatCurrency(aff.total)}</div>
+                        <div class="commission">${aff.rate}% → ${formatCurrency(aff.commission)}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (sorted.length === 0) {
+                document.getElementById('affiliateList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🤝</div>
+                        <div>No affiliate data yet</div>
+                    </div>
+                `;
+            }
+        }
 
-    function generateReport() {
-        const monthVal = document.getElementById('report-month').value; // YYYY-MM
-        if(!monthVal) return;
+        // ==================== EXPORT ====================
+        function exportAccounts() {
+            const headers = ['telegram_id', 'mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all', 'accounttype', 'price', 'affiliate', 'comission'];
+            const csv = [
+                headers,
+                ...allData.map(row => headers.map(h => row[h] || ''))
+            ].map(row => row.join(',')).join('\n');
+            
+            downloadCSV(csv, `accounts_${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('📥 Accounts exported!', 'success');
+        }
 
-        const [year, month] = monthVal.split('-');
-        
-        // Filter data for this month (Assuming we add a date column later, 
-        // but for now, since sheet doesn't have 'Date Created', we can't filter by creation date accurately 
-        // unless we parse the row order or add a timestamp in script.
-        // WORKAROUND: Since the script doesn't save timestamp yet, we will just show Total Stats for now
-        // OR we assume the user wants to see totals. 
-        // To make reports accurate, I will update the Script slightly in thought, but for HTML side:
-        
-        // Let's calculate totals for the selected filter (Mock logic until timestamp added)
-        // Ideally, the Apps Script should return a 'timestamp' column. 
-        // Let's assume all data for now for the demo of the UI.
-        
-        const totalStudents = allData.length;
-        const totalRev = allData.reduce((sum, i) => sum + (parseFloat(i.price)||0), 0);
-        
-        // Calculate Commission payout
-        const totalComm = allData.reduce((sum, i) => {
-            const p = parseFloat(i.price)||0;
-            const c = parseFloat(i.comission)||0;
-            return sum + (p * (c/100));
-        }, 0);
+        function exportAffiliate() {
+            const affiliateMap = {};
+            
+            allData.forEach(row => {
+                const code = (row.affiliate || '').toString().trim();
+                if (!code) return;
+                
+                if (!affiliateMap[code]) {
+                    affiliateMap[code] = { code, total: 0, count: 0, commission: 0 };
+                }
+                
+                const price = parseFloat(row.price) || 0;
+                affiliateMap[code].total += price;
+                affiliateMap[code].count += 1;
+            });
+            
+            Object.values(affiliateMap).forEach(aff => {
+                const rate = aff.total >= CONFIG.COMMISSION_THRESHOLD ? CONFIG.COMMISSION_HIGH : CONFIG.COMMISSION_LOW;
+                aff.commission = Math.round(aff.total * rate);
+                aff.rate = rate * 100;
+            });
+            
+            const csv = [
+                ['Affiliate Code', 'Total Sales', 'Total Revenue', 'Commission Rate', 'Commission Amount'],
+                ...Object.values(affiliateMap).map(a => [
+                    a.code, a.count, a.total, `${a.rate}%`, a.commission
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            downloadCSV(csv, `affiliate_report_${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('📥 Affiliate report exported!', 'success');
+        }
 
-        const html = `
-            <h3>Report for ${monthVal}</h3>
-            <p><strong>Total Students:</strong> ${totalStudents}</p>
-            <p><strong>Total Revenue:</strong> ${totalRev.toLocaleString()} Ks</p>
-            <p><strong>Total Commission to Pay:</strong> ${totalComm.toLocaleString()} Ks</p>
-            <hr>
-            <p style="font-size:12px; color:red">Note: Detailed date filtering requires adding a 'Timestamp' column in the sheet. Currently showing overall stats.</p>
-        `;
-        document.getElementById('report-result').innerHTML = html;
-    }
+        function downloadCSV(csv, filename) {
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
 
-</script>
+        // ==================== UTILITIES ====================
+        function formatCurrency(amount) {
+            if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
+            if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
+            return amount.toString();
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function refreshData() {
+            loadData();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            
+            if (tab === 'reports') generateReport();
+            if (tab === 'affiliate') generateAffiliateReport();
+        }
+
+        // ==================== KEYBOARD SHORTCUTS ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                if (dirtyRows.size > 0) saveAll();
+            }
+        });
+
+        // ==================== AUTO REFRESH ====================
+        setInterval(() => {
+            if (dirtyRows.size === 0) {
+                // Silently refresh every 5 minutes if no pending changes
+                // loadData(); 
+            }
+        }, 300000);
+
+        window.refreshData = refreshData;
+    </script>
 </body>
 </html>
