@@ -71,7 +71,7 @@
             <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
         
-        <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:8px; display:block;">📚 Select Subjects (ဘာသာတစ်ခုချင်းစီ Month သတ်မှတ်နိုင်)</label>
+        <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:8px; display:block;">📚 Select Subjects</label>
         <div class="subject-grid" id="subjectGrid"></div>
         
         <div class="row-2">
@@ -141,6 +141,7 @@
         throw new Error("Unauthorized");
     }
 
+    // ⚠️ သင့် Web App URL အသစ်ထည့်
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyC_6WsewBDm94TN5ZwkSRK0i0ymlv7zoEQL5I2FJxSpENR-ZAjzLpF9Dm2PQ8N0-ff/exec";
     
     const SUBJECTS = [
@@ -162,7 +163,6 @@
     let cachedStudents = [];
     let cachedLogs = [];
 
-    // Initialize UI
     function init() {
         const grid = document.getElementById('subjectGrid');
         SUBJECTS.forEach(sub => {
@@ -227,15 +227,16 @@
         renderData();
     }
 
-    // =================== FETCH ===================
+    // =================== FETCH (GET) ===================
     async function fetchFromSheet() {
         showLoading(true);
         try {
+            // ✅ GET request မှာ header မလိုဘူး
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
             
             if (!data.success) {
-                tg.showAlert("⚠️ Server: " + (data.error || "Unknown error"));
+                tg.showAlert("⚠️ Server Error: " + (data.error || "Unknown"));
                 showLoading(false);
                 return;
             }
@@ -244,13 +245,13 @@
             cachedLogs = data.logs || [];
             renderData();
         } catch(e) {
-            console.error(e);
-            tg.showAlert("⚠️ Data ဆွဲယူရတာ အဆင်မပြေပါဘူး။");
+            console.error("Fetch Error:", e);
+            tg.showAlert("⚠️ Data ဆွဲယူရတာ အဆင်မပြေပါ: " + e.message);
         }
         showLoading(false);
     }
 
-    // =================== SAVE (အစအဆုံး) ===================
+    // =================== SAVE (POST) - အရေးကြီးဆုံး ===================
     async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
         const accounttype = document.getElementById('accountType').value;
@@ -263,7 +264,6 @@
             return;
         }
         
-        // ဘာသာရပ်တွေ ရွေးထားခြင်း ရှိ/မရှိ စစ်ဆေးပါ
         const subjects = {};
         let hasSubject = false;
         
@@ -273,7 +273,6 @@
                 hasSubject = true;
                 const months = parseInt(document.getElementById('months-' + sub.code).value) || 1;
                 
-                // Expiry တွက်ချက် (ရှိပြီးသား သက်တမ်းဆက်တိုက်)
                 let baseDate = new Date();
                 if (cachedStudents.length > 0) {
                     const stu = cachedStudents.find(s => String(s.telegram_id) === String(id));
@@ -313,10 +312,12 @@
         };
         
         try {
+            // ⭐⭐⭐ အရေးကြီးဆုံး - Content-Type header မထည့်ပါနဲ့ ⭐⭐⭐
+            // ဒါမှ CORS preflight မဖြစ်ဘူး
             const response = await fetch(SCRIPT_URL, {
                 method: "POST",
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'application/json' }
+                body: JSON.stringify(payload)
+                // headers: { 'Content-Type': 'application/json' }  // ❌ ဒီဟာဖြုတ်ထား
             });
             
             const result = await response.json();
@@ -329,7 +330,7 @@
             
             tg.HapticFeedback.notificationOccurred('success');
             
-            // Form Reset
+            // Reset form
             document.getElementById('tgId').value = "";
             document.getElementById('price').value = "";
             document.getElementById('commission').value = "0";
@@ -343,7 +344,7 @@
             await fetchFromSheet();
             
         } catch(err) {
-            console.error(err);
+            console.error("Save Error:", err);
             tg.showAlert("❌ Network Error: " + err.message);
         }
         
@@ -359,8 +360,8 @@
         try {
             await fetch(SCRIPT_URL, {
                 method: "POST",
-                body: JSON.stringify({ action: "delete", telegram_id: id, subject: subjectCode }),
-                headers: { 'Content-Type': 'application/json' }
+                body: JSON.stringify({ action: "delete", telegram_id: id, subject: subjectCode })
+                // ❌ headers မထည့်ပါနဲ့
             });
             await fetchFromSheet();
         } catch(e) {
@@ -523,7 +524,6 @@
         const totalComm = cachedLogs.reduce((s,l) => s + (parseFloat(l.commissionAmount)||0), 0);
         const totalSales = cachedLogs.length;
         
-        // Daily
         let daily = {};
         cachedLogs.forEach(l => {
             const d = getLocalDateStr(l.timestamp);
