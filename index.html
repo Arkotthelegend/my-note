@@ -552,7 +552,7 @@
     ];
 
     // 🔗 Google Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyE75b-mOIjLmRdpETAB4j1c-M6FCZrxi6kwb7eGhqbPmfwUUdOBIbBv6x0KY9pD26/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjzxnioZYpBm9tsStHwmigakw1CHvk5oW1fKUJW9F21BRtD-ht4J9d39koZBUuuVJ7/exec";
     
     // ============================================
     // 🔒 ADMIN CHECK
@@ -755,16 +755,45 @@
     }
 
     async function saveRecord() {
-        const id = document.getElementById('tgId').value.trim();
-        const accounttype = document.getElementById('accountType').value;
-        const price = document.getElementById('price').value || "0";
-        const affiliate = document.getElementById('affiliate').value;
-        const commission = document.getElementById('commission').value || "0";
+    // ... (form validation) ...
+    
+    showLoading(true);
+    
+    const payload = { 
+        action: "save", 
+        telegram_id: id,
+        subjects: { /* ... */ },
+        accounttype: accounttype,
+        price: price,
+        affiliate: affiliate,
+        commission: commission,
+        commissionAmount: commissionAmount,
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        const response = await fetch(SCRIPT_URL, { 
+            method: "POST", 
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' }  // ⭐ ဒီဟာအရေးကြီးဆုံး
+        });
         
-        if (!id) { 
-            tg.showAlert("❌ Telegram ID ထည့်ပေးပါဗျ။"); 
-            return; 
+        const result = await response.json();
+        
+        if (!result.success) {
+            tg.showAlert("❌ Error: " + result.error);
+            showLoading(false);
+            return;
         }
+        
+        tg.HapticFeedback.notificationOccurred('success');
+        await fetchFromSheet();
+        
+    } catch(e) { 
+        tg.showAlert("❌ Network Error: " + e.message); 
+    }
+    showLoading(false);
+}
         
         // Collect selected subjects
         const subjects = {};
