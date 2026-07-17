@@ -633,23 +633,78 @@
       }
     }
     
-    async function checkAdmin() {
-      const result = await apiCall('checkAdmin', { telegramId: currentUserId });
-      if (result.success) {
-        isAdmin = (currentUserId === ADMIN_ID);
-        var statusEl = document.getElementById('userStatus');
-        
-        if (isAdmin) {
-          statusEl.textContent = '👑 ADMIN ACCESS';
-          statusEl.className = 'status-badge status-admin';
-          document.getElementById('listTabBtn').classList.remove('hidden');
-          document.getElementById('analyticsTabBtn').classList.remove('hidden');
-        } else {
-          statusEl.textContent = '👤 User Mode';
-          statusEl.className = 'status-badge status-user';
-        }
-      }
+  // အောက်ပါ function ကို အစားထိုးပါ
+async function checkAdmin() {
+  const result = await apiCall('checkAdmin', { telegramId: currentUserId });
+  
+  // Always check against ADMIN_ID directly
+  isAdmin = (currentUserId === ADMIN_ID);
+  
+  var statusEl = document.getElementById('userStatus');
+  
+  if (isAdmin) {
+    statusEl.textContent = '👑 ADMIN ACCESS - ' + currentUserId;
+    statusEl.className = 'status-badge status-admin';
+    
+    // Show admin tabs
+    document.getElementById('listTabBtn').classList.remove('hidden');
+    document.getElementById('analyticsTabBtn').classList.remove('hidden');
+    
+    console.log('✅ Admin detected! ID:', currentUserId);
+  } else {
+    statusEl.textContent = '👤 User Mode - ' + currentUserId;
+    statusEl.className = 'status-badge status-user';
+    console.log(' Not admin. ID:', currentUserId, 'Expected:', ADMIN_ID);
+  }
+}
+
+// addSubscription function ကိုလည်း ပြင်ပါ
+async function addSubscription() {
+  var targetUserId = document.getElementById('targetUserId').value;
+  var price = document.getElementById('price').value;
+  
+  if (!targetUserId || !price) {
+    showMessage('❌ Customer ID and Price are required!', 'error');
+    return;
+  }
+  
+  // Double check admin
+  if (currentUserId !== ADMIN_ID) {
+    showMessage(' Only admin (ID: ' + ADMIN_ID + ') can add subscriptions! Your ID: ' + currentUserId, 'error');
+    return;
+  }
+  
+  var data = {
+    telegramId: currentUserId,
+    targetUserId: targetUserId,
+    mm: parseInt(document.getElementById('mm').value) || 0,
+    en: parseInt(document.getElementById('en').value) || 0,
+    math: parseInt(document.getElementById('math').value) || 0,
+    phy: parseInt(document.getElementById('phy').value) || 0,
+    chem: parseInt(document.getElementById('chem').value) || 0,
+    bio: parseInt(document.getElementById('bio').value) || 0,
+    eco: parseInt(document.getElementById('eco').value) || 0,
+    all: parseInt(document.getElementById('all').value) || 0,
+    accounttype: document.getElementById('accountType').value,
+    price: parseFloat(price),
+    affiliate: document.getElementById('affiliate').value.trim(),
+    comission: parseFloat(document.getElementById('commission').value) || 0
+  };
+  
+  showMessage('⏳ Saving...', 'success');
+  const result = await apiCall('addSubscription', data);
+  
+  if (result.success) {
+    var msg = result.message;
+    if (result.commissionAmount > 0) {
+      msg += ' | 💰 Commission: ' + result.commissionAmount.toLocaleString() + ' MMK';
     }
+    showMessage('✅ ' + msg, 'success');
+    clearForm();
+  } else {
+    showMessage('❌ ' + result.message, 'error');
+  }
+}
     
     function calculateCommission() {
       var price = parseFloat(document.getElementById('price').value) || 0;
