@@ -14,109 +14,70 @@
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
+        input:focus { border-color: var(--primary); }
         .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
         
-        .subject-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        .subject-card { border: 2px solid #ddd; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; background: white; transition: all 0.2s; }
-        .subject-card.active { border-color: var(--primary); background: #e3f2fd; }
-        .subject-card input[type="checkbox"] { display: none; }
-        .sub-label { font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 4px; }
-        .months-input { width: 60px; padding: 6px; border-radius: 6px; border: 1px solid #ccc; text-align: center; margin-top: 4px; display: none; }
-        .subject-card.active .months-input { display: inline-block; }
-        
-        .row-2 { display: flex; gap: 10px; }
-        .row-2 .form-group { flex: 1; }
-        
-        .commission-box { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 10px; display: none; }
-        .commission-box.show { display: block; }
-        
         .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
-        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.75rem; transition: 0.3s; color: #666; }
+        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
-        
-        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
-        
+
         .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 8px; display: block; }
+        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
         .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
         .sub-main { display: flex; justify-content: space-between; align-items: center; }
         .sub-name { font-weight: bold; color: #333; }
         .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
+        
         .status-expired { color: var(--danger); }
         .status-warning { color: var(--warning); }
         .status-ok { color: var(--success); }
         .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
-        
-        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); flex-direction: column; }
-        .spinner { width: 30px; height: 30px; border: 3px solid #ddd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; margin-right: 4px; }
-        .badge-gw { background: #e2e3f5; color: #5a4fcf; }
-        .badge-normal { background: #e3f2fd; color: var(--primary); }
-        .badge-price { background: #fff3cd; color: #856404; }
-        .badge-aff { background: #d4edda; color: #155724; }
+        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay"><div class="spinner"></div>⏳ Loading...</div>
+<div id="loading-overlay">⏳ Loading...</div>
 
 <div class="container">
     <div class="card">
-        <h2>👤 Add/Update Student</h2>
+        <h2>👤 Add/Update Sub (G-12)</h2>
         <div class="form-group">
-            <label>Telegram ID</label>
+            <label>Telegram ID (Only Numbers)</label>
             <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
-        
-        <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:8px; display:block;">📚 Select Subjects</label>
-        <div class="subject-grid" id="subjectGrid"></div>
-        
-        <div class="row-2">
-            <div class="form-group">
-                <label>Account Type</label>
-                <select id="accountType">
-                    <option value="normal">Normal</option>
-                    <option value="gw">Giveaway Winner</option>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 2;">
+                <label>Subject</label>
+                <select id="subject">
+                    <option value="Myanmar">Myanmar</option>
+                    <option value="English">English</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Economics">Economics</option>
+                    <option value="All">All Subjects (all)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Price (MMK)</label>
-                <input type="number" id="price" placeholder="0" oninput="updateCommission()">
+            <div class="form-group" style="flex: 1;">
+                <label>Months</label>
+                <input type="number" id="months" value="1" min="1">
             </div>
         </div>
-        
-        <div class="row-2">
-            <div class="form-group">
-                <label>Affiliate</label>
-                <select id="affiliate"></select>
-            </div>
-            <div class="form-group">
-                <label>Commission %</label>
-                <select id="commission" onchange="updateCommission()">
-                    <option value="0">0%</option>
-                    <option value="20">20%</option>
-                    <option value="30">30%</option>
-                    <option value="40">40%</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="date" id="expiryDate">
         </div>
-        
-        <div class="commission-box" id="commissionBox">
-            <div style="font-size:0.8rem; opacity:0.9;">💰 Commission</div>
-            <div style="font-size:1.3rem; font-weight:bold;" id="commissionAmount">0 MMK</div>
-        </div>
-        
         <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
     </div>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('manage')">🗂 All</div>
-        <div class="tab" onclick="switchTab('expire')">⏳ Expiring</div>
-        <div class="tab" onclick="switchTab('analytics')">📊 Analytics</div>
-        <div class="tab" onclick="switchTab('logs')">📝 Logs</div>
+        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
+        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
+       <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
     </div>
 
     <div id="search-container">
@@ -130,433 +91,241 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    const ADMIN_IDS = ["8432363664","7273479209"];
+    // 🔒 Admin ID ဖြည့်ရန်
+    const ADMIN_IDS = ["8432363664","7273479209"]; 
+
     const currentUserId = tg.initDataUnsafe?.user?.id;
     const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
 
     if (!isAdmin) {
-        document.body.innerHTML = `<div style="display:flex;height:100vh;flex-direction:column;justify-content:center;align-items:center;background:#f8d7da;padding:20px;text-align:center;">
-            <h1 style="color:#721c24;font-size:3rem;margin:0;">⛔</h1><h2 style="color:#721c24;margin-top:10px;">Access Denied</h2></div>`;
+        document.body.innerHTML = `<div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
+            <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1><h2 style="color:#721c24; margin-top:10px;">Access Denied</h2></div>`;
         tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။");
-        throw new Error("Unauthorized");
+        throw new Error("Unauthorized Access");
     }
 
-    // ⚠️ သင့် Web App URL အသစ်ထည့်
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyC_6WsewBDm94TN5ZwkSRK0i0ymlv7zoEQL5I2FJxSpENR-ZAjzLpF9Dm2PQ8N0-ff/exec";
+    // 🔗 Google Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVC5RE4A9A_Se0cTTYMDJ1GmMLMU5Fu45dJIW9-_3_gNhyOovz_jdTi0z893k6wEV4ag/exec";
     
-    const SUBJECTS = [
-        {code:'mm', name:'Myanmar', icon:'🇲🇲'}, {code:'en', name:'English', icon:'🇬🇧'},
-        {code:'math', name:'Mathematics', icon:'🔢'}, {code:'phy', name:'Physics', icon:'⚛️'},
-        {code:'chem', name:'Chemistry', icon:'🧪'}, {code:'bio', name:'Biology', icon:'🧬'},
-        {code:'eco', name:'Economics', icon:'📈'}, {code:'all', name:'All Subjects', icon:'📚'}
-    ];
-    
-    const AFFILIATES = [
-        {code:'None', label:'No Affiliate'},
-        {code:'MG-KoKo', label:'MG-KoKo'},
-        {code:'MG-Mya', label:'MG-Mya'},
-        {code:'MG-SuSu', label:'MG-SuSu'},
-        {code:'MG-Thida', label:'MG-Thida'}
-    ];
-
     let currentTab = 'manage';
-    let cachedStudents = [];
-    let cachedLogs = [];
+    let cachedData = [];
+    let cachedLogs = []; 
 
-    function init() {
-        const grid = document.getElementById('subjectGrid');
-        SUBJECTS.forEach(sub => {
-            grid.innerHTML += `
-                <div class="subject-card" id="card-${sub.code}" onclick="toggleSubject('${sub.code}')">
-                    <input type="checkbox" id="chk-${sub.code}">
-                    <span class="sub-label">${sub.icon} ${sub.name}</span>
-                    <input type="number" id="months-${sub.code}" class="months-input" value="1" min="1" onclick="event.stopPropagation()">
-                </div>
-            `;
-        });
-        
-        const affSel = document.getElementById('affiliate');
-        AFFILIATES.forEach(a => {
-            affSel.innerHTML += `<option value="${a.code}">${a.label}</option>`;
-        });
-        
-        fetchFromSheet();
-    }
-
-    function toggleSubject(code) {
-        const card = document.getElementById('card-'+code);
-        const chk = document.getElementById('chk-'+code);
-        chk.checked = !chk.checked;
-        card.classList.toggle('active', chk.checked);
-    }
-
-    function updateCommission() {
-        const price = parseFloat(document.getElementById('price').value) || 0;
-        const rate = parseInt(document.getElementById('commission').value) || 0;
-        const amt = Math.round(price * rate / 100);
-        document.getElementById('commissionAmount').textContent = amt.toLocaleString() + ' MMK';
-        document.getElementById('commissionBox').classList.toggle('show', price > 0 && rate > 0);
-    }
-
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
     function getLocalDateStr(dateVal) {
         if (!dateVal) return "";
         let d = new Date(dateVal);
-        if (isNaN(d.getTime())) return String(dateVal).substring(0,10);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (isNaN(d.getTime())) return String(dateVal).substring(0, 10);
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
     }
 
+    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Time (AM/PM) ပြောင်းပေးသည့် Function
     function getLocalTimeStr(dateVal) {
         if (!dateVal) return "";
         let d = new Date(dateVal);
-        if (isNaN(d.getTime())) return "";
-        let hh = d.getHours(), min = String(d.getMinutes()).padStart(2,'0');
+        if (isNaN(d.getTime())) return String(dateVal).substring(11, 16);
+        let hh = d.getHours();
+        let min = String(d.getMinutes()).padStart(2, '0');
         let ampm = hh >= 12 ? 'PM' : 'AM';
-        hh = hh % 12 || 12;
-        return `${String(hh).padStart(2,'0')}:${min} ${ampm}`;
+        hh = hh % 12 || 12; // 12-hour format
+        return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
     }
 
-    function showLoading(show) {
-        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    function updateExpiryDate() {
+        const id = document.getElementById('tgId').value.trim();
+        const sub = document.getElementById('subject').value;
+        const months = parseInt(document.getElementById('months').value) || 0;
+
+        let baseDate = new Date(); 
+
+        if (id && sub && cachedData.length > 0) {
+            const existingRecord = cachedData.find(item => String(item.id) === id && item.subject === sub);
+            if (existingRecord && existingRecord.expiry) {
+                let existingExp = new Date(existingRecord.expiry);
+                if (existingExp > baseDate) {
+                    baseDate = existingExp; 
+                }
+            }
+        }
+
+        baseDate.setMonth(baseDate.getMonth() + months);
+        document.getElementById('expiryDate').value = baseDate.toISOString().split('T')[0];
     }
+
+    document.getElementById('months').addEventListener('input', updateExpiryDate);
+    document.getElementById('tgId').addEventListener('input', updateExpiryDate);
+    document.getElementById('subject').addEventListener('change', updateExpiryDate);
+
+    function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
 
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
         document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
         renderData();
     }
 
-    // =================== FETCH (GET) ===================
     async function fetchFromSheet() {
         showLoading(true);
         try {
-            // ✅ GET request မှာ header မလိုဘူး
-            const res = await fetch(SCRIPT_URL);
-            const data = await res.json();
-            
-            if (!data.success) {
-                tg.showAlert("⚠️ Server Error: " + (data.error || "Unknown"));
-                showLoading(false);
-                return;
-            }
-            
-            cachedStudents = data.students || data.active || [];
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+            cachedData = data.active || [];
             cachedLogs = data.logs || [];
+            updateExpiryDate(); 
             renderData();
-        } catch(e) {
-            console.error("Fetch Error:", e);
-            tg.showAlert("⚠️ Data ဆွဲယူရတာ အဆင်မပြေပါ: " + e.message);
+        } catch (e) {
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
         }
         showLoading(false);
     }
 
-    // =================== SAVE (POST) - အရေးကြီးဆုံး ===================
     async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
-        const accounttype = document.getElementById('accountType').value;
-        const price = parseFloat(document.getElementById('price').value) || 0;
-        const affiliate = document.getElementById('affiliate').value;
-        const commission = parseInt(document.getElementById('commission').value) || 0;
-        
-        if (!id) {
-            tg.showAlert("❌ Telegram ID ထည့်ပေးပါ။");
-            return;
-        }
-        
-        const subjects = {};
-        let hasSubject = false;
-        
-        SUBJECTS.forEach(sub => {
-            const chk = document.getElementById('chk-' + sub.code);
-            if (chk && chk.checked) {
-                hasSubject = true;
-                const months = parseInt(document.getElementById('months-' + sub.code).value) || 1;
-                
-                let baseDate = new Date();
-                if (cachedStudents.length > 0) {
-                    const stu = cachedStudents.find(s => String(s.telegram_id) === String(id));
-                    if (stu && stu[sub.code]) {
-                        const existing = new Date(stu[sub.code]);
-                        if (existing > baseDate) baseDate = existing;
-                    }
-                }
-                
-                baseDate.setMonth(baseDate.getMonth() + months);
-                subjects[sub.code] = {
-                    months: months,
-                    expiry: baseDate.toISOString().split('T')[0]
-                };
-            }
-        });
-        
-        if (!hasSubject) {
-            tg.showAlert("❌ အနည်းဆုံး ဘာသာရပ် တစ်ခုရွေးပါ။");
-            return;
-        }
-        
-        const commissionAmount = Math.round(price * commission / 100);
+        const sub = document.getElementById('subject').value;
+        const months = document.getElementById('months').value;
+        const exp = document.getElementById('expiryDate').value;
+
+        if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
         
         showLoading(true);
-        
-        const payload = {
-            action: "save",
-            telegram_id: id,
-            subjects: subjects,
-            accounttype: accounttype,
-            price: price,
-            affiliate: affiliate,
-            commission: commission,
-            commissionAmount: commissionAmount,
-            timestamp: new Date().toISOString()
-        };
-        
+        const payload = { action: "save", id, subject: sub, months, expiry: exp, timestamp: Date.now() };
+
         try {
-            // ⭐⭐⭐ အရေးကြီးဆုံး - Content-Type header မထည့်ပါနဲ့ ⭐⭐⭐
-            // ဒါမှ CORS preflight မဖြစ်ဘူး
-            const response = await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-                // headers: { 'Content-Type': 'application/json' }  // ❌ ဒီဟာဖြုတ်ထား
-            });
-            
-            const result = await response.json();
-            
-            if (!result.success) {
-                tg.showAlert("❌ Server Error: " + result.error);
-                showLoading(false);
-                return;
-            }
-            
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
             tg.HapticFeedback.notificationOccurred('success');
-            
-            // Reset form
-            document.getElementById('tgId').value = "";
-            document.getElementById('price').value = "";
-            document.getElementById('commission').value = "0";
-            document.getElementById('commissionBox').classList.remove('show');
-            SUBJECTS.forEach(sub => {
-                document.getElementById('chk-'+sub.code).checked = false;
-                document.getElementById('card-'+sub.code).classList.remove('active');
-                document.getElementById('months-'+sub.code).value = 1;
-            });
-            
             await fetchFromSheet();
-            
-        } catch(err) {
-            console.error("Save Error:", err);
-            tg.showAlert("❌ Network Error: " + err.message);
-        }
-        
+            document.getElementById('tgId').value = "";
+        } catch(e) { tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); }
         showLoading(false);
     }
 
-    // =================== DELETE ===================
-    async function deleteSubject(id, subjectCode) {
-        const subName = SUBJECTS.find(s => s.code === subjectCode)?.name || subjectCode;
-        if (!confirm(`${id} ရဲ့ ${subName} ကို ဖျက်မှာသေချာလား?`)) return;
-        
+    async function deleteSubject(id, subject) {
+        if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
         showLoading(true);
         try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "delete", telegram_id: id, subject: subjectCode })
-                // ❌ headers မထည့်ပါနဲ့
-            });
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
             await fetchFromSheet();
-        } catch(e) {
-            tg.showAlert("❌ ဖျက်လို့မရပါ။");
-        }
+        } catch(e) { tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); }
         showLoading(false);
     }
 
-    // =================== RENDER ===================
     function renderData() {
         const area = document.getElementById('displayArea');
         area.innerHTML = "";
-        
-        if (currentTab === 'manage') renderManage(area);
-        else if (currentTab === 'expire') renderExpire(area);
-        else if (currentTab === 'analytics') renderAnalytics(area);
-        else if (currentTab === 'logs') renderLogs(area);
-    }
 
-    function renderManage(area) {
-        const search = document.getElementById('search').value.toLowerCase().trim();
-        
-        if (!cachedStudents.length) {
-            area.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">📭 စာရင်းမရှိသေးပါ</div>';
-            return;
-        }
-        
-        const sorted = [...cachedStudents].sort((a,b) => String(b.telegram_id).localeCompare(String(a.telegram_id)));
-        
-        sorted.forEach(stu => {
-            const idMatch = String(stu.telegram_id).includes(search);
-            let subHtml = "";
-            let subMatch = false;
-            
-            SUBJECTS.forEach(sub => {
-                if (stu[sub.code]) {
-                    if (sub.name.toLowerCase().includes(search) || sub.code.includes(search)) subMatch = true;
-                    subHtml += `
-                        <div class="sub-item">
+        if (currentTab === 'manage') {
+            let db = {};
+            cachedData.forEach(item => { if(!db[item.id]) db[item.id] = []; db[item.id].push(item); });
+            const search = document.getElementById('search').value.toLowerCase();
+            const sortedIds = Object.keys(db).reverse();
+
+            sortedIds.forEach(studentId => {
+                const subs = db[studentId];
+                if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                    let subHtml = "";
+                    subs.forEach(s => {
+                        subHtml += `<div class="sub-item">
                             <div class="sub-main">
-                                <span class="sub-name">${sub.icon} ${sub.name}</span>
-                                <button class="item-delete-btn" onclick="deleteSubject('${stu.telegram_id}','${sub.code}')">🗑️</button>
+                                <span class="sub-name">📘 ${s.subject}</span>
+                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
                             </div>
-                            <div class="exp-date">📅 Exp: ${getLocalDateStr(stu[sub.code])}</div>
-                        </div>
-                    `;
+                            <div class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</div>
+                        </div>`;
+                    });
+                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
                 }
             });
-            
-            if (!subHtml) return;
-            if (search && !idMatch && !subMatch) return;
-            
-            const typeBadge = stu.accounttype === 'gw' 
-                ? '<span class="badge badge-gw">🎁 GW</span>' 
-                : '<span class="badge badge-normal">👤 Normal</span>';
-            
-            area.innerHTML += `
-                <div class="user-record">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:8px;">
-                        <span class="user-id">👤 ${stu.telegram_id}</span>
-                        ${typeBadge}
-                    </div>
-                    ${stu.price ? `<div style="font-size:0.8rem;color:#666;margin-bottom:8px;">💰 ${Number(stu.price).toLocaleString()} MMK ${stu.affiliate && stu.affiliate !== 'None' ? '| 🏷️ ' + stu.affiliate : ''} ${stu.commission > 0 ? '| 📊 ' + stu.commission + '%' : ''}</div>` : ''}
-                    ${subHtml}
-                </div>
-            `;
-        });
-    }
+        } 
+        else if (currentTab === 'expire') {
+            let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            allItems.forEach(s => {
+                let expDate = new Date(s.expiry);
+                const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
+                let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
+                if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
+                else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
 
-    function renderExpire(area) {
-        let items = [];
-        cachedStudents.forEach(stu => {
-            SUBJECTS.forEach(sub => {
-                if (stu[sub.code]) items.push({id: stu.telegram_id, ...sub, expiry: stu[sub.code]});
-            });
-        });
-        items.sort((a,b) => new Date(a.expiry) - new Date(b.expiry));
-        
-        if (!items.length) {
-            area.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">✅ သက်တမ်းကုန်မယ့်စာရင်းမရှိသေးပါ</div>';
-            return;
-        }
-        
-        items.forEach(s => {
-            const exp = new Date(s.expiry);
-            const diff = Math.ceil((exp - new Date()) / (86400000));
-            let cls = "status-ok", txt = `(ကျန်ရက်: ${diff} ရက်)`, border = "var(--success)";
-            if (diff < 0) { cls = "status-expired"; txt = "(သက်တမ်းကုန်ပြီ!)"; border = "var(--danger)"; }
-            else if (diff <= 7) { cls = "status-warning"; txt = "(၇ ရက်ပဲ ကျန်!)"; border = "var(--warning)"; }
-            
-            area.innerHTML += `
-                <div class="sub-item" style="border-left:5px solid ${border};background:white;">
+                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
                     <div class="sub-main">
-                        <span>${s.icon} <b>${s.id}</b> - ${s.name}</span>
-                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}','${s.code}')">🗑️</button>
+                        <span>👤 <b>${s.id}</b> - ${s.subject}</span>
+                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
                     </div>
-                    <div class="exp-date ${cls}">⌛ ${getLocalDateStr(s.expiry)} ${txt}</div>
-                </div>
-            `;
-        });
-    }
-
-    function renderLogs(area) {
-        if (!cachedLogs.length) {
-            area.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">📝 မှတ်တမ်းမရှိသေးပါ</div>';
-            return;
-        }
-        
-        let byDate = {};
-        cachedLogs.forEach(log => {
-            if (!log.timestamp) return;
-            const d = getLocalDateStr(log.timestamp);
-            if (!byDate[d]) byDate[d] = [];
-            byDate[d].push({...log, time: getLocalTimeStr(log.timestamp)});
-        });
-        
-        Object.keys(byDate).sort((a,b) => new Date(b)-new Date(a)).forEach(date => {
-            const logs = byDate[date];
-            const rev = logs.reduce((s,l) => s + (parseFloat(l.price)||0), 0);
-            const comm = logs.reduce((s,l) => s + (parseFloat(l.commissionAmount)||0), 0);
-            
-            let html = `
-                <div style="background:white;padding:14px;border-radius:12px;margin-bottom:10px;border-left:4px solid var(--success);">
-                    <div style="font-weight:bold;color:var(--success);display:flex;justify-content:space-between;">
-                        <span>🗓 ${date}</span>
-                        <span style="font-size:0.8rem;background:#e8f5e9;padding:2px 8px;border-radius:10px;">${logs.length} ကြိမ်</span>
-                    </div>
-                    <div style="font-size:0.85rem;color:#666;margin-top:4px;">💰 ${rev.toLocaleString()} MMK | 📊 Comm: ${comm.toLocaleString()} MMK</div>
-                </div>
-            `;
-            
-            logs.forEach(log => {
-                const sub = SUBJECTS.find(s => s.code === log.subject) || {name: log.subject, icon: '📘'};
-                html += `
-                    <div class="sub-item" style="border-left:4px solid var(--info);background:white;margin-bottom:8px;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#888;margin-bottom:4px;">
-                            <span>⏰ ${log.time}</span>
-                            <span style="color:var(--success);font-weight:bold;">+${log.months||0} လ</span>
-                        </div>
-                        <div class="sub-main">
-                            <span>👤 <b>${log.telegram_id || log.id}</b></span>
-                            <span style="color:var(--primary);font-weight:bold;">${sub.icon} ${sub.name}</span>
-                        </div>
-                        <div style="margin-top:4px;font-size:0.8rem;color:#666;">📅 ${getLocalDateStr(log.expiry)} | 💰 ${(parseFloat(log.price)||0).toLocaleString()} MMK</div>
-                        ${log.affiliate && log.affiliate !== 'None' ? `<div style="margin-top:4px;"><span class="badge badge-aff">🏷️ ${log.affiliate}</span><span class="badge badge-price">📊 ${log.commission}% = ${(parseFloat(log.commissionAmount)||0).toLocaleString()} MMK</span></div>` : ''}
-                    </div>
-                `;
+                    <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
+                </div>`;
             });
-            area.innerHTML += html;
-        });
-    }
-
-    function renderAnalytics(area) {
-        if (!cachedLogs.length) {
-            area.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">📊 မှတ်တမ်းမရှိသေးပါ</div>';
-            return;
         }
-        
-        const totalRev = cachedLogs.reduce((s,l) => s + (parseFloat(l.price)||0), 0);
-        const totalComm = cachedLogs.reduce((s,l) => s + (parseFloat(l.commissionAmount)||0), 0);
-        const totalSales = cachedLogs.length;
-        
-        let daily = {};
-        cachedLogs.forEach(l => {
-            const d = getLocalDateStr(l.timestamp);
-            if (!daily[d]) daily[d] = {rev:0, comm:0, count:0};
-            daily[d].rev += parseFloat(l.price)||0;
-            daily[d].comm += parseFloat(l.commissionAmount)||0;
-            daily[d].count += 1;
-        });
-        
-        area.innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
-                <div class="card" style="text-align:center;padding:15px;"><div style="font-size:1.3rem;font-weight:bold;color:var(--success);">${totalRev.toLocaleString()}</div><div style="font-size:0.75rem;color:#777;">💰 Total Revenue</div></div>
-                <div class="card" style="text-align:center;padding:15px;"><div style="font-size:1.3rem;font-weight:bold;color:#6f42c1;">${totalComm.toLocaleString()}</div><div style="font-size:0.75rem;color:#777;">📊 Total Commission</div></div>
-                <div class="card" style="text-align:center;padding:15px;"><div style="font-size:1.3rem;font-weight:bold;color:var(--warning);">${totalSales}</div><div style="font-size:0.75rem;color:#777;">🛒 Total Sales</div></div>
-                <div class="card" style="text-align:center;padding:15px;"><div style="font-size:1.3rem;font-weight:bold;color:var(--primary);">${new Set(cachedLogs.map(l => l.telegram_id||l.id)).size}</div><div style="font-size:0.75rem;color:#777;">👥 Unique Students</div></div>
-            </div>
-            <h2>📅 Daily Breakdown</h2>
-        `;
-        
-        Object.keys(daily).sort((a,b) => new Date(b)-new Date(a)).slice(0,30).forEach(d => {
-            area.innerHTML += `
-                <div class="sub-item" style="background:white;display:flex;justify-content:space-between;align-items:center;">
-                    <div><b>${d}</b> <span style="font-size:0.8rem;color:#666;">(${daily[d].count} sales)</span></div>
-                    <div style="text-align:right;">
-                        <div style="color:var(--success);font-weight:bold;">${Math.round(daily[d].rev).toLocaleString()} MMK</div>
-                        <div style="font-size:0.75rem;color:#6f42c1;">Comm: ${Math.round(daily[d].comm).toLocaleString()}</div>
-                    </div>
-                </div>
-            `;
-        });
+        else if (currentTab === 'logs') {
+            let logsByDate = {};
+            let totalMonthsByDate = {};
+            let countByDate = {};
+
+            cachedLogs.forEach(log => {
+                if (!log.timestamp) return;
+                
+                // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
+                let dateStr = getLocalDateStr(log.timestamp);
+                let timeStr = getLocalTimeStr(log.timestamp);
+                let expiryStr = getLocalDateStr(log.expiry); // Expiry Date ကို ပြုပြင်ခြင်း
+
+                if (!logsByDate[dateStr]) {
+                    logsByDate[dateStr] = [];
+                    totalMonthsByDate[dateStr] = 0;
+                    countByDate[dateStr] = 0;
+                }
+                
+                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
+                totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
+                countByDate[dateStr] += 1;
+            });
+
+            let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
+
+            if (sortedDates.length === 0) {
+                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
+            } else {
+                sortedDates.forEach(date => {
+                    let dailyTotal = totalMonthsByDate[date];
+                    let dailyCount = countByDate[date];
+
+                    let html = `
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🗓 ${date}</span>
+                            <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
+                        </div>
+                        <div style="color:#444; font-size: 0.95rem;">
+                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
+                        </div>
+                    </div>`;
+                    
+                    logsByDate[date].forEach(log => {
+                        html += `
+                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
+                                    <span>⏰ ${log.displayTime}</span>
+                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                                </div>
+                                <div class="sub-main">
+                                    <span>👤 <b>${log.id}</b></span>
+                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
+                                </div>
+                                <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
+                                    📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
+                                </div>
+                            </div>`;
+                    });
+                    area.innerHTML += html;
+                });
+            }
+        }
     }
 
-    init();
+    fetchFromSheet();
 </script>
 
 </body>
