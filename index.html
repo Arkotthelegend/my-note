@@ -1,332 +1,488 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Admin Panel</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
-        input:focus { border-color: var(--primary); }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        
-        .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
-        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
-        .tab.active { background: var(--primary); color: white; }
-
-        .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        
-        .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
-        .sub-main { display: flex; justify-content: space-between; align-items: center; }
-        .sub-name { font-weight: bold; color: #333; }
-        .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
-        
-        .status-expired { color: var(--danger); }
-        .status-warning { color: var(--warning); }
-        .status-ok { color: var(--success); }
-        .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
-        .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
-        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram App Admin Panel</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: var(--tg-theme-bg-color, #f3f4f6);
+      color: var(--tg-theme-text-color, #1f2937);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .card {
+      background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+    }
+  </style>
 </head>
-<body>
+<body class="p-4 min-h-screen pb-20">
 
-<div id="loading-overlay">⏳ Loading...</div>
+  <!-- Admin Verification Loading Banner -->
+  <div id="authLoading" class="text-center py-10">
+    <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+    <p class="mt-3 text-gray-600 font-medium">Admin အခွင့်အရေး စစ်ဆေးနေပါသည်...</p>
+  </div>
 
-<div class="container">
-    <div class="card">
-        <h2>👤 Add/Update Sub (G-12)</h2>
-        <div class="form-group">
-            <label>Telegram ID (Only Numbers)</label>
-            <input type="number" id="tgId" placeholder="e.g. 8432363664">
+  <!-- Main Admin Content (Hidden until authorized) -->
+  <div id="mainContent" class="max-w-4xl mx-auto hidden">
+    
+    <!-- Top Header -->
+    <div class="card p-4 rounded-xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
+      <div>
+        <h1 class="text-xl font-bold text-blue-600 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+          TG Course Admin Panel
+        </h1>
+        <p class="text-xs text-gray-500 mt-0.5">Connected as Admin ID: <span id="displayAdminId" class="font-mono font-bold text-gray-700"></span></p>
+      </div>
+      <button onclick="fetchData()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Data ဆွဲယူမယ်
+      </button>
+    </div>
+
+    <!-- User Add / Edit Form Card -->
+    <div class="card p-5 rounded-xl shadow-md mb-8 border border-gray-100">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+        <h2 id="formTitle" class="text-lg font-bold flex items-center gap-2 text-gray-800">
+          <i data-lucide="user-plus" class="w-5 h-5 text-green-500"></i>
+          အသုံးပြုသူသစ် ထည့်သွင်းရန် / ပြင်ဆင်ရန်
+        </h2>
+        <button onclick="clearForm()" class="text-xs text-gray-500 hover:text-red-500 underline">ဖောင်ရှင်းမယ် (Clear)</button>
+      </div>
+
+      <form id="userForm" onsubmit="saveUser(event)">
+        <!-- Telegram ID Input -->
+        <div class="mb-5">
+          <label class="block text-sm font-bold mb-1 text-gray-700">Telegram User ID <span class="text-red-500">*</span></label>
+          <div class="flex gap-2">
+            <input type="number" id="telegram_id" required placeholder="ဥပမာ - 8432363664" 
+              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-lg font-mono font-semibold">
+            <button type="button" onclick="searchUserInList()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex items-center gap-1">
+              <i data-lucide="search" class="w-4 h-4"></i> ရှာမယ်
+            </button>
+          </div>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 2;">
-                <label>Subject</label>
-                <select id="subject">
-                    <option value="Myanmar">Myanmar</option>
-                    <option value="English">English</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="Economics">Economics</option>
-                    <option value="All">All Subjects (all)</option>
-                </select>
+
+        <!-- Subjects Grid -->
+        <label class="block text-sm font-bold mb-2 text-gray-700">ဘာသာရပ်များ နှင့် သက်တမ်းကုန်ဆုံးမည့် ရက်စွဲ (Expiration Dates)</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          
+          <!-- Subject Item Helper Template -->
+          <!-- We generate 8 subject boxes: mm, en, math, phy, chem, bio, eco, all -->
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>🇲🇲 မြန်မာ (Myanmar)</span>
+              <span class="text-xs text-gray-400 font-mono">mm</span>
             </div>
-            <div class="form-group" style="flex: 1;">
-                <label>Months</label>
-                <input type="number" id="months" value="1" min="1">
+            <input type="date" id="mm" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('mm', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('mm', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('mm', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('mm', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('mm')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
             </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>🇬🇧 အင်္ဂလိပ် (English)</span>
+              <span class="text-xs text-gray-400 font-mono">en</span>
+            </div>
+            <input type="date" id="en" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('en', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('en', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('en', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('en', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('en')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>📐 သင်္ချာ (Mathematics)</span>
+              <span class="text-xs text-gray-400 font-mono">math</span>
+            </div>
+            <input type="date" id="math" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('math', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('math', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('math', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('math', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('math')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>⚡ ရူပဗေဒ (Physics)</span>
+              <span class="text-xs text-gray-400 font-mono">phy</span>
+            </div>
+            <input type="date" id="phy" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('phy', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('phy', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('phy', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('phy', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('phy')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>🧪 ဓာတုဗေဒ (Chemistry)</span>
+              <span class="text-xs text-gray-400 font-mono">chem</span>
+            </div>
+            <input type="date" id="chem" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('chem', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('chem', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('chem', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('chem', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('chem')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>🧬 ဇီဝဗေဒ (Biology)</span>
+              <span class="text-xs text-gray-400 font-mono">bio</span>
+            </div>
+            <input type="date" id="bio" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('bio', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('bio', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('bio', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('bio', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('bio')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <div class="border rounded-lg p-3 bg-gray-50/50">
+            <div class="font-bold text-sm mb-1 text-blue-700 flex justify-between">
+              <span>📊 ဘောဂဗေဒ (Economics)</span>
+              <span class="text-xs text-gray-400 font-mono">eco</span>
+            </div>
+            <input type="date" id="eco" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('eco', 1)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('eco', 2)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('eco', 3)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('eco', 6)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('eco')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
+          <!-- ALL Subjects Box -->
+          <div class="border-2 border-green-500 rounded-lg p-3 bg-green-50/30">
+            <div class="font-bold text-sm mb-1 text-green-700 flex justify-between">
+              <span>🌟 ဘာသာရပ်အားလုံး (All Subjects)</span>
+              <span class="text-xs text-gray-500 font-mono">all</span>
+            </div>
+            <input type="date" id="all" class="w-full px-2 py-1.5 border rounded bg-white text-sm mb-2 font-semibold">
+            <div class="flex gap-1 overflow-x-auto text-xs">
+              <button type="button" onclick="addMonths('all', 1)" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 font-semibold">+၁ လ</button>
+              <button type="button" onclick="addMonths('all', 2)" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 font-semibold">+၂ လ</button>
+              <button type="button" onclick="addMonths('all', 3)" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 font-semibold">+၃ လ</button>
+              <button type="button" onclick="addMonths('all', 6)" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 font-semibold">+၆ လ</button>
+              <button type="button" onclick="clearDate('all')" class="bg-red-50 text-red-500 px-2 py-1 rounded ml-auto">X</button>
+            </div>
+          </div>
+
         </div>
-        <div class="form-group">
-            <label>Expiry Date</label>
-            <input type="date" id="expiryDate">
+
+        <!-- Price Input -->
+        <div class="mb-6">
+          <label class="block text-sm font-bold mb-1 text-gray-700">ပေးသွင်းငွေ / သင်တန်းကြေး (Price)</label>
+          <input type="text" id="price" placeholder="ဥပမာ - 15000 / 30000 Ks" 
+            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent">
         </div>
-        <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
+
+        <!-- Submit Button -->
+        <button type="submit" id="saveBtn" 
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition flex justify-center items-center gap-2 text-base">
+          <i data-lucide="save" class="w-5 h-5"></i>
+          <span>သိမ်းဆည်းမည် (Save Data)</span>
+        </button>
+      </form>
     </div>
 
-    <div class="tabs">
-        <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
-        <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
-       <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
+    <!-- User Database List Section -->
+    <div class="card p-5 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+          <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
+          လက်ရှိအသုံးပြုသူများ စာရင်း (<span id="userCount">0</span> ဦး)
+        </h3>
+        <input type="text" id="searchInput" oninput="filterTable()" placeholder="ID ဖြင့်ရှာရန်..." 
+          class="px-3 py-1.5 border rounded-lg text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 w-44">
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b bg-gray-50/50 text-gray-600 font-semibold">
+              <th class="p-2.5">Telegram ID</th>
+              <th class="p-2.5">Active ဘာသာရပ်များ</th>
+              <th class="p-2.5">Price</th>
+              <th class="p-2.5 text-right">လုပ်ဆောင်ချက်</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody" class="divide-y divide-gray-100">
+            <!-- Data rows will be inserted here -->
+            <tr><td colSpan="4" class="text-center py-6 text-gray-400">ဒေတာများ ဆွဲယူနေပါသည်...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div id="search-container">
-        <input type="text" id="search" class="search-box" placeholder="🔍 Search ID or Subject..." onkeyup="renderData()">
-    </div>
+  </div>
 
-    <div id="displayArea"></div>
-</div>
+  <script>
+    // ==========================================
+    // ၁။ GAS WEB APP URL ထည့်ရန် (ဒီမှာပြင်ပါ)
+    // ==========================================
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwY4bjqdx1N7vEd08kbnxgqR_77hOP0yQzAER7_bVEdVFGNDYERHnbq32C4EhhX3-jN/exec"; 
 
-<script>
+    // Admin IDs (Telegram App မသုံးဘဲ Web ဘရောင်ဇာနဲ့ စမ်းပါက အသုံးပြုရန်)
+    const ADMIN_IDS = [8432363664]; 
+    let CURRENT_ADMIN_ID = 0;
+    let ALL_USERS_DATA = [];
+
+    // Initialize WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // 🔒 Admin ID ဖြည့်ရန်
-    const ADMIN_IDS = ["8432363664","7273479209"]; 
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
 
-    const currentUserId = tg.initDataUnsafe?.user?.id;
-    const isAdmin = ADMIN_IDS.map(String).includes(String(currentUserId));
+      // Telegram user ID ကို ယူခြင်း
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        CURRENT_ADMIN_ID = tg.initDataUnsafe.user.id;
+      } else {
+        // Telegram ထဲမှာ မဟုတ်ဘဲ Web Browser မှာ စမ်းသပ်ရင်
+        CURRENT_ADMIN_ID = ADMIN_IDS[0]; // For local/browser testing
+      }
 
-    if (!isAdmin) {
-        document.body.innerHTML = `<div style="display:flex; height:100vh; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; padding:20px; text-align:center;">
-            <h1 style="color:#721c24; font-size:3rem; margin:0;">⛔</h1><h2 style="color:#721c24; margin-top:10px;">Access Denied</h2></div>`;
-        tg.showAlert("⛔ ဝင်ခွင့်မရှိပါ။");
-        throw new Error("Unauthorized Access");
+      document.getElementById("displayAdminId").innerText = CURRENT_ADMIN_ID;
+
+      // Admin ဖြစ်မဖြစ် စစ်ဆေးခြင်း
+      if (ADMIN_IDS.includes(CURRENT_ADMIN_ID)) {
+        document.getElementById("authLoading").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+        fetchData();
+      } else {
+        document.getElementById("authLoading").innerHTML = `
+          <div class="p-6 max-w-sm mx-auto bg-red-50 text-red-600 rounded-xl border border-red-200 mt-10">
+            <h3 class="font-bold text-lg mb-2">⛔ ဝင်ရောက်ခွင့် မရှိပါ (Access Denied)</h3>
+            <p class="text-sm">သင်၏ Telegram ID (${CURRENT_ADMIN_ID}) သည် Admin စာရင်းတွင် မပါဝင်ပါ။</p>
+          </div>
+        `;
+      }
+    });
+
+    // ==========================================
+    // ၂။ API ခေါ်ဆိုမှု Helper (Bypass CORS)
+    // ==========================================
+    async function callApi(action, payload = {}) {
+      const data = {
+        action: action,
+        admin_id: CURRENT_ADMIN_ID,
+        ...payload
+      };
+
+      // GAS CORS မဖြစ်စေရန် text/plain ဖြင့် POST ပို့ခြင်း
+      const response = await fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      });
+      return await response.json();
     }
 
-    // 🔗 Google Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpRup9OOh0D8rdEx8uaB_0tZQLuLjy7ZB5FFRrBcaqh0k87d3Eig5Xw_WWXguFDgFT/exec";
-    
-    let currentTab = 'manage';
-    let cachedData = [];
-    let cachedLogs = []; 
-
-    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
-    function getLocalDateStr(dateVal) {
-        if (!dateVal) return "";
-        let d = new Date(dateVal);
-        if (isNaN(d.getTime())) return String(dateVal).substring(0, 10);
-        let yyyy = d.getFullYear();
-        let mm = String(d.getMonth() + 1).padStart(2, '0');
-        let dd = String(d.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    }
-
-    // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Time (AM/PM) ပြောင်းပေးသည့် Function
-    function getLocalTimeStr(dateVal) {
-        if (!dateVal) return "";
-        let d = new Date(dateVal);
-        if (isNaN(d.getTime())) return String(dateVal).substring(11, 16);
-        let hh = d.getHours();
-        let min = String(d.getMinutes()).padStart(2, '0');
-        let ampm = hh >= 12 ? 'PM' : 'AM';
-        hh = hh % 12 || 12; // 12-hour format
-        return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
-    }
-
-    function updateExpiryDate() {
-        const id = document.getElementById('tgId').value.trim();
-        const sub = document.getElementById('subject').value;
-        const months = parseInt(document.getElementById('months').value) || 0;
-
-        let baseDate = new Date(); 
-
-        if (id && sub && cachedData.length > 0) {
-            const existingRecord = cachedData.find(item => String(item.id) === id && item.subject === sub);
-            if (existingRecord && existingRecord.expiry) {
-                let existingExp = new Date(existingRecord.expiry);
-                if (existingExp > baseDate) {
-                    baseDate = existingExp; 
-                }
-            }
+    // ==========================================
+    // ၃။ Google Sheet မှ Data များ ဆွဲယူခြင်း
+    // ==========================================
+    async function fetchData() {
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = `<tr><td colSpan="4" class="text-center py-6 text-gray-400">ဒေတာများ ဆွဲယူနေပါသည်...</td></tr>`;
+      
+      try {
+        const res = await callApi("getData");
+        if (res.status === "success") {
+          ALL_USERS_DATA = res.data;
+          renderTable(ALL_USERS_DATA);
+          document.getElementById("userCount").innerText = ALL_USERS_DATA.length;
+        } else {
+          alert(res.message);
         }
-
-        baseDate.setMonth(baseDate.getMonth() + months);
-        document.getElementById('expiryDate').value = baseDate.toISOString().split('T')[0];
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colSpan="4" class="text-center py-6 text-red-500">ချိတ်ဆက်မှု အမှားအယွင်းဖြစ်နေပါသည်! URL စစ်ဆေးပါ။</td></tr>`;
+      }
     }
 
-    document.getElementById('months').addEventListener('input', updateExpiryDate);
-    document.getElementById('tgId').addEventListener('input', updateExpiryDate);
-    document.getElementById('subject').addEventListener('change', updateExpiryDate);
+    // ==========================================
+    // ၄။ အသုံးပြုသူ စာရင်း (Table) ရေးဆွဲခြင်း
+    // ==========================================
+    function renderTable(data) {
+      const tbody = document.getElementById("userTableBody");
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colSpan="4" class="text-center py-6 text-gray-400">အသုံးပြုသူ မရှိသေးပါ။</td></tr>`;
+        return;
+      }
 
-    function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
+      tbody.innerHTML = data.map(user => {
+        // သက်တမ်းကျန်နေသေးတဲ့ ဘာသာရပ်တွေကို Box လေးတွေနဲ့ ပြမယ်
+        const subjects = ['mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco', 'all'];
+        const activeBadges = subjects.map(sub => {
+          if (user[sub]) {
+            return `<span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded mr-1 mb-1 font-mono">${sub}: ${user[sub]}</span>`;
+          }
+          return '';
+        }).join('');
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
-        renderData();
+        return `
+          <tr class="hover:bg-gray-50/80 transition">
+            <td class="p-2.5 font-mono font-bold text-blue-600">${user.telegram_id}</td>
+            <td class="p-2.5">${activeBadges || '<span class="text-xs text-gray-400">ဘာသာရပ်မရှိ</span>'}</td>
+            <td class="p-2.5 font-semibold">${user.price}</td>
+            <td class="p-2.5 text-right">
+              <button onclick="editUser('${user.telegram_id}')" class="bg-gray-100 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1">
+                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> ပြင်မယ်
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
     }
 
-    async function fetchFromSheet() {
-        showLoading(true);
-        try {
-            const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            cachedData = data.active || [];
-            cachedLogs = data.logs || [];
-            updateExpiryDate(); 
-            renderData();
-        } catch (e) {
-            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+    // ==========================================
+    // ၅။ ၁ လစာ၊ ၂ လစာ အလိုအလျောက် ပေါင်းထည့်ပေးသည့် Helper
+    // ==========================================
+    function addMonths(subjectId, monthsToAdd) {
+      const input = document.getElementById(subjectId);
+      let baseDate = input.value ? new Date(input.value) : new Date();
+      
+      // အကယ်၍ ထည့်ထားတဲ့ရက်က ယနေ့ထက် စောနေခဲ့ရင် (သက်တမ်းကုန်နေရင်) ယနေ့ရက်ကနေစပြီး ပေါင်းပေးမယ်
+      const today = new Date();
+      if (baseDate < today) {
+        baseDate = today;
+      }
+
+      // လ ပေါင်းထည့်ခြင်း
+      baseDate.setMonth(baseDate.getMonth() + monthsToAdd);
+      
+      // YYYY-MM-DD format ပြောင်းခြင်း
+      const y = baseDate.getFullYear();
+      const m = String(baseDate.getMonth() + 1).padStart(2, '0');
+      const d = String(baseDate.getDate()).padStart(2, '0');
+      
+      input.value = `${y}-${m}-${d}`;
+    }
+
+    function clearDate(subjectId) {
+      document.getElementById(subjectId).value = '';
+    }
+
+    // ==========================================
+    // ၆။ ဒေတာ သိမ်းဆည်းခြင်း (Save / Update)
+    // ==========================================
+    async function saveUser(e) {
+      e.preventDefault();
+      const btn = document.getElementById("saveBtn");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<div class="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div> သိမ်းဆည်းနေသည်...`;
+      btn.disabled = true;
+
+      const userData = {
+        telegram_id: document.getElementById("telegram_id").value,
+        mm: document.getElementById("mm").value,
+        en: document.getElementById("en").value,
+        math: document.getElementById("math").value,
+        phy: document.getElementById("phy").value,
+        chem: document.getElementById("chem").value,
+        bio: document.getElementById("bio").value,
+        eco: document.getElementById("eco").value,
+        all: document.getElementById("all").value,
+        price: document.getElementById("price").value
+      };
+
+      try {
+        const res = await callApi("saveUser", { userData: userData });
+        if (res.status === "success") {
+          if (tg && tg.showPopup) {
+            tg.showPopup({ title: 'အောင်မြင်ပါသည်', message: res.message, buttons: [{ type: 'ok' }] });
+          } else {
+            alert(res.message);
+          }
+          clearForm();
+          fetchData(); // ဇယားကို ဒေတာအသစ် ပြန်ဆွဲတင်မယ်
+        } else {
+          alert("Error: " + res.message);
         }
-        showLoading(false);
+      } catch (err) {
+        alert("သိမ်းဆည်းမှု မအောင်မြင်ပါ။ Error: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
     }
 
-    async function saveRecord() {
-        const id = document.getElementById('tgId').value.trim();
-        const sub = document.getElementById('subject').value;
-        const months = document.getElementById('months').value;
-        const exp = document.getElementById('expiryDate').value;
+    // ==========================================
+    // ၇။ Edit Button နှိပ်ပါက ဖောင်ထဲသို့ ဒေတာဖြည့်သွင်းခြင်း
+    // ==========================================
+    function editUser(id) {
+      const user = ALL_USERS_DATA.find(u => u.telegram_id === id);
+      if (!user) return;
 
-        if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
-        
-        showLoading(true);
-        const payload = { action: "save", id, subject: sub, months, expiry: exp, timestamp: Date.now() };
+      document.getElementById("telegram_id").value = user.telegram_id;
+      document.getElementById("mm").value = user.mm;
+      document.getElementById("en").value = user.en;
+      document.getElementById("math").value = user.math;
+      document.getElementById("phy").value = user.phy;
+      document.getElementById("chem").value = user.chem;
+      document.getElementById("bio").value = user.bio;
+      document.getElementById("eco").value = user.eco;
+      document.getElementById("all").value = user.all;
+      document.getElementById("price").value = user.price;
 
-        try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            tg.HapticFeedback.notificationOccurred('success');
-            await fetchFromSheet();
-            document.getElementById('tgId').value = "";
-        } catch(e) { tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); }
-        showLoading(false);
+      document.getElementById("formTitle").innerHTML = `<i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> ID: ${id} ကို ပြင်ဆင်နေသည်`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      lucide.createIcons();
     }
 
-    async function deleteSubject(id, subject) {
-        if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
-        showLoading(true);
-        try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
-            await fetchFromSheet();
-        } catch(e) { tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); }
-        showLoading(false);
+    function searchUserInList() {
+      const id = document.getElementById("telegram_id").value.trim();
+      if (!id) return;
+      const user = ALL_USERS_DATA.find(u => u.telegram_id === id);
+      if (user) {
+        editUser(id);
+      } else {
+        alert("ဒီ Telegram ID ဖြင့် အသုံးပြုသူ မရှိသေးပါ။ ထည့်သွင်းမည့် အချက်အလက်များ ဆက်လက်ရွေးချယ်နိုင်ပါသည်။");
+      }
     }
 
-    function renderData() {
-        const area = document.getElementById('displayArea');
-        area.innerHTML = "";
-
-        if (currentTab === 'manage') {
-            let db = {};
-            cachedData.forEach(item => { if(!db[item.id]) db[item.id] = []; db[item.id].push(item); });
-            const search = document.getElementById('search').value.toLowerCase();
-            const sortedIds = Object.keys(db).reverse();
-
-            sortedIds.forEach(studentId => {
-                const subs = db[studentId];
-                if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
-                    let subHtml = "";
-                    subs.forEach(s => {
-                        subHtml += `<div class="sub-item">
-                            <div class="sub-main">
-                                <span class="sub-name">📘 ${s.subject}</span>
-                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
-                            </div>
-                            <div class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</div>
-                        </div>`;
-                    });
-                    area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
-                }
-            });
-        } 
-        else if (currentTab === 'expire') {
-            let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-            allItems.forEach(s => {
-                let expDate = new Date(s.expiry);
-                const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
-                let statusClass = "status-ok", statusText = `(ကျန်ရက်: ${diffDays} ရက်)`;
-                if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
-                else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
-
-                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
-                    <div class="sub-main">
-                        <span>👤 <b>${s.id}</b> - ${s.subject}</span>
-                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
-                    </div>
-                    <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
-                </div>`;
-            });
-        }
-        else if (currentTab === 'logs') {
-            let logsByDate = {};
-            let totalMonthsByDate = {};
-            let countByDate = {};
-
-            cachedLogs.forEach(log => {
-                if (!log.timestamp) return;
-                
-                // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
-                let dateStr = getLocalDateStr(log.timestamp);
-                let timeStr = getLocalTimeStr(log.timestamp);
-                let expiryStr = getLocalDateStr(log.expiry); // Expiry Date ကို ပြုပြင်ခြင်း
-
-                if (!logsByDate[dateStr]) {
-                    logsByDate[dateStr] = [];
-                    totalMonthsByDate[dateStr] = 0;
-                    countByDate[dateStr] = 0;
-                }
-                
-                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
-                totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
-                countByDate[dateStr] += 1;
-            });
-
-            let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
-
-            if (sortedDates.length === 0) {
-                area.innerHTML = `<div class="user-record" style="text-align:center; color:#777;">မှတ်တမ်း မရှိသေးပါဘူး။</div>`;
-            } else {
-                sortedDates.forEach(date => {
-                    let dailyTotal = totalMonthsByDate[date];
-                    let dailyCount = countByDate[date];
-
-                    let html = `
-                    <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                        <div style="font-weight:bold; color:var(--success); font-size:1.1rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>🗓 ${date}</span>
-                            <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
-                        </div>
-                        <div style="color:#444; font-size: 0.95rem;">
-                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
-                        </div>
-                    </div>`;
-                    
-                    logsByDate[date].forEach(log => {
-                        html += `
-                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
-                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
-                                    <span>⏰ ${log.displayTime}</span>
-                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
-                                </div>
-                                <div class="sub-main">
-                                    <span>👤 <b>${log.id}</b></span>
-                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
-                                </div>
-                                <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
-                                    📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
-                                </div>
-                            </div>`;
-                    });
-                    area.innerHTML += html;
-                });
-            }
-        }
+    function clearForm() {
+      document.getElementById("userForm").reset();
+      document.getElementById("formTitle").innerHTML = `<i data-lucide="user-plus" class="w-5 h-5 text-green-500"></i> အသုံးပြုသူသစ် ထည့်သွင်းရန် / ပြင်ဆင်ရန်`;
+      lucide.createIcons();
     }
 
-    fetchFromSheet();
-</script>
-
+    function filterTable() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = ALL_USERS_DATA.filter(u => u.telegram_id.toLowerCase().includes(query));
+      renderTable(filtered);
+    }
+  </script>
 </body>
 </html>
