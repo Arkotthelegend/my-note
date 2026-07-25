@@ -16,26 +16,31 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
         input:focus { border-color: var(--primary); }
         .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        
+        .btn-add-sub { background: #e3f2fd; color: var(--primary); border: none; padding: 10px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 0.9rem; }
+
         .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
         .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
 
         .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        
+
         .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
         .sub-main { display: flex; justify-content: space-between; align-items: center; }
         .sub-name { font-weight: bold; color: #333; }
         .exp-date { font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
-        
+
         .status-expired { color: var(--danger); }
         .status-warning { color: var(--warning); }
         .status-ok { color: var(--success); }
         .item-delete-btn { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 5px; }
         .search-box { background: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-size: 1rem; }
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
+
+        .sub-row { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; }
+        .sub-row-remove { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -48,36 +53,19 @@
             <label>Telegram ID (Only Numbers)</label>
             <input type="number" id="tgId" placeholder="e.g. 8432363664">
         </div>
-        <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 2;">
-                <label>Subject</label>
-                <select id="subject">
-                    <option value="Myanmar">Myanmar</option>
-                    <option value="English">English</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="Economics">Economics</option>
-                    <option value="All">All Subjects (all)</option>
-                </select>
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <label>Months</label>
-                <input type="number" id="months" value="1" min="1">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Expiry Date</label>
-            <input type="date" id="expiryDate">
-        </div>
+
+        <!-- Dynamic Subjects List -->
+        <div id="subjectsList"></div>
+
+        <button class="btn-add-sub" onclick="addSubjectRow()">+ Add Another Subject</button>
+
         <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
     </div>
 
     <div class="tabs">
         <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
         <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
-       <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
+        <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
     </div>
 
     <div id="search-container">
@@ -105,11 +93,12 @@
     }
 
     // 🔗 Google Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVC5RE4A9A_Se0cTTYMDJ1GmMLMU5Fu45dJIW9-_3_gNhyOovz_jdTi0z893k6wEV4ag/exec";
-    
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5LowT_lxYdcFOmSEkTYcJYwMin_adfuJIb3ASUIZTm-tEUCicvsJkjChXWO2-jN766g/exec";
+
     let currentTab = 'manage';
     let cachedData = [];
     let cachedLogs = []; 
+    let subjectRows = [];
 
     // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
     function getLocalDateStr(dateVal) {
@@ -134,30 +123,100 @@
         return `${String(hh).padStart(2, '0')}:${min} ${ampm}`;
     }
 
-    function updateExpiryDate() {
-        const id = document.getElementById('tgId').value.trim();
-        const sub = document.getElementById('subject').value;
-        const months = parseInt(document.getElementById('months').value) || 0;
+    // ====== SUBJECT ROW MANAGEMENT ======
+    function addSubjectRow(data) {
+        const idx = subjectRows.length;
+        const rowId = 'subRow_' + idx;
+        subjectRows.push({ id: rowId });
 
-        let baseDate = new Date(); 
+        const container = document.getElementById('subjectsList');
+        const div = document.createElement('div');
+        div.id = rowId;
+        div.className = 'sub-row';
 
-        if (id && sub && cachedData.length > 0) {
-            const existingRecord = cachedData.find(item => String(item.id) === id && item.subject === sub);
-            if (existingRecord && existingRecord.expiry) {
-                let existingExp = new Date(existingRecord.expiry);
-                if (existingExp > baseDate) {
-                    baseDate = existingExp; 
+        div.innerHTML = `
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <div style="flex: 2;">
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: bold; color: #555;">Subject</label>
+                    <select class="sub-select" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+                        <option value="Myanmar">Myanmar</option>
+                        <option value="English">English</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Economics">Economics</option>
+                        <option value="All">All Subjects</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: bold; color: #555;">Duration</label>
+                    <input type="number" class="sub-dur" value="${data && data.duration ? data.duration : '1'}" min="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: bold; color: #555;">Unit</label>
+                    <select class="sub-unit" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+                        <option value="months" ${data && data.unit === 'days' ? '' : 'selected'}>Months</option>
+                        <option value="days" ${data && data.unit === 'days' ? 'selected' : ''}>Days</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: bold; color: #555;">Expiry Date</label>
+                <input type="date" class="sub-exp" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            ${idx > 0 ? `<button class="sub-row-remove" onclick="removeSubjectRow('${rowId}')">✕</button>` : ''}
+        `;
+
+        container.appendChild(div);
+
+        // Auto-calculate expiry when inputs change
+        const durInput = div.querySelector('.sub-dur');
+        const unitSelect = div.querySelector('.sub-unit');
+        const expInput = div.querySelector('.sub-exp');
+
+        function calcExpiry() {
+            const dur = parseInt(durInput.value) || 0;
+            const unit = unitSelect.value;
+            const id = document.getElementById('tgId').value.trim();
+            const sub = div.querySelector('.sub-select').value;
+
+            let baseDate = new Date();
+
+            // If existing record, extend from expiry
+            if (id && sub && cachedData.length > 0) {
+                const existing = cachedData.find(item => String(item.id) === id && item.subject === sub);
+                if (existing && existing.expiry) {
+                    let e = new Date(existing.expiry);
+                    if (e > baseDate) baseDate = e;
                 }
             }
+
+            if (unit === 'months') {
+                baseDate.setMonth(baseDate.getMonth() + dur);
+            } else {
+                baseDate.setDate(baseDate.getDate() + dur);
+            }
+
+            expInput.value = baseDate.toISOString().split('T')[0];
         }
 
-        baseDate.setMonth(baseDate.getMonth() + months);
-        document.getElementById('expiryDate').value = baseDate.toISOString().split('T')[0];
+        durInput.addEventListener('input', calcExpiry);
+        unitSelect.addEventListener('change', calcExpiry);
+        div.querySelector('.sub-select').addEventListener('change', calcExpiry);
+        document.getElementById('tgId').addEventListener('input', calcExpiry);
+
+        calcExpiry();
     }
 
-    document.getElementById('months').addEventListener('input', updateExpiryDate);
-    document.getElementById('tgId').addEventListener('input', updateExpiryDate);
-    document.getElementById('subject').addEventListener('change', updateExpiryDate);
+    function removeSubjectRow(rowId) {
+        const el = document.getElementById(rowId);
+        if (el) el.remove();
+        subjectRows = subjectRows.filter(r => r.id !== rowId);
+    }
+
+    // Start with one row
+    addSubjectRow();
 
     function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
 
@@ -176,7 +235,6 @@
             const data = await response.json();
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
-            updateExpiryDate(); 
             renderData();
         } catch (e) {
             tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
@@ -186,20 +244,35 @@
 
     async function saveRecord() {
         const id = document.getElementById('tgId').value.trim();
-        const sub = document.getElementById('subject').value;
-        const months = document.getElementById('months').value;
-        const exp = document.getElementById('expiryDate').value;
+        if (!id) { tg.showAlert("Telegram ID ထည့်ပေးပါ။"); return; }
 
-        if(!id || !exp) { tg.showAlert("အချက်အလက် ပြည့်စုံအောင် ဖြည့်ပေးပါဗျ။"); return; }
-        
+        const rows = document.querySelectorAll('#subjectsList > div');
+        const subjects = [];
+
+        rows.forEach(row => {
+            const sub = row.querySelector('.sub-select').value;
+            const dur = row.querySelector('.sub-dur').value;
+            const unit = row.querySelector('.sub-unit').value;
+            const exp = row.querySelector('.sub-exp').value;
+            if (exp) {
+                subjects.push({ subject: sub, duration: dur, unit: unit, expiry: exp });
+            }
+        });
+
+        if (subjects.length === 0) { tg.showAlert("အနည်းဆုံး ဘာသာရပ် တစ်ခု ထည့်ပေးပါ။"); return; }
+
         showLoading(true);
-        const payload = { action: "save", id, subject: sub, months, expiry: exp, timestamp: Date.now() };
+        const payload = { action: "saveMulti", id: id, subjects: subjects, timestamp: Date.now() };
 
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
             tg.HapticFeedback.notificationOccurred('success');
-            await fetchFromSheet();
+            // Reset form
             document.getElementById('tgId').value = "";
+            document.getElementById('subjectsList').innerHTML = '';
+            subjectRows = [];
+            addSubjectRow();
+            await fetchFromSheet();
         } catch(e) { tg.showAlert("သိမ်းဆည်းရာမှာ အမှားအယွင်းရှိနေပါတယ်ဗျ။"); }
         showLoading(false);
     }
@@ -266,7 +339,7 @@
 
             cachedLogs.forEach(log => {
                 if (!log.timestamp) return;
-                
+
                 // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
                 let dateStr = getLocalDateStr(log.timestamp);
                 let timeStr = getLocalTimeStr(log.timestamp);
@@ -277,7 +350,7 @@
                     totalMonthsByDate[dateStr] = 0;
                     countByDate[dateStr] = 0;
                 }
-                
+
                 logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
                 totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
                 countByDate[dateStr] += 1;
@@ -302,7 +375,7 @@
                             စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
                         </div>
                     </div>`;
-                    
+
                     logsByDate[date].forEach(log => {
                         html += `
                             <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
