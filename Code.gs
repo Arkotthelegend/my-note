@@ -1,12 +1,16 @@
 /**
  * G-12 / G-11 / G-10 paid-user Google Apps Script
  * ------------------------------------------------
- * Paste this whole file into the Apps Script bound to your paid-users
- * spreadsheet. Deploy as Web App (Execute as: Me, Who has access: Anyone).
+ * Paste this whole file into Apps Script, then set SPREADSHEET_ID below
+ * (from the sheet URL: docs.google.com/spreadsheets/d/THIS_ID/edit).
+ * If this script was opened from the spreadsheet (Extensions → Apps Script),
+ * you can leave SPREADSHEET_ID empty and it will use that spreadsheet.
  *
- * Use the SAME script (or paste this into both deployments) so:
+ * Deploy as Web App (Execute as: Me, Who has access: Anyone).
+ *
+ * One deployment is enough for both:
  *   - my-note admin can save / delete / clean
- *   - reference app can call ?action=getUsers and unlock subjects
+ *   - apps call ?action=getUsers and unlock subjects
  *
  * GOOGLE SHEET — Row 1 headers, exactly these names (lowercase):
  *
@@ -19,9 +23,7 @@
  * You can add the g11_ / g10_ columns by hand, or just run ensureHeaders()
  * once (or save any user from my-note) and the script will create them.
  *
- * Sheets used:
- *   Users  (or Sheet1 / first sheet)  — one row per Telegram ID
- *   Logs                              — sale history (created if missing)
+ * Set the tab names below to match your spreadsheet (old GAS used these too).
  *
  * After pasting, run setupDailyCleanup() ONCE from the Apps Script editor.
  * That deletes expired subject dates every night. If every subject on a
@@ -31,6 +33,14 @@
  */
 
 var TZ = 'Asia/Yangon';
+
+// From the Google Sheet URL: https://docs.google.com/spreadsheets/d/<THIS_ID>/edit
+// Leave empty only if this script is bound to the spreadsheet.
+var SPREADSHEET_ID = '';
+
+// Tab names — change these if your tabs are named differently.
+var USERS_SHEET_NAME = 'Sheet1';
+var LOGS_SHEET_NAME = 'Logs';
 
 var SUBJECT_IDS = ['all', 'mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco'];
 var GRADES = [12, 11, 10];
@@ -120,16 +130,26 @@ function isExpiredYmd(ymd) {
   return ymd < todayYmd();
 }
 
-function getUsersSheet() {
+function getSpreadsheet() {
+  if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  return ss.getSheetByName('Users') || ss.getSheetByName('Sheet1') || ss.getSheets()[0];
+  if (ss) return ss;
+  throw new Error('Set SPREADSHEET_ID at the top of Code.gs (copy it from the Google Sheet URL).');
+}
+
+function getUsersSheet() {
+  var ss = getSpreadsheet();
+  return ss.getSheetByName(USERS_SHEET_NAME)
+    || ss.getSheetByName('Users')
+    || ss.getSheetByName('Sheet1')
+    || ss.getSheets()[0];
 }
 
 function getLogsSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName('Logs') || ss.getSheetByName('Log');
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(LOGS_SHEET_NAME) || ss.getSheetByName('Logs') || ss.getSheetByName('Log');
   if (!sh) {
-    sh = ss.insertSheet('Logs');
+    sh = ss.insertSheet(LOGS_SHEET_NAME || 'Logs');
     sh.appendRow(['timestamp', 'id', 'subject', 'months', 'unit', 'expiry', 'grade', 'column']);
   }
   return sh;
