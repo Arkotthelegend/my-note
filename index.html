@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-12 Admin Panel</title>
+    <title>Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; }
@@ -48,10 +48,18 @@
 
 <div class="container">
     <div class="card">
-        <h2>👤 Add/Update Sub (G-12)</h2>
+        <h2>👤 Add/Update Sub</h2>
         <div class="form-group">
             <label>Telegram ID (Only Numbers)</label>
             <input type="number" id="tgId" placeholder="e.g. 8432363664">
+        </div>
+        <div class="form-group">
+            <label>Grade</label>
+            <select id="gradeSelect">
+                <option value="12">Grade 12</option>
+                <option value="11">Grade 11</option>
+                <option value="10">Grade 10</option>
+            </select>
         </div>
 
         <!-- Dynamic Subjects List -->
@@ -67,6 +75,7 @@
         <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
         <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
     </div>
+    <button class="btn-add" style="background: var(--danger); margin-bottom: 15px;" onclick="cleanupExpired()">🧹 Delete expired dates</button>
 
     <div id="search-container">
         <input type="text" id="search" class="search-box" placeholder="🔍 Search ID or Subject..." onkeyup="renderData()">
@@ -94,6 +103,31 @@
 
     // 🔗 Google Script URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5LowT_lxYdcFOmSEkTYcJYwMin_adfuJIb3ASUIZTm-tEUCicvsJkjChXWO2-jN766g/exec";
+
+    const SUBJECTS = [
+        { id: 'mm', label: 'Myanmar' },
+        { id: 'en', label: 'English' },
+        { id: 'math', label: 'Mathematics' },
+        { id: 'phy', label: 'Physics' },
+        { id: 'chem', label: 'Chemistry' },
+        { id: 'bio', label: 'Biology' },
+        { id: 'eco', label: 'Economics' },
+        { id: 'all', label: 'All Subjects' }
+    ];
+
+    function columnFor(grade, subjectId) {
+        const g = parseInt(grade, 10) || 12;
+        const prefix = g === 12 ? '' : 'g' + g + '_';
+        return prefix + subjectId;
+    }
+
+    function selectedGrade() {
+        return parseInt(document.getElementById('gradeSelect').value, 10) || 12;
+    }
+
+    function subjectOptionsHtml() {
+        return SUBJECTS.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+    }
 
     let currentTab = 'manage';
     let cachedData = [];
@@ -139,14 +173,7 @@
                 <div style="flex: 2;">
                     <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: bold; color: #555;">Subject</label>
                     <select class="sub-select" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
-                        <option value="Myanmar">Myanmar</option>
-                        <option value="English">English</option>
-                        <option value="Mathematics">Mathematics</option>
-                        <option value="Physics">Physics</option>
-                        <option value="Chemistry">Chemistry</option>
-                        <option value="Biology">Biology</option>
-                        <option value="Economics">Economics</option>
-                        <option value="All">All Subjects</option>
+                        ${subjectOptionsHtml()}
                     </select>
                 </div>
                 <div style="flex: 1;">
@@ -180,12 +207,16 @@
             const unit = unitSelect.value;
             const id = document.getElementById('tgId').value.trim();
             const sub = div.querySelector('.sub-select').value;
+            const col = columnFor(selectedGrade(), sub);
 
             let baseDate = new Date();
 
             // If existing record, extend from expiry
             if (id && sub && cachedData.length > 0) {
-                const existing = cachedData.find(item => String(item.id) === id && item.subject === sub);
+                const existing = cachedData.find(item =>
+                    String(item.id) === id &&
+                    (item.column === col || (!item.column && item.subject === (SUBJECTS.find(s => s.id === sub) || {}).label && (item.grade || 12) === selectedGrade()))
+                );
                 if (existing && existing.expiry) {
                     let e = new Date(existing.expiry);
                     if (e > baseDate) baseDate = e;
@@ -205,6 +236,7 @@
         unitSelect.addEventListener('change', calcExpiry);
         div.querySelector('.sub-select').addEventListener('change', calcExpiry);
         document.getElementById('tgId').addEventListener('input', calcExpiry);
+        document.getElementById('gradeSelect').addEventListener('change', calcExpiry);
 
         calcExpiry();
     }
@@ -249,13 +281,22 @@
         const rows = document.querySelectorAll('#subjectsList > div');
         const subjects = [];
 
+        const grade = selectedGrade();
         rows.forEach(row => {
             const sub = row.querySelector('.sub-select').value;
             const dur = row.querySelector('.sub-dur').value;
             const unit = row.querySelector('.sub-unit').value;
             const exp = row.querySelector('.sub-exp').value;
+            const meta = SUBJECTS.find(s => s.id === sub);
             if (exp) {
-                subjects.push({ subject: sub, duration: dur, unit: unit, expiry: exp });
+                subjects.push({
+                    subject: meta ? meta.label : sub,
+                    column: columnFor(grade, sub),
+                    grade: grade,
+                    duration: dur,
+                    unit: unit,
+                    expiry: exp
+                });
             }
         });
 
@@ -277,13 +318,48 @@
         showLoading(false);
     }
 
-    async function deleteSubject(id, subject) {
-        if(!confirm(id + " ရဲ့ " + subject + " ကို ဖျက်မှာ သေချာလား?")) return;
+    async function deleteSubject(id, column, subject) {
+        const name = displayName({ column: column, subject: subject });
+        if(!confirm(id + " ရဲ့ " + name + " ကို ဖျက်မှာ သေချာလား?")) return;
         showLoading(true);
         try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, subject }) });
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", id, column, subject }) });
             await fetchFromSheet();
         } catch(e) { tg.showAlert("ဖျက်လို့ မရပါဘူးဗျာ။"); }
+        showLoading(false);
+    }
+
+    function displayName(item) {
+        let grade = parseInt(item.grade, 10);
+        if (!grade && item.column) {
+            const m = String(item.column).match(/^g(10|11)_/);
+            grade = m ? parseInt(m[1], 10) : 12;
+        }
+        grade = grade || 12;
+        const label = item.subject || item.column || '';
+        return 'G' + grade + ' ' + label;
+    }
+
+    async function cleanupExpired() {
+        if (!confirm("သက်တမ်းကုန်သမျှ date တွေကို ဖျက်မယ်။ ဘာသာရပ်အားလုံး ကုန်ရင် ID row ပါ ဖျက်မယ်။ သေချာလား?")) return;
+        showLoading(true);
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "cleanupExpired" })
+            });
+            let msg = "Expired dates ဖျက်ပြီးပါပြီ။";
+            try {
+                const result = await response.json();
+                if (result && result.success) {
+                    msg = "ဖျက်လိုက်သော dates: " + (result.cleared || 0) + "\nဖျက်လိုက်သော ID rows: " + (result.deletedRows || 0);
+                }
+            } catch (parseErr) {}
+            await fetchFromSheet();
+            tg.showAlert(msg);
+        } catch (e) {
+            tg.showAlert("Expired ဖျက်လို့ မရပါဘူးဗျာ။ GAS ကို အသစ် paste လုပ်ပြီး deploy လုပ်ပါ။");
+        }
         showLoading(false);
     }
 
@@ -299,13 +375,15 @@
 
             sortedIds.forEach(studentId => {
                 const subs = db[studentId];
-                if (studentId.includes(search) || subs.some(s => s.subject.toLowerCase().includes(search))) {
+                if (studentId.includes(search) || subs.some(s => displayName(s).toLowerCase().includes(search) || String(s.grade || '').includes(search))) {
                     let subHtml = "";
                     subs.forEach(s => {
+                        const col = s.column || '';
+                        const name = displayName(s);
                         subHtml += `<div class="sub-item">
                             <div class="sub-main">
-                                <span class="sub-name">📘 ${s.subject}</span>
-                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${s.subject}')">🗑️</button>
+                                <span class="sub-name">📘 ${name}</span>
+                                <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${col}', '${s.subject || ''}')">🗑️</button>
                             </div>
                             <div class="exp-date">📅 Exp: ${getLocalDateStr(s.expiry)}</div>
                         </div>`;
@@ -323,10 +401,12 @@
                 if(diffDays < 0) { statusClass = "status-expired"; statusText = "(သက်တမ်းကုန်ပြီ!)"; }
                 else if(diffDays <= 7) { statusClass = "status-warning"; statusText = "(၇ ရက်ပဲ ကျန်တော့တယ်!)"; }
 
+                const name = displayName(s);
+                const col = s.column || '';
                 area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
                     <div class="sub-main">
-                        <span>👤 <b>${s.id}</b> - ${s.subject}</span>
-                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${s.subject}')">🗑️</button>
+                        <span>👤 <b>${s.id}</b> - ${name}</span>
+                        <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${col}', '${s.subject || ''}')">🗑️</button>
                     </div>
                     <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
                 </div>`;
@@ -385,7 +465,7 @@
                                 </div>
                                 <div class="sub-main">
                                     <span>👤 <b>${log.id}</b></span>
-                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.subject}</span>
+                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.grade ? 'G' + log.grade + ' ' : ''}${log.subject}</span>
                                 </div>
                                 <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
                                     📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
