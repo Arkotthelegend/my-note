@@ -1,54 +1,31 @@
 /**
  * G-12 / G-11 / G-10 paid-user Google Apps Script
  * ------------------------------------------------
- * Paste this whole file into Apps Script, then set SPREADSHEET_ID below
- * (from the sheet URL: docs.google.com/spreadsheets/d/THIS_ID/edit).
- * If this script was opened from the spreadsheet (Extensions → Apps Script),
- * you can leave SPREADSHEET_ID empty and it will use that spreadsheet.
+ * Paste this WHOLE file into the Apps Script BOUND to TG APP SHEET
+ * (Extensions → Apps Script on that spreadsheet). Do not paste the
+ * statistics/rank script into this project. Those are two different apps.
  *
  * Deploy as Web App (Execute as: Me, Who has access: Anyone).
+ * Then Deploy → Manage deployments → existing Web app → New version.
  *
- * One deployment is enough for both:
- *   - my-note admin can save / delete / clean
- *   - apps call ?action=getUsers and unlock subjects
- *
- * GOOGLE SHEET — Row 1 headers, exactly these names (lowercase):
+ * GOOGLE SHEET — Row 1 headers, lowercase:
  *
  *   id
- *   all, mm, en, math, phy, chem, bio, eco          ← Grade 12 (already exist)
- *   g11_all, g11_mm, g11_en, g11_math, g11_phy, g11_chem, g11_bio, g11_eco
- *   g10_all, g10_mm, g10_en, g10_math, g10_phy, g10_chem, g10_bio, g10_eco
+ *   all, mm, en, math, phy, chem, bio, eco
+ *   g11_all, g11_mm, ...   g10_all, g10_mm, ...
  *
- * Volunteer unlocks (separate from paid — same date format):
+ * Volunteer unlocks (separate from paid, same date format):
  *   vol_all, vol_mm, vol_en, vol_math, vol_phy, vol_chem, vol_bio, vol_eco
  *   g11_vol_all, g11_vol_mm, ...   g10_vol_all, g10_vol_mm, ...
  *
- * VolunteerStats tab (created automatically):
+ * VolunteerStats tab is created when you first save volunteer stats:
  *   id, reports, note, updated
  *
- * Put an expiry date like 2026-09-17 in a cell to unlock that subject.
- * You can add the g11_ / g10_ columns by hand, or just run ensureHeaders()
- * once (or save any user from my-note) and the script will create them.
- *
- * Set the tab names below to match your spreadsheet (old GAS used these too).
- *
  * After pasting, run setupDailyCleanup() ONCE from the Apps Script editor.
- * That deletes expired subject dates every night. If every subject on a
- * row is empty, the whole ID row is removed so the sheet stays small.
- *
  * Project timezone: File → Project settings → Asia/Yangon
  */
 
 var TZ = 'Asia/Yangon';
-
-// From the Google Sheet URL: https://docs.google.com/spreadsheets/d/<THIS_ID>/edit
-// Leave empty only if this script is bound to the spreadsheet.
-var SPREADSHEET_ID = '';
-
-// Tab names — change these if your tabs are named differently.
-var USERS_SHEET_NAME = 'Sheet1';
-var LOGS_SHEET_NAME = 'Logs';
-var VOLUNTEER_STATS_SHEET_NAME = 'VolunteerStats';
 
 var SUBJECT_IDS = ['all', 'mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco'];
 var GRADES = [12, 11, 10];
@@ -164,54 +141,28 @@ function isExpiredYmd(ymd) {
   return ymd < todayYmd();
 }
 
-function getSpreadsheet() {
-  if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (ss) return ss;
-  throw new Error('Set SPREADSHEET_ID at the top of Code.gs (copy it from the Google Sheet URL).');
-}
-
 function getUsersSheet() {
-  var ss = getSpreadsheet();
-  return ss.getSheetByName(USERS_SHEET_NAME)
-    || ss.getSheetByName('Users')
-    || ss.getSheetByName('Sheet1')
-    || ss.getSheets()[0];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheetByName('Users') || ss.getSheetByName('Sheet1') || ss.getSheets()[0];
 }
 
 function getLogsSheet() {
-  var ss = getSpreadsheet();
-  var sh = ss.getSheetByName(LOGS_SHEET_NAME) || ss.getSheetByName('Logs') || ss.getSheetByName('Log');
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Logs') || ss.getSheetByName('Log');
   if (!sh) {
-    sh = ss.insertSheet(LOGS_SHEET_NAME || 'Logs');
+    sh = ss.insertSheet('Logs');
     sh.appendRow(['timestamp', 'id', 'subject', 'months', 'unit', 'expiry', 'grade', 'column', 'role']);
-    return sh;
-  }
-  var info = headerMap(sh);
-  if (!info.map.role) {
-    var col = sh.getLastColumn() + 1;
-    if (sh.getLastColumn() === 0) col = 1;
-    sh.getRange(1, col).setValue('role');
   }
   return sh;
 }
 
-function getVolunteerStatsSheet() {
-  var ss = getSpreadsheet();
-  var sh = ss.getSheetByName(VOLUNTEER_STATS_SHEET_NAME);
-  if (!sh) {
-    sh = ss.insertSheet(VOLUNTEER_STATS_SHEET_NAME);
+function getVolunteerStatsSheet(createIfMissing) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('VolunteerStats');
+  if (!sh && createIfMissing) {
+    sh = ss.insertSheet('VolunteerStats');
     sh.appendRow(['id', 'reports', 'note', 'updated']);
   }
-  var info = headerMap(sh);
-  ['id', 'reports', 'note', 'updated'].forEach(function (name) {
-    if (!info.map[name]) {
-      var col = sh.getLastColumn() + 1;
-      if (sh.getLastColumn() === 0) col = 1;
-      sh.getRange(1, col).setValue(name);
-      info.map[name] = col;
-    }
-  });
   return sh;
 }
 
@@ -300,25 +251,26 @@ function volunteerAccessKey(volColumn) {
 }
 
 function readVolunteerStatsMap() {
-  var sh = getVolunteerStatsSheet();
+  var sh = getVolunteerStatsSheet(false);
+  var map = {};
+  if (!sh) return map;
   var info = headerMap(sh);
   var lastRow = sh.getLastRow();
-  var map = {};
   if (lastRow < 2) return map;
   var rows = sh.getRange(2, 1, lastRow - 1, info.lastCol).getValues();
   for (var i = 0; i < rows.length; i++) {
     var id = String(rows[i][info.map.id - 1] || '').trim();
     if (!id) continue;
     map[id] = {
-      reports: parseInt(rows[i][info.map.reports - 1], 10) || 0,
-      note: String(rows[i][info.map.note - 1] || '')
+      reports: parseInt(rows[i][(info.map.reports || 2) - 1], 10) || 0,
+      note: String(rows[i][(info.map.note || 3) - 1] || '')
     };
   }
   return map;
 }
 
 function upsertVolunteerStats(id, reports, note) {
-  var sh = getVolunteerStatsSheet();
+  var sh = getVolunteerStatsSheet(true);
   var info = headerMap(sh);
   var want = String(id || '').trim();
   if (!want) return { success: false, message: 'Missing id' };
@@ -328,30 +280,31 @@ function upsertVolunteerStats(id, reports, note) {
     sh.getRange(row, info.map.id).setValue(want);
   }
   if (reports !== undefined && reports !== null && reports !== '') {
-    sh.getRange(row, info.map.reports).setValue(parseInt(reports, 10) || 0);
+    sh.getRange(row, info.map.reports || 2).setValue(parseInt(reports, 10) || 0);
   }
   if (note !== undefined) {
-    sh.getRange(row, info.map.note).setValue(String(note));
+    sh.getRange(row, info.map.note || 3).setValue(String(note));
   }
-  sh.getRange(row, info.map.updated).setValue(new Date());
+  sh.getRange(row, info.map.updated || 4).setValue(new Date());
   return { success: true };
 }
 
 function bumpVolunteerReport(id) {
-  var sh = getVolunteerStatsSheet();
+  var sh = getVolunteerStatsSheet(true);
   var info = headerMap(sh);
   var want = String(id || '').trim();
   if (!want) return { success: false, message: 'Missing id' };
+  var reportsCol = info.map.reports || 2;
   var row = findUserRow(sh, want);
   if (!row) {
     row = Math.max(sh.getLastRow() + 1, 2);
     sh.getRange(row, info.map.id).setValue(want);
-    sh.getRange(row, info.map.reports).setValue(1);
+    sh.getRange(row, reportsCol).setValue(1);
   } else {
-    var current = parseInt(sh.getRange(row, info.map.reports).getValue(), 10) || 0;
-    sh.getRange(row, info.map.reports).setValue(current + 1);
+    var current = parseInt(sh.getRange(row, reportsCol).getValue(), 10) || 0;
+    sh.getRange(row, reportsCol).setValue(current + 1);
   }
-  sh.getRange(row, info.map.updated).setValue(new Date());
+  sh.getRange(row, info.map.updated || 4).setValue(new Date());
   return { success: true };
 }
 

@@ -314,12 +314,16 @@
         try {
             const response = await fetch(SCRIPT_URL);
             const data = await response.json();
+            if (data && data.success === false) {
+                tg.showAlert("GAS error: " + (data.message || "unknown"));
+                return;
+            }
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
             cachedVolunteerStats = data.volunteerStats || {};
             renderData();
         } catch (e) {
-            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
+            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။ Code.gs ကို TG APP SHEET bound script မှာ paste ပြီး New version deploy လုပ်ပါ။");
         }
         showLoading(false);
     }
