@@ -19,6 +19,13 @@
  *   g11_all, g11_mm, g11_en, g11_math, g11_phy, g11_chem, g11_bio, g11_eco
  *   g10_all, g10_mm, g10_en, g10_math, g10_phy, g10_chem, g10_bio, g10_eco
  *
+ * Volunteer unlocks (separate from paid — same date format):
+ *   vol_all, vol_mm, vol_en, vol_math, vol_phy, vol_chem, vol_bio, vol_eco
+ *   g11_vol_all, g11_vol_mm, ...   g10_vol_all, g10_vol_mm, ...
+ *
+ * VolunteerStats tab (created automatically):
+ *   id, reports, note, updated
+ *
  * Put an expiry date like 2026-09-17 in a cell to unlock that subject.
  * You can add the g11_ / g10_ columns by hand, or just run ensureHeaders()
  * once (or save any user from my-note) and the script will create them.
@@ -41,6 +48,7 @@ var SPREADSHEET_ID = '';
 // Tab names — change these if your tabs are named differently.
 var USERS_SHEET_NAME = 'Sheet1';
 var LOGS_SHEET_NAME = 'Logs';
+var VOLUNTEER_STATS_SHEET_NAME = 'VolunteerStats';
 
 var SUBJECT_IDS = ['all', 'mm', 'en', 'math', 'phy', 'chem', 'bio', 'eco'];
 var GRADES = [12, 11, 10];
@@ -78,9 +86,26 @@ function allColumnNames() {
   return names;
 }
 
+function allVolunteerColumnNames() {
+  var names = [];
+  GRADES.forEach(function (grade) {
+    var prefix = grade === 12 ? 'vol_' : 'g' + grade + '_vol_';
+    SUBJECT_IDS.forEach(function (id) {
+      names.push(prefix + id);
+    });
+  });
+  return names;
+}
+
 function columnFor(grade, subjectId) {
   var g = parseInt(grade, 10) || 12;
   var prefix = g === 12 ? '' : 'g' + g + '_';
+  return prefix + subjectId;
+}
+
+function volunteerColumnFor(grade, subjectId) {
+  var g = parseInt(grade, 10) || 12;
+  var prefix = g === 12 ? 'vol_' : 'g' + g + '_vol_';
   return prefix + subjectId;
 }
 
@@ -88,15 +113,24 @@ function parseColumn(column) {
   var col = String(column || '').trim().toLowerCase();
   var grade = 12;
   var subjectId = col;
-  var m = col.match(/^g(10|11)_(.+)$/);
-  if (m) {
-    grade = parseInt(m[1], 10);
-    subjectId = m[2];
+  var kind = 'paid';
+  var vol = col.match(/^(?:g(10|11)_)?vol_(all|mm|en|math|phy|chem|bio|eco)$/);
+  if (vol) {
+    kind = 'volunteer';
+    if (vol[1]) grade = parseInt(vol[1], 10);
+    subjectId = vol[2];
+  } else {
+    var m = col.match(/^g(10|11)_(.+)$/);
+    if (m) {
+      grade = parseInt(m[1], 10);
+      subjectId = m[2];
+    }
   }
   return {
     column: col,
     grade: grade,
     subjectId: subjectId,
+    kind: kind,
     label: SUBJECT_LABELS[subjectId] || subjectId
   };
 }
@@ -150,8 +184,34 @@ function getLogsSheet() {
   var sh = ss.getSheetByName(LOGS_SHEET_NAME) || ss.getSheetByName('Logs') || ss.getSheetByName('Log');
   if (!sh) {
     sh = ss.insertSheet(LOGS_SHEET_NAME || 'Logs');
-    sh.appendRow(['timestamp', 'id', 'subject', 'months', 'unit', 'expiry', 'grade', 'column']);
+    sh.appendRow(['timestamp', 'id', 'subject', 'months', 'unit', 'expiry', 'grade', 'column', 'role']);
+    return sh;
   }
+  var info = headerMap(sh);
+  if (!info.map.role) {
+    var col = sh.getLastColumn() + 1;
+    if (sh.getLastColumn() === 0) col = 1;
+    sh.getRange(1, col).setValue('role');
+  }
+  return sh;
+}
+
+function getVolunteerStatsSheet() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(VOLUNTEER_STATS_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(VOLUNTEER_STATS_SHEET_NAME);
+    sh.appendRow(['id', 'reports', 'note', 'updated']);
+  }
+  var info = headerMap(sh);
+  ['id', 'reports', 'note', 'updated'].forEach(function (name) {
+    if (!info.map[name]) {
+      var col = sh.getLastColumn() + 1;
+      if (sh.getLastColumn() === 0) col = 1;
+      sh.getRange(1, col).setValue(name);
+      info.map[name] = col;
+    }
+  });
   return sh;
 }
 
@@ -170,7 +230,7 @@ function headerMap(sheet) {
 function ensureHeaders() {
   var sheet = getUsersSheet();
   var info = headerMap(sheet);
-  var needed = ['id'].concat(allColumnNames());
+  var needed = ['id'].concat(allColumnNames()).concat(allVolunteerColumnNames());
   var added = [];
   needed.forEach(function (name) {
     if (!info.map[name]) {
@@ -209,13 +269,90 @@ function subjectColumns(info) {
   return cols;
 }
 
+function volunteerColumns(info) {
+  var known = {};
+  allVolunteerColumnNames().forEach(function (n) { known[n] = true; });
+  var cols = [];
+  Object.keys(info.map).forEach(function (key) {
+    if (known[key] || /^(g1[01]_)?vol_(all|mm|en|math|phy|chem|bio|eco)$/.test(key)) {
+      cols.push(key);
+    }
+  });
+  return cols;
+}
+
+function accessColumns(info) {
+  return subjectColumns(info).concat(volunteerColumns(info));
+}
+
 function rowHasAnySubject(sheet, row, info) {
-  var cols = subjectColumns(info);
+  var cols = accessColumns(info);
   for (var i = 0; i < cols.length; i++) {
+    if (!info.map[cols[i]]) continue;
     var val = sheet.getRange(row, info.map[cols[i]]).getValue();
     if (toYmd(val) || (val !== '' && val !== null)) return true;
   }
   return false;
+}
+
+function volunteerAccessKey(volColumn) {
+  return String(volColumn || '').replace('vol_', '');
+}
+
+function readVolunteerStatsMap() {
+  var sh = getVolunteerStatsSheet();
+  var info = headerMap(sh);
+  var lastRow = sh.getLastRow();
+  var map = {};
+  if (lastRow < 2) return map;
+  var rows = sh.getRange(2, 1, lastRow - 1, info.lastCol).getValues();
+  for (var i = 0; i < rows.length; i++) {
+    var id = String(rows[i][info.map.id - 1] || '').trim();
+    if (!id) continue;
+    map[id] = {
+      reports: parseInt(rows[i][info.map.reports - 1], 10) || 0,
+      note: String(rows[i][info.map.note - 1] || '')
+    };
+  }
+  return map;
+}
+
+function upsertVolunteerStats(id, reports, note) {
+  var sh = getVolunteerStatsSheet();
+  var info = headerMap(sh);
+  var want = String(id || '').trim();
+  if (!want) return { success: false, message: 'Missing id' };
+  var row = findUserRow(sh, want);
+  if (!row) {
+    row = Math.max(sh.getLastRow() + 1, 2);
+    sh.getRange(row, info.map.id).setValue(want);
+  }
+  if (reports !== undefined && reports !== null && reports !== '') {
+    sh.getRange(row, info.map.reports).setValue(parseInt(reports, 10) || 0);
+  }
+  if (note !== undefined) {
+    sh.getRange(row, info.map.note).setValue(String(note));
+  }
+  sh.getRange(row, info.map.updated).setValue(new Date());
+  return { success: true };
+}
+
+function bumpVolunteerReport(id) {
+  var sh = getVolunteerStatsSheet();
+  var info = headerMap(sh);
+  var want = String(id || '').trim();
+  if (!want) return { success: false, message: 'Missing id' };
+  var row = findUserRow(sh, want);
+  if (!row) {
+    row = Math.max(sh.getLastRow() + 1, 2);
+    sh.getRange(row, info.map.id).setValue(want);
+    sh.getRange(row, info.map.reports).setValue(1);
+  } else {
+    var current = parseInt(sh.getRange(row, info.map.reports).getValue(), 10) || 0;
+    sh.getRange(row, info.map.reports).setValue(current + 1);
+  }
+  sh.getRange(row, info.map.updated).setValue(new Date());
+  return { success: true };
 }
 
 function resolveSubject(item) {
@@ -246,6 +383,8 @@ function doPost(e) {
     if (action === 'saveMulti') return jsonOut(saveMulti(data));
     if (action === 'delete') return jsonOut(deleteSubject(data));
     if (action === 'cleanupExpired') return jsonOut(cleanupExpired());
+    if (action === 'saveVolunteerStats') return jsonOut(upsertVolunteerStats(data.id, data.reports, data.note));
+    if (action === 'bumpVolunteerReport') return jsonOut(bumpVolunteerReport(data.id));
     return jsonOut({ success: false, message: 'Unknown action' });
   } catch (err) {
     return jsonOut({ success: false, message: String(err) });
@@ -259,19 +398,37 @@ function buildAppUsers() {
   var info = headerMap(sheet);
   var lastRow = sheet.getLastRow();
   var result = {};
+  var volStats = readVolunteerStatsMap();
   if (lastRow < 2) return result;
 
   var range = sheet.getRange(2, 1, lastRow - 1, info.lastCol).getValues();
-  var cols = subjectColumns(info);
+  var paidCols = subjectColumns(info);
+  var volCols = volunteerColumns(info);
 
   for (var r = 0; r < range.length; r++) {
     var id = String(range[r][info.map.id - 1] || '').trim();
     if (!id) continue;
     var entry = {};
-    cols.forEach(function (key) {
+    paidCols.forEach(function (key) {
+      if (!info.map[key]) return;
       var ymd = toYmd(range[r][info.map[key] - 1]);
       if (ymd && !isExpiredYmd(ymd)) entry[key] = ymd;
     });
+    var vol = {};
+    volCols.forEach(function (key) {
+      if (!info.map[key]) return;
+      var ymd = toYmd(range[r][info.map[key] - 1]);
+      if (ymd && !isExpiredYmd(ymd)) vol[volunteerAccessKey(key)] = ymd;
+    });
+    var reports = volStats[id] ? parseInt(volStats[id].reports, 10) || 0 : 0;
+    if (Object.keys(vol).length) {
+      entry.vol = vol;
+      entry.isVolunteer = true;
+      entry.volReports = reports;
+    } else if (reports > 0) {
+      entry.isVolunteer = true;
+      entry.volReports = reports;
+    }
     if (Object.keys(entry).length) result[id] = entry;
   }
   return result;
@@ -282,7 +439,7 @@ function buildAdminData() {
   var info = headerMap(sheet);
   var lastRow = sheet.getLastRow();
   var active = [];
-  var cols = subjectColumns(info);
+  var cols = accessColumns(info);
 
   if (lastRow >= 2) {
     var range = sheet.getRange(2, 1, lastRow - 1, info.lastCol).getValues();
@@ -290,6 +447,7 @@ function buildAdminData() {
       var id = String(range[r][info.map.id - 1] || '').trim();
       if (!id) continue;
       cols.forEach(function (key) {
+        if (!info.map[key]) return;
         var ymd = toYmd(range[r][info.map[key] - 1]);
         if (!ymd) return;
         var meta = parseColumn(key);
@@ -298,7 +456,9 @@ function buildAdminData() {
           subject: meta.label,
           grade: meta.grade,
           column: meta.column,
-          expiry: ymd
+          expiry: ymd,
+          kind: meta.kind,
+          volunteer: meta.kind === 'volunteer'
         });
       });
     }
@@ -325,6 +485,7 @@ function buildAdminData() {
     var iExp = logCol('expiry', 5);
     var iGrade = logCol('grade', 6);
     var iCol = logCol('column', 7);
+    var iRole = logCol('role', 8);
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
       if (!row[iId] && !row[iTs]) continue;
@@ -336,12 +497,13 @@ function buildAdminData() {
         unit: row[iUnit] || 'months',
         expiry: row[iExp] instanceof Date ? toYmd(row[iExp]) : row[iExp],
         grade: row[iGrade] || 12,
-        column: row[iCol] || ''
+        column: row[iCol] || '',
+        role: row[iRole] || ''
       });
     }
   }
 
-  return { active: active, logs: logs };
+  return { active: active, logs: logs, volunteerStats: readVolunteerStatsMap() };
 }
 
 function saveMulti(data) {
@@ -360,8 +522,13 @@ function saveMulti(data) {
 
   var items = data.subjects || [];
   var logSheet = getLogsSheet();
+  var grantRole = data.role === 'volunteer' ? 'volunteer' : 'paid';
   items.forEach(function (item) {
+    var itemRole = item.role === 'volunteer' ? 'volunteer' : grantRole;
     var meta = resolveSubject(item);
+    if (itemRole === 'volunteer' && meta.kind !== 'volunteer') {
+      meta = parseColumn(volunteerColumnFor(meta.grade, meta.subjectId));
+    }
     var col = info.map[meta.column];
     if (!col) return;
     var expiry = toYmd(item.expiry) || item.expiry;
@@ -374,7 +541,8 @@ function saveMulti(data) {
       item.unit || 'months',
       expiry,
       meta.grade,
-      meta.column
+      meta.column,
+      itemRole
     ]);
   });
 
@@ -408,7 +576,7 @@ function cleanupExpired() {
   var deletedRows = 0;
   if (lastRow < 2) return { success: true, cleared: 0, deletedRows: 0 };
 
-  var cols = subjectColumns(info);
+  var cols = accessColumns(info);
   var width = info.lastCol;
   var height = lastRow - 1;
   var values = sheet.getRange(2, 1, height, width).getValues();
