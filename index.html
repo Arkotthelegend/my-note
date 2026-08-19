@@ -6,7 +6,7 @@
     <title>Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; }
+        :root { --primary: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #333; --danger: #ff4d4d; --warning: #ffa500; --success: #28a745; --info: #17a2b8; --vol: #C9A227; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 30px; }
         .container { max-width: 500px; margin: auto; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
@@ -19,10 +19,17 @@
         .btn-add-sub { background: #e3f2fd; color: var(--primary); border: none; padding: 10px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 0.9rem; }
 
         .tabs { display: flex; background: #e0e0e0; border-radius: 12px; margin-bottom: 15px; padding: 4px; overflow: hidden; }
-        .tab { flex: 1; text-align: center; padding: 10px 2px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.8rem; transition: 0.3s; color: #666; }
+        .tab { flex: 1; text-align: center; padding: 10px 1px; cursor: pointer; border-radius: 10px; font-weight: bold; font-size: 0.72rem; transition: 0.3s; color: #666; }
         .tab.active { background: var(--primary); color: white; }
+        #tab-volunteer.active { background: var(--vol); color: #1a1404; }
 
         .user-record { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-record.vol { border-left-color: var(--vol); }
+        .vol-chip { display: inline-block; background: #fff8e1; color: #8a6d12; border: 1px solid #e6c35c; border-radius: 8px; padding: 2px 8px; font-size: 0.72rem; font-weight: bold; }
+        .vol-stats { background: #fffdf6; border: 1px solid #f0e0a8; border-radius: 10px; padding: 10px; margin-top: 10px; }
+        .vol-stats textarea { width: 100%; min-height: 52px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 0.85rem; }
+        .vol-stats .btn-add { margin-top: 8px; background: var(--vol); color: #1a1404; }
+        .btn-vol { background: #fff8e1; color: #8a6d12; border: 1px solid #e6c35c; padding: 8px 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .user-id { font-weight: bold; color: #0056b3; font-size: 1.1rem; margin-bottom: 12px; display: block; border-bottom: 1px solid #eee; padding-bottom: 8px; }
 
         .sub-item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
@@ -48,7 +55,14 @@
 
 <div class="container">
     <div class="card">
-        <h2>👤 Add/Update Sub</h2>
+        <h2 id="add-form-title">👤 Add/Update Sub</h2>
+        <div class="form-group">
+            <label>Role</label>
+            <select id="roleSelect" onchange="onRoleChange()">
+                <option value="paid">Paid</option>
+                <option value="volunteer">Volunteer</option>
+            </select>
+        </div>
         <div class="form-group">
             <label>Telegram ID (Only Numbers)</label>
             <input type="number" id="tgId" placeholder="e.g. 8432363664">
@@ -67,11 +81,12 @@
 
         <button class="btn-add-sub" onclick="addSubjectRow()">+ Add Another Subject</button>
 
-        <button class="btn-add" onclick="saveRecord()">🚀 Save to Google Sheet</button>
+        <button class="btn-add" id="save-btn" onclick="saveRecord()">🚀 Save to Google Sheet</button>
     </div>
 
     <div class="tabs">
         <div class="tab active" id="tab-manage" onclick="switchTab('manage')">🗂 All</div>
+        <div class="tab" id="tab-volunteer" onclick="switchTab('volunteer')">🤝 Volunteer</div>
         <div class="tab" id="tab-expire" onclick="switchTab('expire')">⏳ Expiring</div>
         <div class="tab" id="tab-logs" onclick="switchTab('logs')">📝 Recent Logs</div>
     </div>
@@ -121,8 +136,41 @@
         return prefix + subjectId;
     }
 
+    function volunteerColumnFor(grade, subjectId) {
+        const g = parseInt(grade, 10) || 12;
+        const prefix = g === 12 ? 'vol_' : 'g' + g + '_vol_';
+        return prefix + subjectId;
+    }
+
     function selectedGrade() {
         return parseInt(document.getElementById('gradeSelect').value, 10) || 12;
+    }
+
+    function selectedRole() {
+        return document.getElementById('roleSelect').value === 'volunteer' ? 'volunteer' : 'paid';
+    }
+
+    function grantColumnFor(grade, subjectId) {
+        return selectedRole() === 'volunteer' ? volunteerColumnFor(grade, subjectId) : columnFor(grade, subjectId);
+    }
+
+    function onRoleChange() {
+        const vol = selectedRole() === 'volunteer';
+        document.getElementById('add-form-title').textContent = vol ? '🤝 Add Volunteer access' : '👤 Add/Update Sub';
+        document.getElementById('save-btn').textContent = vol ? '🤝 Save volunteer unlock' : '🚀 Save to Google Sheet';
+        document.getElementById('save-btn').style.background = vol ? 'var(--vol)' : 'var(--primary)';
+        document.getElementById('save-btn').style.color = vol ? '#1a1404' : '#fff';
+        document.querySelectorAll('#subjectsList .sub-exp').forEach(function (el) {
+            el.dispatchEvent(new Event('input'));
+        });
+        const firstDur = document.querySelector('#subjectsList .sub-dur');
+        if (firstDur) firstDur.dispatchEvent(new Event('input'));
+    }
+
+    function isVolunteerItem(item) {
+        if (!item) return false;
+        if (item.kind === 'volunteer' || item.volunteer === true) return true;
+        return /(?:^|_)vol_/.test(String(item.column || ''));
     }
 
     function subjectOptionsHtml() {
@@ -131,7 +179,8 @@
 
     let currentTab = 'manage';
     let cachedData = [];
-    let cachedLogs = []; 
+    let cachedLogs = [];
+    let cachedVolunteerStats = {};
     let subjectRows = [];
 
     // 💡 အချိန်ဇုန် မှန်ကန်စေရန် Date ပြောင်းပေးသည့် Function
@@ -207,7 +256,7 @@
             const unit = unitSelect.value;
             const id = document.getElementById('tgId').value.trim();
             const sub = div.querySelector('.sub-select').value;
-            const col = columnFor(selectedGrade(), sub);
+            const col = grantColumnFor(selectedGrade(), sub);
 
             let baseDate = new Date();
 
@@ -256,7 +305,7 @@
         currentTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('search-container').style.display = (tab === 'manage') ? 'block' : 'none';
+        document.getElementById('search-container').style.display = (tab === 'manage' || tab === 'volunteer') ? 'block' : 'none';
         renderData();
     }
 
@@ -267,6 +316,7 @@
             const data = await response.json();
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
+            cachedVolunteerStats = data.volunteerStats || {};
             renderData();
         } catch (e) {
             tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။");
@@ -291,11 +341,12 @@
             if (exp) {
                 subjects.push({
                     subject: meta ? meta.label : sub,
-                    column: columnFor(grade, sub),
+                    column: grantColumnFor(grade, sub),
                     grade: grade,
                     duration: dur,
                     unit: unit,
-                    expiry: exp
+                    expiry: exp,
+                    role: selectedRole()
                 });
             }
         });
@@ -303,7 +354,7 @@
         if (subjects.length === 0) { tg.showAlert("အနည်းဆုံး ဘာသာရပ် တစ်ခု ထည့်ပေးပါ။"); return; }
 
         showLoading(true);
-        const payload = { action: "saveMulti", id: id, subjects: subjects, timestamp: Date.now() };
+        const payload = { action: "saveMulti", id: id, role: selectedRole(), subjects: subjects, timestamp: Date.now() };
 
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
@@ -337,7 +388,52 @@
         }
         grade = grade || 12;
         const label = item.subject || item.column || '';
-        return 'G' + grade + ' ' + label;
+        return 'G' + grade + ' ' + label + (isVolunteerItem(item) ? ' · Vol' : '');
+    }
+
+    async function bumpVolunteerReport(id) {
+        showLoading(true);
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "bumpVolunteerReport", id: id }) });
+            await fetchFromSheet();
+        } catch (e) { tg.showAlert("Report တိုးလို့ မရပါဘူး။"); }
+        showLoading(false);
+    }
+
+    async function saveVolunteerStats(id) {
+        const reportsEl = document.getElementById('vol-rep-' + id);
+        const noteEl = document.getElementById('vol-note-' + id);
+        showLoading(true);
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "saveVolunteerStats",
+                    id: id,
+                    reports: reportsEl ? reportsEl.value : 0,
+                    note: noteEl ? noteEl.value : ''
+                })
+            });
+            await fetchFromSheet();
+        } catch (e) { tg.showAlert("Volunteer stats သိမ်းလို့ မရပါဘူး။"); }
+        showLoading(false);
+    }
+
+    function volunteerStatsHtml(studentId) {
+        const stats = cachedVolunteerStats[studentId] || { reports: 0, note: '' };
+        const reports = Number(stats.reports) || 0;
+        const note = String(stats.note || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<div class="vol-stats">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
+                <b>Mistakes found: ${reports}</b>
+                <button type="button" class="btn-vol" onclick="bumpVolunteerReport('${studentId}')">+1 report</button>
+            </div>
+            <label style="font-size:0.8rem;">Set reports</label>
+            <input type="number" id="vol-rep-${studentId}" min="0" value="${reports}" style="margin-bottom:8px;">
+            <label style="font-size:0.8rem;">Private note</label>
+            <textarea id="vol-note-${studentId}" placeholder="Owner note only">${note}</textarea>
+            <button type="button" class="btn-add" onclick="saveVolunteerStats('${studentId}')">Save volunteer stats</button>
+        </div>`;
     }
 
     async function cleanupExpired() {
@@ -366,11 +462,14 @@
     function renderData() {
         const area = document.getElementById('displayArea');
         area.innerHTML = "";
+        const search = (document.getElementById('search').value || '').toLowerCase();
 
         if (currentTab === 'manage') {
             let db = {};
-            cachedData.forEach(item => { if(!db[item.id]) db[item.id] = []; db[item.id].push(item); });
-            const search = document.getElementById('search').value.toLowerCase();
+            cachedData.filter(item => !isVolunteerItem(item)).forEach(item => {
+                if (!db[item.id]) db[item.id] = [];
+                db[item.id].push(item);
+            });
             const sortedIds = Object.keys(db).reverse();
 
             sortedIds.forEach(studentId => {
@@ -391,7 +490,42 @@
                     area.innerHTML += `<div class="user-record"><span class="user-id">👤 ID: ${studentId}</span>${subHtml}</div>`;
                 }
             });
-        } 
+        }
+        else if (currentTab === 'volunteer') {
+            let db = {};
+            cachedData.filter(isVolunteerItem).forEach(item => {
+                if (!db[item.id]) db[item.id] = [];
+                db[item.id].push(item);
+            });
+            Object.keys(cachedVolunteerStats).forEach(id => {
+                if (!db[id]) db[id] = [];
+            });
+            const sortedIds = Object.keys(db).reverse();
+            if (sortedIds.length === 0) {
+                area.innerHTML = `<div class="user-record vol" style="text-align:center; color:#777;">Volunteer မရှိသေးပါ။ Role ကို Volunteer ရွေးပြီး ID ထည့်ပါ။</div>`;
+            }
+            sortedIds.forEach(studentId => {
+                const subs = db[studentId];
+                const hay = (studentId + ' ' + subs.map(displayName).join(' ')).toLowerCase();
+                if (search && hay.indexOf(search) === -1) return;
+                let subHtml = "";
+                subs.forEach(s => {
+                    const col = s.column || '';
+                    const name = displayName(s);
+                    subHtml += `<div class="sub-item">
+                        <div class="sub-main">
+                            <span class="sub-name">🤝 ${name}</span>
+                            <button class="item-delete-btn" onclick="deleteSubject('${studentId}', '${col}', '${s.subject || ''}')">🗑️</button>
+                        </div>
+                        <div class="exp-date">📅 Until: ${getLocalDateStr(s.expiry)}</div>
+                    </div>`;
+                });
+                if (!subs.length) {
+                    subHtml = `<div class="sub-item" style="color:#888;">Subject unlock မရှိသေးပါ။ အပေါ်က form မှာ Volunteer role နဲ့ ထည့်ပါ။</div>`;
+                }
+                area.innerHTML += `<div class="user-record vol"><span class="user-id">🤝 ID: ${studentId} <span class="vol-chip">Volunteer</span></span>${subHtml}${volunteerStatsHtml(studentId)}</div>`;
+            });
+        }
         else if (currentTab === 'expire') {
             let allItems = [...cachedData].sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
             allItems.forEach(s => {
@@ -403,9 +537,10 @@
 
                 const name = displayName(s);
                 const col = s.column || '';
-                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${diffDays < 0 ? 'red' : 'orange'};">
+                const vol = isVolunteerItem(s);
+                area.innerHTML += `<div class="sub-item" style="background:white; border-left: 5px solid ${vol ? 'var(--vol)' : (diffDays < 0 ? 'red' : 'orange')};">
                     <div class="sub-main">
-                        <span>👤 <b>${s.id}</b> - ${name}</span>
+                        <span>👤 <b>${s.id}</b> - ${name}${vol ? ' <span class="vol-chip">Vol</span>' : ''}</span>
                         <button class="item-delete-btn" onclick="deleteSubject('${s.id}', '${col}', '${s.subject || ''}')">🗑️</button>
                     </div>
                     <div class="exp-date ${statusClass}">⌛ ${getLocalDateStr(s.expiry)} ${statusText}</div>
@@ -416,24 +551,30 @@
             let logsByDate = {};
             let totalMonthsByDate = {};
             let countByDate = {};
+            let volCountByDate = {};
 
             cachedLogs.forEach(log => {
                 if (!log.timestamp) return;
+                const isVol = log.role === 'volunteer' || /(?:^|_)vol_/.test(String(log.column || ''));
 
-                // ⭐ UTC ကို Local Timezone ပြောင်းလဲခြင်း
                 let dateStr = getLocalDateStr(log.timestamp);
                 let timeStr = getLocalTimeStr(log.timestamp);
-                let expiryStr = getLocalDateStr(log.expiry); // Expiry Date ကို ပြုပြင်ခြင်း
+                let expiryStr = getLocalDateStr(log.expiry);
 
                 if (!logsByDate[dateStr]) {
                     logsByDate[dateStr] = [];
                     totalMonthsByDate[dateStr] = 0;
                     countByDate[dateStr] = 0;
+                    volCountByDate[dateStr] = 0;
                 }
 
-                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr});
-                totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
-                countByDate[dateStr] += 1;
+                logsByDate[dateStr].push({...log, displayTime: timeStr, displayExpiry: expiryStr, isVol: isVol});
+                if (isVol) {
+                    volCountByDate[dateStr] += 1;
+                } else {
+                    totalMonthsByDate[dateStr] += (parseInt(log.months) || 0);
+                    countByDate[dateStr] += 1;
+                }
             });
 
             let sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
@@ -444,6 +585,7 @@
                 sortedDates.forEach(date => {
                     let dailyTotal = totalMonthsByDate[date];
                     let dailyCount = countByDate[date];
+                    let volCount = volCountByDate[date];
 
                     let html = `
                     <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; margin-bottom: 10px; border-left: 5px solid var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
@@ -452,20 +594,20 @@
                             <span style="font-size: 0.85rem; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; color: #2e7d32;">${dailyCount} ကြိမ်</span>
                         </div>
                         <div style="color:#444; font-size: 0.95rem;">
-                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>
+                            စုစုပေါင်း ရောင်းရသည့် သက်တမ်း: <b>${dailyTotal} လ</b>${volCount ? ' · Volunteer ' + volCount + ' ကြိမ် (မထည့်ပါ)' : ''}
                         </div>
                     </div>`;
 
                     logsByDate[date].forEach(log => {
                         html += `
-                            <div class="sub-item" style="border-left: 4px solid var(--info); background: white;">
+                            <div class="sub-item" style="border-left: 4px solid ${log.isVol ? 'var(--vol)' : 'var(--info)'}; background: white;">
                                 <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color:#888; margin-bottom:6px;">
                                     <span>⏰ ${log.displayTime}</span>
-                                    <span style="color:var(--success); font-weight:bold;">+${log.months || 0} လ</span>
+                                    <span style="color:${log.isVol ? 'var(--vol)' : 'var(--success)'}; font-weight:bold;">${log.isVol ? 'Volunteer' : '+' + (log.months || 0) + ' လ'}</span>
                                 </div>
                                 <div class="sub-main">
                                     <span>👤 <b>${log.id}</b></span>
-                                    <span class="sub-name" style="color:var(--primary);">📘 ${log.grade ? 'G' + log.grade + ' ' : ''}${log.subject}</span>
+                                    <span class="sub-name" style="color:${log.isVol ? 'var(--vol)' : 'var(--primary)'};">📘 ${log.grade ? 'G' + log.grade + ' ' : ''}${log.subject}</span>
                                 </div>
                                 <div style="margin-top:6px; font-size: 0.8rem; color: #666;">
                                     📅 ကုန်ဆုံးရက်: ${log.displayExpiry}
