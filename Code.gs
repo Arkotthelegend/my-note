@@ -365,10 +365,14 @@ function resolveSubject(item) {
 }
 
 function doGet(e) {
-  var action = (e && e.parameter && e.parameter.action) || '';
-  if (action === 'getUsers') return jsonOut(buildAppUsers());
-  if (action === 'cleanupExpired') return jsonOut(cleanupExpired());
-  return jsonOut(buildAdminData());
+  try {
+    var action = (e && e.parameter && e.parameter.action) || '';
+    if (action === 'getUsers') return jsonOut(buildAppUsers());
+    if (action === 'cleanupExpired') return jsonOut(cleanupExpired());
+    return jsonOut(buildAdminData());
+  } catch (err) {
+    return jsonOut({ success: false, message: String(err) });
+  }
 }
 
 function doPost(e) {
