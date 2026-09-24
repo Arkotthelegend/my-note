@@ -2,15 +2,17 @@
  * G-12 / G-11 / G-10 paid-user Google Apps Script
  * ------------------------------------------------
  * Paste this WHOLE file into the Apps Script BOUND to TG APP SHEET
- * (Extensions → Apps Script on that spreadsheet). Do not paste the
- * statistics/rank script into this project. Those are two different apps.
+ * (Extensions → Apps Script on that spreadsheet).
+ * First column may be `id` or `telegram_id`.
+ * Do NOT paste the statistics/rank (score) script into this project.
+ * Those are two different spreadsheets.
  *
  * Deploy as Web App (Execute as: Me, Who has access: Anyone).
  * Then Deploy → Manage deployments → existing Web app → New version.
  *
  * GOOGLE SHEET — Row 1 headers, lowercase:
  *
- *   id
+ *   id   (or telegram_id — both work)
  *   all, mm, en, math, phy, chem, bio, eco
  *   g11_all, g11_mm, ...   g10_all, g10_mm, ...
  *
@@ -174,6 +176,7 @@ function headerMap(sheet) {
     var key = String(headers[i] || '').trim().toLowerCase();
     if (key) map[key] = i + 1;
   }
+  if (!map.id && map.telegram_id) map.id = map.telegram_id;
   if (!map.id) map.id = 1;
   return { map: map, headers: headers, lastCol: lastCol };
 }
@@ -184,13 +187,13 @@ function ensureHeaders() {
   var needed = ['id'].concat(allColumnNames()).concat(allVolunteerColumnNames());
   var added = [];
   needed.forEach(function (name) {
-    if (!info.map[name]) {
-      var col = sheet.getLastColumn() + 1;
-      if (sheet.getLastColumn() === 0) col = 1;
-      sheet.getRange(1, col).setValue(name);
-      info.map[name] = col;
-      added.push(name);
-    }
+    if (name === 'id' && (info.map.id || info.map.telegram_id)) return;
+    if (info.map[name]) return;
+    var col = sheet.getLastColumn() + 1;
+    if (sheet.getLastColumn() === 0) col = 1;
+    sheet.getRange(1, col).setValue(name);
+    info.map[name] = col;
+    added.push(name);
   });
   return added;
 }
@@ -212,7 +215,7 @@ function subjectColumns(info) {
   allColumnNames().forEach(function (n) { known[n] = true; });
   var cols = [];
   Object.keys(info.map).forEach(function (key) {
-    if (key === 'id') return;
+    if (key === 'id' || key === 'telegram_id') return;
     if (known[key] || /^(g1[01]_)?(all|mm|en|math|phy|chem|bio|eco)$/.test(key)) {
       cols.push(key);
     }
@@ -322,6 +325,12 @@ function doGet(e) {
     var action = (e && e.parameter && e.parameter.action) || '';
     if (action === 'getUsers') return jsonOut(buildAppUsers());
     if (action === 'cleanupExpired') return jsonOut(cleanupExpired());
+    if (action === 'saveScore' || action === 'getLeaderboard' || action === 'friendOp' || action === 'getPhotos') {
+      return jsonOut({
+        success: false,
+        message: 'Wrong script: this is TG APP SHEET (paid users). Paste stats-Code.gs on the score spreadsheet.'
+      });
+    }
     return jsonOut(buildAdminData());
   } catch (err) {
     return jsonOut({ success: false, message: String(err) });
