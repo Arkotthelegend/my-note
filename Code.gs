@@ -372,6 +372,7 @@ function doGet(e) {
     var action = (e && e.parameter && e.parameter.action) || '';
     if (action === 'getUsers') return jsonOut(buildAppUsers());
     if (action === 'cleanupExpired') return jsonOut(cleanupExpired());
+    if (action === 'list' || action === 'admin') return jsonOut(buildAdminData());
     if (action === 'saveScore' || action === 'getLeaderboard' || action === 'friendOp' || action === 'getPhotos') {
       return jsonOut({
         success: false,
@@ -385,14 +386,23 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  var data = {};
   try {
-    var data = {};
     if (e && e.postData && e.postData.contents) {
       data = JSON.parse(e.postData.contents);
     }
-    var action = data.action || '';
+  } catch (parseErr) {
+    return jsonOut({ success: false, message: String(parseErr) });
+  }
+  var action = data.action || '';
+  if (action === 'list' || action === 'admin') {
+    try { return jsonOut(buildAdminData()); } catch (listErr) {
+      return jsonOut({ success: false, message: String(listErr) });
+    }
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
     if (action === 'saveMulti') return jsonOut(saveMulti(data));
     if (action === 'delete') return jsonOut(deleteSubject(data));
     if (action === 'cleanupExpired') return jsonOut(cleanupExpired());

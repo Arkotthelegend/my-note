@@ -309,21 +309,54 @@
         renderData();
     }
 
+    function gasRequest(opts) {
+        opts = opts || {};
+        var method = opts.method || 'GET';
+        var action = opts.action || '';
+        var url = SCRIPT_URL;
+        var fetchOpts = { method: method, redirect: 'follow', cache: 'no-store', credentials: 'omit' };
+        if (method === 'GET') {
+            url += '?action=' + encodeURIComponent(action || 'list') + '&t=' + Date.now();
+        } else {
+            fetchOpts.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+            fetchOpts.body = opts.body || JSON.stringify({ action: action || 'list' });
+        }
+        var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        if (ctrl) fetchOpts.signal = ctrl.signal;
+        var timer = setTimeout(function () {
+            try { if (ctrl) ctrl.abort(); } catch (e0) {}
+        }, 25000);
+        return fetch(url, fetchOpts).then(function (res) {
+            return res.text();
+        }).then(function (text) {
+            try { return JSON.parse(text); } catch (e1) {
+                throw new Error('Sheet JSON ရချင်တာ HTML ပြန်လာပါတယ်');
+            }
+        }).finally(function () { clearTimeout(timer); });
+    }
+
     async function fetchFromSheet() {
         showLoading(true);
         try {
-            const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
+            var data = null;
+            try {
+                data = await gasRequest({ method: 'GET', action: 'list' });
+            } catch (eGet) {
+                data = await gasRequest({ method: 'POST', action: 'list' });
+            }
             if (data && data.success === false) {
                 tg.showAlert("GAS error: " + (data.message || "unknown"));
                 return;
+            }
+            if (!data || !Array.isArray(data.active)) {
+                throw new Error('no active list');
             }
             cachedData = data.active || [];
             cachedLogs = data.logs || [];
             cachedVolunteerStats = data.volunteerStats || {};
             renderData();
         } catch (e) {
-            tg.showAlert("Data ဆွဲယူရတာ အဆင်မပြေပါဘူးဗျာ။ Code.gs ကို TG APP SHEET bound script မှာ paste ပြီး New version deploy လုပ်ပါ။");
+            tg.showAlert("Data မရပါ။ Internet စစ်ပြီး Note ကို ပိတ်ပြီး ပြန်ဖွင့်ပါ။ Script က အလုပ်လုပ်နေပါတယ်။");
         }
         showLoading(false);
     }
